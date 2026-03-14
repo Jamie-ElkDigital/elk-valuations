@@ -429,7 +429,7 @@ session_start();
   }
 
   .fin-table td:not(:first-child) {
-    text-align: right;
+    text-align: center;
   }
 
   .fin-table tr.subtotal td {
@@ -455,7 +455,7 @@ session_start();
     border-bottom: 1px solid var(--input-border);
     border-radius: 0;
     padding: 4px 6px;
-    text-align: right;
+    text-align: center;
     width: 130px;
     color: var(--text);
     font-size: 13px;
@@ -1388,6 +1388,7 @@ session_start();
       <div class="btn-row">
         <button class="btn btn-ghost" onclick="goTo(4)">← Back</button>
         <div class="spacer"></div>
+        <div id="saveInfo" style="font-size:11px; color:var(--text-faint); margin-right:12px; display:none;">Last saved: <span id="saveTime"></span></div>
         <button id="saveBtn" class="btn btn-outline" style="color:var(--success); border-color:var(--success);" onclick="saveValuation()">💾 Save Valuation</button>
         <button class="btn btn-outline" onclick="window.print()">🖨 Print Report</button>
         <button class="btn btn-primary btn-lg" onclick="showStatus('Report generation coming soon — PDF export will be available in the full version.')">Generate PDF Report</button>
@@ -1891,6 +1892,8 @@ async function saveValuation() {
     
     showStatus('Valuation saved to ELK Database ✓');
     btn.innerHTML = '💾 Saved';
+    document.getElementById('saveInfo').style.display = 'block';
+    document.getElementById('saveTime').textContent = new Date().toLocaleTimeString();
     setTimeout(() => {
       btn.innerHTML = '💾 Save Valuation';
       btn.disabled = false;
