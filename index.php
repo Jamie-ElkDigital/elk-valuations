@@ -2045,7 +2045,13 @@ init();
     letter-spacing: 0.04em;
   ">
     <span>&copy; 2026 GTA Accounting (Garrett Adam Accountants Ltd). All rights reserved.</span>
-    <span>Design &amp; Development by <a href="https://elkdesignservices.com" target="_blank" style="color:rgba(237,237,240,0.5); text-decoration:none; border-bottom:1px solid rgba(102,14,12,0.4);">ELK Digital</a> &mdash; elkdesignservices.com <span style="margin-left:8px; opacity:0.5;">v3.1.4 (Built: 14 Mar 2026 19:17)</span></span>
+    <span>Design &amp; Development by <a href="https://elkdesignservices.com" target="_blank" style="color:rgba(237,237,240,0.5); text-decoration:none; border-bottom:1px solid rgba(102,14,12,0.4);">ELK Digital</a> &mdash; elkdesignservices.com <span style="margin-left:8px; opacity:0.5;">
+      <?php 
+        $version = getenv('APP_VERSION') ?: '3.1.x';
+        $buildTime = getenv('BUILD_TIME') ?: date('j M Y H:i');
+        echo "v{$version} (Built: {$buildTime})"; 
+      ?>
+    </span></span>
   </footer>
 </body>
 </html>
