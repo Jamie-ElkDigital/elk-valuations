@@ -405,7 +405,7 @@ session_start();
   }
 
   .fin-table th {
-    text-align: right;
+    text-align: center;
     font-size: 10px;
     text-transform: uppercase;
     letter-spacing: 0.1em;
@@ -958,7 +958,7 @@ session_start();
           <span>Choose PDF Files</span>
         </button>
         <div id="uploadStatus" style="font-size: 11px; color: var(--gold); margin-top: 8px; display: none;">
-          <span class="spinner"></span> Processing accounts with Gemini Pro...
+          <span class="spinner"></span> Processing accounts please wait...
         </div>
       </div>
 
@@ -1800,10 +1800,7 @@ function calcResults() {
     tbody.appendChild(tr);
   });
 
-  // Mandatory AI generation if not already generated
-  if (!document.getElementById('r_narrative').dataset.aiGenerated) {
-    generateNarrative();
-  }
+  // Automatic generation removed - manual button only
 }
 
 // ── SAVE TO DB ──
