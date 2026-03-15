@@ -15,6 +15,7 @@ const fs = require('fs');
     });
 
     process.stdin.on('end', async () => {
+        try {
             const browser = await puppeteer.launch({
                 executablePath: '/usr/bin/google-chrome-stable',
                 headless: 'new',
