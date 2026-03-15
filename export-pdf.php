@@ -4,6 +4,10 @@
  * Re-uses branding and data logic to generate a pixel-perfect PDF via Puppeteer.
  */
 
+// Increase memory and timeout for Puppeteer
+ini_set('memory_limit', '1024M');
+set_time_limit(120);
+
 session_start();
 require_once 'db.php';
 require_once 'theme-engine.php';
@@ -67,7 +71,6 @@ function fmtShort($n) {
 }
 
 // Generate the HTML for Puppeteer
-// Note: We use absolute paths or embedded styles for Puppeteer
 ob_start();
 ?>
 <!DOCTYPE html>
@@ -204,13 +207,16 @@ $tempPdf  = tempnam(sys_get_temp_dir(), 'pdf_out_') . '.pdf';
 file_put_contents($tempHtml, $html);
 
 // Pipe HTML into node script
-$cmd = "node generate-pdf.js " . escapeshellarg($tempPdf);
+$nodePath = exec('which node') ?: 'node';
+$cmd = "$nodePath generate-pdf.js " . escapeshellarg($tempPdf);
+
 $descriptorspec = [
    0 => ["pipe", "r"], // stdin
    1 => ["pipe", "w"], // stdout
    2 => ["pipe", "w"]  // stderr
 ];
 
+error_log("Starting PDF generation for valuation $id");
 $process = proc_open($cmd, $descriptorspec, $pipes);
 
 if (is_resource($process)) {
@@ -225,7 +231,8 @@ if (is_resource($process)) {
 
     $return_value = proc_close($process);
 
-    if ($return_value === 0 && file_exists($tempPdf)) {
+    if ($return_value === 0 && file_exists($tempPdf) && filesize($tempPdf) > 0) {
+        error_log("PDF generated successfully: $tempPdf (" . filesize($tempPdf) . " bytes)");
         // Stream PDF to browser
         header('Content-Type: application/pdf');
         header('Content-Disposition: inline; filename="Valuation_Report_' . str_replace(' ', '_', $v['client_name']) . '.pdf"');
@@ -237,8 +244,12 @@ if (is_resource($process)) {
         @unlink($tempPdf);
         exit;
     } else {
-        die("PDF Generation Failed: " . $stderr);
+        error_log("PDF Generation Failed. Return: $return_value. Stderr: $stderr");
+        http_response_code(500);
+        die("PDF Generation Failed. Please contact support. Details logged.");
     }
 } else {
+    error_log("Failed to start PDF process resource.");
+    http_response_code(500);
     die("Failed to start PDF engine.");
 }

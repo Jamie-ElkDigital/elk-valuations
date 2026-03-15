@@ -15,7 +15,6 @@ const fs = require('fs');
     });
 
     process.stdin.on('end', async () => {
-        try {
             const browser = await puppeteer.launch({
                 executablePath: '/usr/bin/google-chrome-stable',
                 headless: 'new',
@@ -23,7 +22,10 @@ const fs = require('fs');
                     '--no-sandbox',
                     '--disable-setuid-sandbox',
                     '--disable-dev-shm-usage',
-                    '--font-render-hinting=none'
+                    '--disable-gpu',
+                    '--disable-extensions',
+                    '--font-render-hinting=none',
+                    '--single-process'
                 ]
             });
 
@@ -33,7 +35,10 @@ const fs = require('fs');
             await page.setViewport({ width: 1200, height: 1600 });
 
             // Set content and wait for network to be idle (ensure images/fonts load)
-            await page.setContent(html, { waitUntil: 'networkidle0' });
+            await page.setContent(html, { 
+                waitUntil: ['load', 'networkidle0'],
+                timeout: 30000 
+            });
 
             // Generate PDF
             await page.pdf({
