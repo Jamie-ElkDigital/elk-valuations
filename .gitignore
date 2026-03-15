@@ -3,3 +3,5 @@ gta
 *.pdf
 *.ppk
 *.json
+!package.json
+!package-lock.json
