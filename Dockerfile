@@ -7,11 +7,9 @@ RUN docker-php-ext-install pdo pdo_mysql
 # Enable Apache rewrite module
 RUN a2enmod rewrite
 
-# Install Node.js and Puppeteer dependencies
+# Install Node.js and dependencies for Headless Chrome
+# Simplified and modernized dependency list for Puppeteer on Debian
 RUN apt-get update && apt-get install -y \
-    gnupg \
-    wget \
-    curl \
     ca-certificates \
     fonts-liberation \
     libasound2 \
@@ -25,7 +23,6 @@ RUN apt-get update && apt-get install -y \
     libfontconfig1 \
     libgbm1 \
     libgcc1 \
-    libgconf-2-4 \
     libgdk-pixbuf2.0-0 \
     libglib2.0-0 \
     libgtk-3-0 \
@@ -48,7 +45,10 @@ RUN apt-get update && apt-get install -y \
     libxss1 \
     libxtst6 \
     lsb-release \
+    wget \
     xdg-utils \
+    curl \
+    gnupg \
     --no-install-recommends \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs \
@@ -57,11 +57,14 @@ RUN apt-get update && apt-get install -y \
 # Set the working directory
 WORKDIR /var/www/html/
 
-# Copy your application files to the container
-COPY . /var/www/html/
+# Copy package files first to leverage Docker cache
+COPY package*.json ./
 
 # Install Node dependencies
 RUN npm install
+
+# Copy your application files to the container
+COPY . /var/www/html/
 
 # Expose port 8080 (Cloud Run default)
 EXPOSE 8080
