@@ -1,5 +1,5 @@
 :root {
-  /* ── BRAND IDENTITY (Dynamic via Database in Phase 4) ── */
+  /* ── BRAND IDENTITY (Dynamic via PHP Injection) ── */
   --brand-surface: #050505;
   --brand-surface-mid: #0a0a15;
   --brand-surface-light: #121220;
@@ -8,25 +8,23 @@
   --brand-accent-light: #dfbc82;
   --brand-accent-hover: #8a6d3b;
   
-  /* ── FUNCTIONAL VARS (Derived from Brand) ── */
+  /* ── FUNCTIONAL VARS (Dynamic via PHP) ── */
   --brand-accent-dim: rgba(197, 160, 89, 0.15);
   --brand-accent-border: rgba(197, 160, 89, 0.3);
   --brand-accent-glow: rgba(197, 160, 89, 0.2);
   
-  /* ── NEUTRALS ── */
+  /* ── NEUTRALS (Now Dynamic) ── */
   --text-main: #ffffff;
   --text-muted: #d1d1d6;
   --text-faint: #71717a;
-  --cream-dim: rgba(255, 255, 255, 0.05);
+  --bg-dim: rgba(255, 255, 255, 0.05);
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --input-bg: #000000;
+  --input-border: #27272a;
   
   /* ── UI STATES ── */
   --success: #10b981;
   --error: #e57373;
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  
-  /* ── INPUTS ── */
-  --input-bg: #000000;
-  --input-border: #27272a;
   
   /* ── CONSTANTS ── */
   --radius: 2px;

@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once 'db.php';
+require_once 'theme-engine.php';
 
 // Authentication Guard
 if (!isset($_SESSION['authenticated']) || !$_SESSION['authenticated']) {
@@ -30,26 +31,6 @@ $primary_color = $firm['primary_color'] ?? '#c5a059';
 $secondary_color = $firm['secondary_color'] ?? '#050505';
 $logo_url = $firm['logo_url'] ?? '';
 
-// Simple PHP function to approximate a lighter/darker color for the surface variants
-// In Phase 4, we could use a proper color library.
-function adjustBrightness($hex, $steps) {
-    $steps = max(-255, min(255, $steps));
-    $hex = str_replace('#', '', $hex);
-    if (strlen($hex) == 3) {
-        $hex = str_repeat(substr($hex, 0, 1), 2) . str_repeat(substr($hex, 1, 1), 2) . str_repeat(substr($hex, 2, 1), 2);
-    }
-    $r = hexdec(substr($hex, 0, 2));
-    $g = hexdec(substr($hex, 2, 2));
-    $b = hexdec(substr($hex, 4, 2));
-    $r = max(0, min(255, $r + $steps));
-    $g = max(0, min(255, $g + $steps));
-    $b = max(0, min(255, $b + $steps));
-    return '#' . str_pad(dechex($r), 2, '0', STR_PAD_LEFT) . str_pad(dechex($g), 2, '0', STR_PAD_LEFT) . str_pad(dechex($b), 2, '0', STR_PAD_LEFT);
-}
-
-$surface_mid = adjustBrightness($secondary_color, 15);
-$surface_light = adjustBrightness($secondary_color, 30);
-
 // Fetch existing valuation if in Edit Mode
 $edit_data = null;
 if (isset($_GET['edit'])) {
@@ -69,30 +50,7 @@ if (isset($_GET['edit'])) {
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css?v=3.2.1">
-<style>
-:root {
-  /* Dynamic overrides from database */
-  --brand-accent: <?php echo $primary_color; ?>;
-  --brand-surface: <?php echo $secondary_color; ?>;
-  --brand-surface-mid: <?php echo $surface_mid; ?>;
-  --brand-surface-light: <?php echo $surface_light; ?>;
-  
-  /* Compatibility Layer for Legacy Step Classes */
-  --gold: var(--brand-accent);
-  --gold-light: var(--brand-accent-light);
-  --navy: var(--brand-surface);
-  --navy-mid: var(--brand-surface-mid);
-  --navy-light: var(--brand-surface-light);
-  --border: var(--border-subtle);
-  --cream: var(--text-main);
-  
-  /* Derived approximations */
-  --brand-accent-light: <?php echo $primary_color; ?>; 
-  --brand-accent-dim: <?php echo $primary_color; ?>26;
-  --brand-accent-border: <?php echo $primary_color; ?>4d;
-  --brand-accent-glow: <?php echo $primary_color; ?>33;
-}
-</style>
+<?php injectTheme($primary_color, $secondary_color); ?>
 <script>
   window.EDIT_DATA = <?php echo $edit_data ? json_encode($edit_data) : 'null'; ?>;
 </script>
@@ -114,7 +72,7 @@ if (isset($_GET['edit'])) {
 <div id="debugOverlay" onclick="closeDebug()"></div>
 <div id="debugModal">
   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-    <h3 style="color:var(--gold-light); margin:0;">AI Extraction Debug</h3>
+    <h3 style="color:var(--brand-accent-light); margin:0;">AI Extraction Debug</h3>
     <button class="btn btn-outline" style="padding:4px 10px;" onclick="closeDebug()">Close</button>
   </div>
   <pre id="debugContent">Waiting for extraction...</pre>
@@ -169,19 +127,6 @@ if (isset($_GET['edit'])) {
       </div>
     </div>
 
-    <div style="margin: 24px 20px; padding: 16px; background: var(--brand-surface-mid); border: 1px solid var(--border-subtle); border-radius: 6px;">
-      <div class="sidebar-section-label" style="margin-bottom:8px; color:var(--brand-accent-light);">Project Roadmap</div>
-      <ul style="list-style:none; font-size:11px; color:var(--text-muted); display:flex; flex-direction:column; gap:6px;">
-        <li><span style="color:var(--success);">✓</span> Smart PDF Upload</li>
-        <li><span style="color:var(--success);">✓</span> AI Data Extraction</li>
-        <li><span style="color:var(--success);">✓</span> Net Debt Calculations</li>
-        <li><span style="color:var(--success);">✓</span> Save to Database</li>
-        <li><span style="color:var(--brand-accent-light);">○</span> Client Dashboard</li>
-        <li><span style="color:var(--brand-accent-light);">○</span> High-Fidelity PDF Export</li>
-        <li><span style="color:var(--brand-accent-light);">○</span> Multi-User Auth</li>
-      </ul>
-    </div>
-
     <div class="sidebar-logo-container" style="padding: 24px 20px;">
       <?php if ($logo_url): ?>
         <img src="<?php echo htmlspecialchars($logo_url); ?>" alt="<?php echo htmlspecialchars($firm['name']); ?>" style="max-height: 50px; width: auto; display: block; filter: drop-shadow(0 0 10px var(--brand-accent-glow));">
@@ -201,17 +146,17 @@ if (isset($_GET['edit'])) {
         <p class="page-desc">Upload statutory accounts to auto-fill the valuation setup, or enter the client company information manually.</p>
       </div>
 
-      <div class="info-box" id="uploadBox" style="background: var(--navy-mid); border: 1px dashed var(--gold); padding: 32px; flex-direction: column; align-items: center; text-align: center; gap: 16px;">
+      <div class="info-box" id="uploadBox" style="background: var(--brand-surface-mid); border: 1px dashed var(--brand-accent); padding: 32px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 16px;">
         <div style="font-size: 24px;">📄</div>
         <div>
-          <strong style="color: var(--cream); display: block; margin-bottom: 4px;">Smart PDF Upload</strong>
-          <span class="text">Upload up to 3 years of Final Accounts. Gemini Pro will extract business details, financial figures, and share structure automatically.</span>
+          <strong style="color: var(--text-main); display: block; margin-bottom: 4px;">Smart PDF Upload</strong>
+          <span class="text" style="color: var(--text-muted);">Upload up to 3 years of Final Accounts. Gemini Pro will extract business details, financial figures, and share structure automatically.</span>
         </div>
         <input type="file" id="pdfUpload" multiple accept=".pdf" style="display: none;" onchange="handleFileUpload(event)">
         <button class="btn btn-outline" onclick="document.getElementById('pdfUpload').click()" id="uploadBtn">
           <span>Choose PDF Files</span>
         </button>
-        <div id="uploadStatus" style="font-size: 11px; color: var(--gold); margin-top: 8px; display: none;">
+        <div id="uploadStatus" style="font-size: 11px; color: var(--brand-accent); margin-top: 8px; display: none;">
           <span class="spinner"></span> Processing accounts please wait...
         </div>
       </div>
@@ -387,8 +332,8 @@ if (isset($_GET['edit'])) {
         <p class="page-desc">Normalise the accounts for EBITDA valuation purposes. Enter adjustments per year — positive values add back, negative values deduct.</p>
       </div>
 
-      <div class="info-box">
-        <span class="icon">ℹ</span>
+      <div class="info-box" style="background: var(--brand-accent-dim); color: var(--text-muted); border: 1px solid var(--brand-accent-border);">
+        <span class="icon" style="color: var(--brand-accent);">ℹ</span>
         <span class="text">Common adjustments: director salary excess above market rate, one-off costs, personal expenses through the business, non-recurring income. Depreciation is already added back in step 2.</span>
       </div>
 
@@ -412,7 +357,7 @@ if (isset($_GET['edit'])) {
         <div></div>
       </div>
 
-      <div class="adj-row total-row" style="background: rgba(76,175,130,0.1); border-color: rgba(76,175,130,0.3);">
+      <div class="adj-row total-row" style="background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.3);">
         <div class="adj-label category" style="color: var(--success)">Adjusted EBITDA</div>
         <div class="adj-value positive" id="adj_ebitda1">£0</div>
         <div class="adj-value positive" id="adj_ebitda2">£0</div>
@@ -446,9 +391,9 @@ if (isset($_GET['edit'])) {
 
       <button class="add-btn" onclick="addShareholderRow()">+ Add shareholder</button>
 
-      <div style="margin-top: 16px; padding: 12px 16px; background: var(--cream-dim); border-radius: var(--radius); display:flex; justify-content:space-between; align-items:center;">
+      <div style="margin-top: 16px; padding: 12px 16px; background: var(--bg-dim); border-radius: var(--radius); display:flex; justify-content:space-between; align-items:center; border: 1px solid var(--border-subtle);">
         <span style="font-size:13px; color: var(--text-muted);">Total shares issued</span>
-        <span style="font-family: 'DM Mono', monospace; font-size:15px; color: var(--cream);" id="totalSharesDisplay">0</span>
+        <span style="font-family: 'DM Mono', monospace; font-size:15px; color: var(--text-main);" id="totalSharesDisplay">0</span>
       </div>
 
       <div class="btn-row">
@@ -521,7 +466,7 @@ if (isset($_GET['edit'])) {
 
       <div class="section-title">
         Accountant's Commentary
-        <button id="aiMethodBtn" class="btn btn-outline" style="margin-left:auto; font-size:11px; padding:4px 10px; color:var(--gold-light);" onclick="generateNarrative('accountantNotes')">✦ Generate with AI</button>
+        <button id="aiMethodBtn" class="btn btn-outline" style="margin-left:auto; font-size:11px; padding:4px 10px; color:var(--brand-accent-light);" onclick="generateNarrative('accountantNotes')">✦ Generate with AI</button>
       </div>
       <div class="form-group">
         <label>Detailed commentary for report</label>
@@ -545,7 +490,7 @@ if (isset($_GET['edit'])) {
 
       <div class="results-hero">
         <div class="page-eyebrow" id="r_company">—</div>
-        <div style="font-family:'Playfair Display',serif; font-size:14px; color:var(--text-muted); margin-top:4px;" id="r_purpose">—</div>
+        <div style="font-size:14px; color:var(--text-muted); margin-top:4px;" id="r_purpose">—</div>
         <div class="valuation-range">
           <div class="val-point">
             <div class="label">Conservative</div>
@@ -608,11 +553,11 @@ if (isset($_GET['edit'])) {
           <span class="weight" id="r_w3">×3</span>
           <span class="weighted" id="r_wv3">—</span>
         </div>
-        <div class="breakdown-row" style="padding-top:12px; border-top:1px solid var(--border);">
-          <span style="font-weight:600; color:var(--cream)">Weighted Average EBITDA</span>
+        <div class="breakdown-row" style="padding-top:12px; border-top:1px solid var(--border-subtle);">
+          <span style="font-weight:600; color:var(--text-main)">Weighted Average EBITDA</span>
           <span></span>
           <span></span>
-          <span class="weighted" style="font-size:15px; color:#f08080;" id="r_wAvg">—</span>
+          <span class="weighted" style="font-size:15px; color:var(--brand-accent-light);" id="r_wAvg">—</span>
         </div>
       </div>
 
@@ -635,7 +580,7 @@ if (isset($_GET['edit'])) {
       </div>
       <textarea class="narrative-box" id="r_narrative" placeholder="Click 'Generate AI Narrative' for Gemini Pro commentary, or type your own…" style="min-height:140px;"></textarea>
 
-      <div class="report-disclaimer">
+      <div class="report-disclaimer" style="background: var(--bg-dim); border: 1px solid var(--border-subtle); color: var(--text-faint);">
         <strong>Important:</strong> This valuation report has been prepared for the purpose stated above and should not be relied upon for any other purpose. The valuation is based on information provided by the directors and has not been independently verified. This report constitutes an opinion, not a guarantee of the price achievable on any open market transaction. GTA Accounting accepts no liability to any third party in connection with this report.
       </div>
 
@@ -745,11 +690,7 @@ function populateExtractedData(data) {
     showStatus('Gemini returned an empty result. Please try again.');
     return;
   }
-  // data is expected to be { year1: {...}, year2: {...}, year3: {...} }
-  // Sorted oldest to newest
   const years = ['year1', 'year2', 'year3'];
-  
-  // 1. Populate Business Details (Step 1) from the most recent year
   const latest = data.year3 || data.year2 || data.year1;
   if (latest) {
     if (latest.companyName) {
@@ -763,14 +704,12 @@ function populateExtractedData(data) {
     
     if (latest.sector) {
       const sectorSelect = document.getElementById('sector');
-      // Try to find a matching option
       Array.from(sectorSelect.options).forEach(opt => {
         if (opt.text.toLowerCase() === latest.sector.toLowerCase() || 
             latest.sector.toLowerCase().includes(opt.text.toLowerCase())) {
           sectorSelect.value = opt.text;
         }
       });
-      // If no match found but a sector was provided, could default to "Other"
       if (!sectorSelect.value && latest.sector) sectorSelect.value = 'Other';
     }
     
@@ -778,7 +717,6 @@ function populateExtractedData(data) {
     if (latest.performanceCommentary) document.getElementById('accountantNotes').value = latest.performanceCommentary;
   }
 
-  // 2. Populate Financial Data (Step 2)
   years.forEach((yKey, idx) => {
     const y = idx + 1;
     const d = data[yKey];
@@ -790,7 +728,6 @@ function populateExtractedData(data) {
     if (d.other) document.getElementById(`f_other${y}`).value = d.other;
     if (d.depreciation) document.getElementById(`f_dep${y}`).value = d.depreciation;
 
-    // Balance sheet (only for most recent year)
     if (idx === 2) {
       if (d.netAssets) document.getElementById('b_netassets').value = d.netAssets;
       if (d.cash) document.getElementById('b_cash').value = d.cash;
@@ -799,7 +736,6 @@ function populateExtractedData(data) {
     }
   });
 
-  // 3. Handle adjustments (Step 3) - e.g. Director salaries
   const adjContainer = document.getElementById('adjRows');
   adjContainer.innerHTML = '';
   adjRowCount = 0;
@@ -820,13 +756,12 @@ function populateExtractedData(data) {
   addAdjRow('Director pension addback', '', '', '');
   addAdjRow('Non-recurring / one-off costs', '', '', '');
 
-  // 4. Handle Shareholders (Step 4)
   if (latest && latest.directors && Array.isArray(latest.directors) && latest.directors.length > 0) {
     const shContainer = document.getElementById('shareholderRows');
-    shContainer.innerHTML = ''; // Clear existing
+    shContainer.innerHTML = ''; 
     shareRowCount = 0;
     
-    let totalShares = 100; // Default
+    let totalShares = 100; 
     if (latest.shareCapital && !isNaN(parseInt(latest.shareCapital))) {
        totalShares = parseInt(latest.shareCapital);
     }
@@ -836,7 +771,6 @@ function populateExtractedData(data) {
     const remainder = totalShares % numDirectors;
 
     latest.directors.forEach((directorName, idx) => {
-       // Give any remainder shares to the first director to ensure total matches
        const shares = sharesPerDirector + (idx === 0 ? remainder : 0);
        addShareholderRow(directorName, shares, 'Ordinary');
     });
@@ -845,17 +779,12 @@ function populateExtractedData(data) {
   calcFinancials();
 }
 
-// ── NAV ──
 function goTo(idx) {
-  // Toggle Page Visibility
   document.querySelectorAll('.page').forEach((p, i) => p.classList.toggle('active', i === idx));
-  
-  // Toggle Sidebar Step Highlighting (only for the Steps section)
   const steps = document.querySelectorAll('.sidebar-section:nth-of-type(2) .nav-item');
   steps.forEach((n, i) => {
     n.classList.toggle('active', i === idx);
   });
-  
   if (idx === 5) calcResults();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -865,7 +794,6 @@ function updateHeader() {
   document.getElementById('clientNameDisplay').textContent = name;
 }
 
-// ── FINANCIALS ──
 function getNum(id) { return parseFloat(document.getElementById(id)?.value) || 0; }
 
 function calcFinancials() {
@@ -896,18 +824,17 @@ function getPreAdjEbitda(y) {
   return op + dep;
 }
 
-// ── ADJUSTMENTS ──
 function addAdjRow(label = '', v1 = '', v2 = '', v3 = '', notes = '') {
   const id = adjRowCount++;
   const row = document.createElement('div');
   row.className = 'adj-row';
   row.id = `adjRow${id}`;
   row.innerHTML = `
-    <input type="text" class="adj-input" style="text-align:left; border-bottom: 1px solid var(--input-border); font-family:'DM Sans',sans-serif;" placeholder="e.g. Director salary addback" value="${label}" oninput="calcAdjustments()">
+    <input type="text" class="adj-input" style="text-align:left; border-bottom: 1px solid var(--input-border); font-family:inherit;" placeholder="e.g. Director salary addback" value="${label}" oninput="calcAdjustments()">
     <input type="number" class="adj-input" placeholder="0" value="${v1}" oninput="calcAdjustments()">
     <input type="number" class="adj-input" placeholder="0" value="${v2}" oninput="calcAdjustments()">
     <input type="number" class="adj-input" placeholder="0" value="${v3}" oninput="calcAdjustments()">
-    <input type="text" class="adj-input" style="text-align:left; font-family:'DM Sans',sans-serif; font-size:11px;" placeholder="Note…" value="${notes}">
+    <input type="text" class="adj-input" style="text-align:left; font-family:inherit; font-size:11px;" placeholder="Note…" value="${notes}">
   `;
   document.getElementById('adjRows').appendChild(row);
   calcAdjustments();
@@ -943,16 +870,15 @@ function getAdjEbitda(y) {
   return getPreAdjEbitda(y) + total;
 }
 
-// ── SHAREHOLDERS ──
 function addShareholderRow(name = '', shares = '', cls = 'Ordinary') {
   const id = shareRowCount++;
   const row = document.createElement('div');
   row.className = 'shareholder-row';
   row.id = `shRow${id}`;
   row.innerHTML = `
-    <input type="text" style="background:var(--input-bg); border:1px solid var(--input-border); border-radius:var(--radius); padding:8px 10px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:13px; width:100%; outline:none;" placeholder="Shareholder name" value="${name}" oninput="updateShareTotal()">
-    <input type="number" style="background:var(--input-bg); border:1px solid var(--input-border); border-radius:var(--radius); padding:8px 10px; color:var(--text); font-family:'DM Mono',monospace; font-size:13px; width:100%; outline:none;" placeholder="100" value="${shares}" min="1" oninput="updateShareTotal()">
-    <select style="background:var(--navy-mid); border:1px solid var(--input-border); border-radius:var(--radius); padding:8px 10px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:13px; width:100%; outline:none;">
+    <input type="text" style="background:var(--input-bg); border:1px solid var(--input-border); border-radius:var(--radius); padding:8px 10px; color:var(--text-main); font-family:inherit; font-size:13px; width:100%; outline:none;" placeholder="Shareholder name" value="${name}" oninput="updateShareTotal()">
+    <input type="number" style="background:var(--input-bg); border:1px solid var(--input-border); border-radius:var(--radius); padding:8px 10px; color:var(--text-main); font-family:'DM Mono',monospace; font-size:13px; width:100%; outline:none;" placeholder="100" value="${shares}" min="1" oninput="updateShareTotal()">
+    <select style="background:var(--input-bg); border:1px solid var(--input-border); border-radius:var(--radius); padding:8px 10px; color:var(--text-main); font-family:inherit; font-size:13px; width:100%; outline:none;">
       <option ${cls==='Ordinary'?'selected':''}>Ordinary</option>
       <option ${cls==='Ordinary A'?'selected':''}>Ordinary A</option>
       <option ${cls==='Ordinary B'?'selected':''}>Ordinary B</option>
@@ -974,7 +900,6 @@ function updateShareTotal() {
   document.getElementById('totalSharesDisplay').textContent = total.toLocaleString();
 }
 
-// ── WEIGHTING ──
 function setWeighting(key) {
   document.querySelectorAll('.multiple-card').forEach(c => c.classList.remove('selected'));
   if (key === '1-2-3') { weighting = [1,2,3]; document.getElementById('w123').classList.add('selected'); }
@@ -983,7 +908,6 @@ function setWeighting(key) {
   calcResults();
 }
 
-// ── RESULTS ──
 function calcResults() {
   const e1 = getAdjEbitda(1);
   const e2 = getAdjEbitda(2);
@@ -997,16 +921,14 @@ function calcResults() {
   const multMid = getNum('multMid') || 3.5;
   const multHigh = getNum('multHigh') || 5;
 
-  // Calculate Net Debt (Loans - Cash)
   const cash = getNum('b_cash');
   const loans = getNum('b_loans');
-  const netDebt = loans - cash; // Negative net debt means net cash
+  const netDebt = loans - cash; 
 
   const valLow = (wAvg * multLow) - netDebt - deduction;
   const valMid = (wAvg * multMid) - netDebt - deduction;
   const valHigh = (wAvg * multHigh) - netDebt - deduction;
 
-  // hero
   document.getElementById('r_company').textContent = document.getElementById('companyName')?.value || '—';
   document.getElementById('r_purpose').textContent = document.getElementById('purpose')?.value || '—';
 
@@ -1017,7 +939,6 @@ function calcResults() {
   document.getElementById('r_mid_mult').textContent = `${multMid}× EBITDA (Adj for Net Debt)`;
   document.getElementById('r_high_mult').textContent = `${multHigh}× EBITDA (Adj for Net Debt)`;
 
-  // cards
   document.getElementById('r_ebitda').textContent = fmt(wAvg);
   document.getElementById('r_weighting').textContent = `Weighting: ${w1}:${w2}:${w3}`;
   const turn3 = getNum('f_turn3');
@@ -1029,7 +950,6 @@ function calcResults() {
   document.getElementById('r_netassets').textContent = fmt(getNum('b_netassets'));
   document.getElementById('r_cash').textContent = fmt(getNum('b_cash'));
 
-  // breakdown
   document.getElementById('r_ebitda_y1').textContent = fmt(e1);
   document.getElementById('r_ebitda_y2').textContent = fmt(e2);
   document.getElementById('r_ebitda_y3').textContent = fmt(e3);
@@ -1041,7 +961,6 @@ function calcResults() {
   document.getElementById('r_wv3').textContent = fmt(e3 * w3);
   document.getElementById('r_wAvg').textContent = fmt(wAvg);
 
-  // shares
   const totalShares = Array.from(document.querySelectorAll('#shareholderRows .shareholder-row'))
     .reduce((t, row) => t + (parseInt(row.querySelectorAll('input')[1]?.value) || 0), 0);
   const pricePerShare = totalShares > 0 ? valMid / totalShares : 0;
@@ -1058,15 +977,10 @@ function calcResults() {
     tr.innerHTML = `<td>${name}</td><td>${cls}</td><td>${shares.toLocaleString()}</td><td>${fmt(val)}</td>`;
     tbody.appendChild(tr);
   });
-
-  // Automatic generation removed - manual button only
 }
 
-// ── SAVE TO DB ──
 async function saveValuation() {
   const btn = document.getElementById('saveBtn');
-  
-  // Gather all data
   const data = {
     id: window.EDIT_DATA ? window.EDIT_DATA.id : null,
     companyName: document.getElementById('companyName')?.value,
@@ -1078,8 +992,6 @@ async function saveValuation() {
     purpose: document.getElementById('purpose')?.value,
     reportDate: document.getElementById('reportDate')?.value,
     businessDesc: document.getElementById('businessDesc')?.value,
-    
-    // Financials
     financials: {
       turnover: [getNum('f_turn1'), getNum('f_turn2'), getNum('f_turn3')],
       cos: [getNum('f_cos1'), getNum('f_cos2'), getNum('f_cos3')],
@@ -1093,8 +1005,6 @@ async function saveValuation() {
         loans: getNum('b_loans')
       }
     },
-    
-    // Adjustments
     adjustments: Array.from(document.querySelectorAll('#adjRows .adj-row')).map(row => {
       const inputs = row.querySelectorAll('input');
       return {
@@ -1105,8 +1015,6 @@ async function saveValuation() {
         note: inputs[4].value
       };
     }),
-    
-    // Shareholders
     shareholders: Array.from(document.querySelectorAll('#shareholderRows .shareholder-row')).map(row => {
       const inputs = row.querySelectorAll('input');
       return {
@@ -1115,8 +1023,6 @@ async function saveValuation() {
         class: row.querySelector('select').value
       };
     }),
-    
-    // Methodology
     weighting: weighting,
     multiples: {
       low: getNum('multLow'),
@@ -1125,12 +1031,8 @@ async function saveValuation() {
     },
     deduction: getNum('deduction'),
     deductionDesc: document.getElementById('deductionDesc').value,
-    
-    // Narratives
     accountantNotes: document.getElementById('accountantNotes').value,
     aiNarrative: document.getElementById('r_narrative').value,
-    
-    // Result
     valuationMid: parseFloat(document.getElementById('r_mid').textContent.replace(/[£,mk]/g, '')) * (document.getElementById('r_mid').textContent.includes('m') ? 1000000 : (document.getElementById('r_mid').textContent.includes('k') ? 1000 : 1))
   };
 
@@ -1143,20 +1045,15 @@ async function saveValuation() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     });
-
     const result = await response.json();
     if (result.error) throw new Error(result.error);
-    
     showStatus('Valuation saved to ELK Database ✓');
     btn.innerHTML = '💾 Saved';
     document.getElementById('saveInfo').style.display = 'block';
     document.getElementById('saveTime').textContent = new Date().toLocaleTimeString();
-    
-    // If it was a new valuation, we might want to update window.EDIT_DATA with the new ID
     if (!data.id && result.id) {
         window.EDIT_DATA = { id: result.id };
     }
-
     setTimeout(() => {
       btn.innerHTML = '💾 Save Valuation';
       btn.disabled = false;
@@ -1168,7 +1065,6 @@ async function saveValuation() {
   }
 }
 
-// ── FORMAT ──
 function fmt(n) {
   if (isNaN(n) || n === null) return '—';
   const abs = Math.abs(n);
@@ -1183,7 +1079,6 @@ function fmtShort(n) {
   return fmt(n);
 }
 
-// ── STATUS ──
 let statusTimer;
 function showStatus(msg) {
   const bar = document.getElementById('statusBar');
@@ -1193,64 +1088,35 @@ function showStatus(msg) {
   statusTimer = setTimeout(() => bar.classList.remove('show'), 4000);
 }
 
-// ── AI NARRATIVE ──
 async function generateNarrative(targetId = 'r_narrative') {
   const btnId = targetId === 'accountantNotes' ? 'aiMethodBtn' : 'aiNarrativeBtn';
   const btn = document.getElementById(btnId);
   const textarea = document.getElementById(targetId);
-  
-  // Build prompt from all current data
-  const company   = document.getElementById('companyName')?.value || 'the company';
-  const sector    = document.getElementById('sector')?.value || 'unspecified sector';
-  const purpose   = document.getElementById('purpose')?.value || 'general advisory';
+  const company = document.getElementById('companyName')?.value || 'the company';
+  const sector = document.getElementById('sector')?.value || 'unspecified sector';
+  const purpose = document.getElementById('purpose')?.value || 'general advisory';
   const employees = document.getElementById('employees')?.value || 'unknown';
-  const years     = document.getElementById('yearsTrading')?.value || 'unknown';
-  const desc      = document.getElementById('businessDesc')?.value || '';
-  const notes     = document.getElementById('accountantNotes')?.value || '';
-
+  const years = document.getElementById('yearsTrading')?.value || 'unknown';
+  const desc = document.getElementById('businessDesc')?.value || '';
   const e1 = getAdjEbitda(1), e2 = getAdjEbitda(2), e3 = getAdjEbitda(3);
   const [w1,w2,w3] = weighting;
   const wAvg = (e1*w1 + e2*w2 + e3*w3) / (w1+w2+w3);
-  const turn3    = getNum('f_turn3');
-  const multLow  = getNum('multLow') || 2.5;
-  const multMid  = getNum('multMid') || 3.5;
+  const turn3 = getNum('f_turn3');
+  const multLow = getNum('multLow') || 2.5;
+  const multMid = getNum('multMid') || 3.5;
   const multHigh = getNum('multHigh') || 5;
-  
   const cash = getNum('b_cash');
   const loans = getNum('b_loans');
   const netDebt = loans - cash;
   const deduction = getNum('deduction');
   const deductDesc = document.getElementById('deductionDesc')?.value || '';
-  
-  const valLow  = (wAvg * multLow) - netDebt - deduction;
-  const valMid  = (wAvg * multMid) - netDebt - deduction;
+  const valLow = (wAvg * multLow) - netDebt - deduction;
+  const valMid = (wAvg * multMid) - netDebt - deduction;
   const valHigh = (wAvg * multHigh) - netDebt - deduction;
-  
   const margin = turn3 ? ((getPreAdjEbitda(3) / turn3) * 100).toFixed(1) : 'unknown';
 
-  const prompt = `Write a comprehensive professional business valuation commentary. Use the following data:
+  const prompt = `Write a comprehensive professional business valuation commentary for ${company}. Sector: ${sector}. Purpose: ${purpose}. Financials: EBITDA ${fmt(e1)} (Y1), ${fmt(e2)} (Y2), ${fmt(e3)} (Y3). Weighted Avg: ${fmt(wAvg)}. Net Debt: ${fmt(netDebt)}. Valuation Range: ${fmtShort(valLow)} to ${fmtShort(valHigh)}. Deduction: ${fmt(deduction)} (${deductDesc}). Write 4-5 flowing paragraphs.`;
 
-Company: ${company}
-Sector: ${sector}
-Purpose: ${purpose}
-Years trading: ${years}
-Employees: ${employees}
-Description: ${desc}
-
-Financials (3 yrs):
-- EBITDA: ${fmt(e1)} (Y1), ${fmt(e2)} (Y2), ${fmt(e3)} (Y3)
-- Weighted Avg: ${fmt(wAvg)}
-- Margin: ${margin}%
-- Net Debt: ${fmt(netDebt)} (Loans: ${fmt(loans)}, Cash: ${fmt(cash)})
-
-Valuation:
-- Multiples: ${multLow}x - ${multHigh}x (Mid: ${multMid}x)
-- Equity Value Range: ${fmtShort(valLow)} to ${fmtShort(valHigh)}
-- Other Deductions: ${fmt(deduction)} (${deductDesc})
-
-Write 4-5 detailed paragraphs. Analyze the growth trends, discuss the balance sheet strength (especially the net cash/debt position), justify the EBITDA multiple for this sector, and provide a professional conclusion. No bullet points or headers.`;
-
-  // Show loading state
   btn.disabled = true;
   const originalHtml = btn.innerHTML;
   btn.innerHTML = '<span class="spinner"></span> Generating…';
@@ -1262,12 +1128,9 @@ Write 4-5 detailed paragraphs. Analyze the growth trends, discuss the balance sh
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prompt })
     });
-
     const data = await response.json();
     if (data.error) throw new Error(data.error);
-    
     textarea.value = data.narrative;
-    textarea.dataset.aiGenerated = '1';
     showStatus('AI commentary generated ✓');
   } catch (err) {
     textarea.value = 'Error: ' + err.message;
@@ -1277,7 +1140,6 @@ Write 4-5 detailed paragraphs. Analyze the growth trends, discuss the balance sh
   }
 }
 
-// ── INIT ──
 function init() {
   if (window.EDIT_DATA) {
     const d = window.EDIT_DATA;
@@ -1290,8 +1152,6 @@ function init() {
     document.getElementById('purpose').value = d.purpose || '';
     document.getElementById('reportDate').value = d.report_date || '';
     document.getElementById('businessDesc').value = d.business_desc || '';
-
-    // Financials
     const fin = JSON.parse(d.financials_json || '{}');
     if (fin.turnover) {
       for (let i = 0; i < 3; i++) {
@@ -1308,8 +1168,6 @@ function init() {
         document.getElementById('b_loans').value = fin.balanceSheet.loans || 0;
       }
     }
-
-    // Adjustments
     const adj = JSON.parse(d.adjustments_json || '[]');
     const adjContainer = document.getElementById('adjRows');
     adjContainer.innerHTML = '';
@@ -1320,16 +1178,12 @@ function init() {
       addAdjRow('Director pension addback', '', '', '');
       addAdjRow('Non-recurring / one-off costs', '', '', '');
     }
-
-    // Shareholders
     const sh = JSON.parse(d.shareholders_json || '[]');
     const shContainer = document.getElementById('shareholderRows');
     shContainer.innerHTML = '';
     shareRowCount = 0;
     sh.forEach(s => addShareholderRow(s.name, s.shares, s.class));
     if (sh.length === 0) addShareholderRow('', '', 'Ordinary');
-
-    // Methodology
     const meth = JSON.parse(d.methodology_json || '{}');
     if (meth.weighting) {
       weighting = meth.weighting;
@@ -1346,34 +1200,22 @@ function init() {
     }
     document.getElementById('deduction').value = meth.deduction || 0;
     document.getElementById('deductionDesc').value = meth.deductionDesc || '';
-
-    // Narratives
     document.getElementById('accountantNotes').value = d.accountant_notes || '';
     document.getElementById('r_narrative').value = d.ai_narrative || '';
-
     updateHeader();
     calcFinancials();
   } else {
-    // Default adjustment rows based on View HR pattern
     addAdjRow('Director salary adjustment', '', '', '');
     addAdjRow('Director pension addback', '', '', '');
     addAdjRow('Non-recurring / one-off costs', '', '', '');
-
-    // Default shareholders
     addShareholderRow('', '', 'Ordinary');
-
-    // Default weighting
     document.getElementById('w123').classList.add('selected');
-
-    // Set default report date
     const now = new Date();
     document.getElementById('reportDate').value = now.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
   }
 }
-
 init();
 </script>
-
 <?php include 'footer.php'; ?>
 </body>
 </html>

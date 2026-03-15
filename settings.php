@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once 'db.php';
+require_once 'theme-engine.php';
 
 // Authentication Guard
 if (!isset($_SESSION['authenticated']) || !$_SESSION['authenticated']) {
@@ -61,25 +62,6 @@ $logo_url = $firm['logo_url'] ?? '';
 $stmt = $pdo->prepare("SELECT id, name, email, role, created_at FROM users WHERE firm_id = ? ORDER BY created_at DESC");
 $stmt->execute([$firm_id]);
 $users = $stmt->fetchAll();
-
-// Helper for dynamic surface variations
-function adjustBrightness($hex, $steps) {
-    $steps = max(-255, min(255, $steps));
-    $hex = str_replace('#', '', $hex);
-    if (strlen($hex) == 3) {
-        $hex = str_repeat(substr($hex, 0, 1), 2) . str_repeat(substr($hex, 1, 1), 2) . str_repeat(substr($hex, 2, 1), 2);
-    }
-    $r = hexdec(substr($hex, 0, 2));
-    $g = hexdec(substr($hex, 2, 2));
-    $b = hexdec(substr($hex, 4, 2));
-    $r = max(0, min(255, $r + $steps));
-    $g = max(0, min(255, $g + $steps));
-    $b = max(0, min(255, $b + $steps));
-    return '#' . str_pad(dechex($r), 2, '0', STR_PAD_LEFT) . str_pad(dechex($g), 2, '0', STR_PAD_LEFT) . str_pad(dechex($b), 2, '0', STR_PAD_LEFT);
-}
-
-$surface_mid = adjustBrightness($secondary_color, 15);
-$surface_light = adjustBrightness($secondary_color, 30);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -91,21 +73,8 @@ $surface_light = adjustBrightness($secondary_color, 30);
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css?v=3.2.1">
+<?php injectTheme($primary_color, $secondary_color); ?>
 <style>
-:root {
-  /* Dynamic overrides from database */
-  --brand-accent: <?php echo $primary_color; ?>;
-  --brand-surface: <?php echo $secondary_color; ?>;
-  --brand-surface-mid: <?php echo $surface_mid; ?>;
-  --brand-surface-light: <?php echo $surface_light; ?>;
-  
-  /* Derived approximations */
-  --brand-accent-light: <?php echo $primary_color; ?>; 
-  --brand-accent-dim: <?php echo $primary_color; ?>26;
-  --brand-accent-border: <?php echo $primary_color; ?>4d;
-  --brand-accent-glow: <?php echo $primary_color; ?>33;
-}
-
 .settings-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -122,7 +91,7 @@ $surface_light = adjustBrightness($secondary_color, 30);
 
 .palette-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 12px;
     margin-bottom: 32px;
 }
@@ -146,6 +115,7 @@ $surface_light = adjustBrightness($secondary_color, 30);
     border-radius: 3px;
     margin-bottom: 8px;
     display: flex;
+    border: 1px solid var(--border-subtle);
 }
 
 .palette-label {
@@ -215,8 +185,7 @@ input[type="color"]::-webkit-color-swatch {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
+    width: 100%;    height: 100%;
     background: rgba(0,0,0,0.8);
     z-index: 90;
 }
@@ -292,19 +261,29 @@ input[type="color"]::-webkit-color-swatch {
                 <div class="palette-grid">
                     <div class="palette-option" onclick="setPalette('#c5a059', '#050505')">
                         <div class="palette-preview"><div style="flex:3; background:#c5a059;"></div><div style="flex:7; background:#050505;"></div></div>
-                        <div class="palette-label">ELK Gold</div>
+                        <div class="palette-label">ELK Gold (Dark)</div>
                     </div>
                     <div class="palette-option" onclick="setPalette('#1e40af', '#0f172a')">
                         <div class="palette-preview"><div style="flex:3; background:#1e40af;"></div><div style="flex:7; background:#0f172a;"></div></div>
-                        <div class="palette-label">GTA Blue</div>
-                    </div>
-                    <div class="palette-option" onclick="setPalette('#059669', '#064e3b')">
-                        <div class="palette-preview"><div style="flex:3; background:#059669;"></div><div style="flex:7; background:#064e3b;"></div></div>
-                        <div class="palette-label">Emerald</div>
+                        <div class="palette-label">GTA Blue (Dark)</div>
                     </div>
                     <div class="palette-option" onclick="setPalette('#ef4444', '#1a1a1a')">
                         <div class="palette-preview"><div style="flex:3; background:#ef4444;"></div><div style="flex:7; background:#1a1a1a;"></div></div>
-                        <div class="palette-label">ELK Red</div>
+                        <div class="palette-label">ELK Red (Dark)</div>
+                    </div>
+                    
+                    <!-- REAL LIGHT THEMES -->
+                    <div class="palette-option" onclick="setPalette('#1e40af', '#ffffff')">
+                        <div class="palette-preview"><div style="flex:3; background:#1e40af;"></div><div style="flex:7; background:#ffffff;"></div></div>
+                        <div class="palette-label">Corporate Light</div>
+                    </div>
+                    <div class="palette-option" onclick="setPalette('#c5a059', '#f8fafc')">
+                        <div class="palette-preview"><div style="flex:3; background:#c5a059;"></div><div style="flex:7; background:#f8fafc;"></div></div>
+                        <div class="palette-label">Modern Slate</div>
+                    </div>
+                    <div class="palette-option" onclick="setPalette('#059669', '#ffffff')">
+                        <div class="palette-preview"><div style="flex:3; background:#059669;"></div><div style="flex:7; background:#ffffff;"></div></div>
+                        <div class="palette-label">Emerald Light</div>
                     </div>
                 </div>
 
@@ -371,7 +350,7 @@ input[type="color"]::-webkit-color-swatch {
             </div>
             <div class="form-group" style="margin-bottom: 16px;">
                 <label>Role</label>
-                <select name="user_role" style="width:100%; background:var(--brand-surface); border:1px solid var(--border-subtle); color:var(--text); padding:10px; border-radius:4px;">
+                <select name="user_role" style="width:100%; background:var(--input-bg); border:1px solid var(--input-border); color:var(--text-main); padding:10px; border-radius:4px;">
                     <option value="user">User</option>
                     <option value="admin">Admin</option>
                 </select>
@@ -391,10 +370,6 @@ input[type="color"]::-webkit-color-swatch {
   </main>
 </div>
 
-<?php include 'footer.php'; ?>
-</body>
-</html>
-
 <script>
 function setPalette(primary, secondary) {
     document.getElementById('primary_color').value = primary;
@@ -410,5 +385,6 @@ function hideAddUser() {
 }
 </script>
 
+<?php include 'footer.php'; ?>
 </body>
 </html>

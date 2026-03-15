@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once 'db.php';
+require_once 'theme-engine.php';
 
 // Authentication Guard
 if (!isset($_SESSION['authenticated']) || !$_SESSION['authenticated']) {
@@ -48,25 +49,6 @@ $primary_color = $firm['primary_color'] ?? '#c5a059';
 $secondary_color = $firm['secondary_color'] ?? '#050505';
 $logo_url = $firm['logo_url'] ?? '';
 
-// Helper for dynamic surface variations
-function adjustBrightness($hex, $steps) {
-    $steps = max(-255, min(255, $steps));
-    $hex = str_replace('#', '', $hex);
-    if (strlen($hex) == 3) {
-        $hex = str_repeat(substr($hex, 0, 1), 2) . str_repeat(substr($hex, 1, 1), 2) . str_repeat(substr($hex, 2, 1), 2);
-    }
-    $r = hexdec(substr($hex, 0, 2));
-    $g = hexdec(substr($hex, 2, 2));
-    $b = hexdec(substr($hex, 4, 2));
-    $r = max(0, min(255, $r + $steps));
-    $g = max(0, min(255, $g + $steps));
-    $b = max(0, min(255, $b + $steps));
-    return '#' . str_pad(dechex($r), 2, '0', STR_PAD_LEFT) . str_pad(dechex($g), 2, '0', STR_PAD_LEFT) . str_pad(dechex($b), 2, '0', STR_PAD_LEFT);
-}
-
-$surface_mid = adjustBrightness($secondary_color, 15);
-$surface_light = adjustBrightness($secondary_color, 30);
-
 function fmt($n) {
     if ($n === null || $n === '') return '—';
     return '£' . number_format((float)$n, 0);
@@ -89,28 +71,8 @@ function fmtShort($n) {
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css?v=3.2.1">
+<?php injectTheme($primary_color, $secondary_color); ?>
 <style>
-:root {
-  --brand-accent: <?php echo $primary_color; ?>;
-  --brand-surface: <?php echo $secondary_color; ?>;
-  --brand-surface-mid: <?php echo $surface_mid; ?>;
-  --brand-surface-light: <?php echo $surface_light; ?>;
-  
-  /* Compatibility Layer */
-  --gold: var(--brand-accent);
-  --gold-light: var(--brand-accent-light);
-  --navy: var(--brand-surface);
-  --navy-mid: var(--brand-surface-mid);
-  --navy-light: var(--brand-surface-light);
-  --border: var(--border-subtle);
-  --cream: var(--text-main);
-
-  --brand-accent-light: <?php echo $primary_color; ?>; 
-  --brand-accent-dim: <?php echo $primary_color; ?>26;
-  --brand-accent-border: <?php echo $primary_color; ?>4d;
-  --brand-accent-glow: <?php echo $primary_color; ?>33;
-}
-
 .report-container {
     max-width: 1000px;
     margin: 0 auto;
@@ -283,8 +245,5 @@ function fmtShort($n) {
 </div>
 
 <?php include 'footer.php'; ?>
-</body>
-</html>
-
 </body>
 </html>
