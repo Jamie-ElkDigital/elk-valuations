@@ -87,8 +87,8 @@ session_start();
       </ul>
     </div>
 
-    <div style="margin-top:auto; padding:32px 24px; display:flex; flex-direction:column; align-items:flex-start; gap:12px;">
-      <img src="elk-design-logo.png" alt="ELK Digital" style="height:100px; width:auto; display:block; filter: drop-shadow(0 0 10px rgba(197,160,89,0.2));">
+    <div class="sidebar-logo-container">
+      <img src="elk-design-logo.png" alt="ELK Digital" class="sidebar-logo">
     </div>
   </nav>
 
