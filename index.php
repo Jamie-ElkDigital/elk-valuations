@@ -157,21 +157,25 @@ $surface_light = adjustBrightness($secondary_color, 30);
       </div>
     </div>
 
-    <div style="margin: 24px 20px; padding: 16px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); border-radius: 6px;">
-      <div class="sidebar-section-label" style="margin-bottom:8px; color:var(--gold-light);">Project Roadmap</div>
+    <div style="margin: 24px 20px; padding: 16px; background: var(--brand-surface-mid); border: 1px solid var(--border-subtle); border-radius: 6px;">
+      <div class="sidebar-section-label" style="margin-bottom:8px; color:var(--brand-accent-light);">Project Roadmap</div>
       <ul style="list-style:none; font-size:11px; color:var(--text-muted); display:flex; flex-direction:column; gap:6px;">
         <li><span style="color:var(--success);">✓</span> Smart PDF Upload</li>
         <li><span style="color:var(--success);">✓</span> AI Data Extraction</li>
         <li><span style="color:var(--success);">✓</span> Net Debt Calculations</li>
         <li><span style="color:var(--success);">✓</span> Save to Database</li>
-        <li><span style="color:var(--gold);">○</span> Client Dashboard</li>
-        <li><span style="color:var(--gold);">○</span> High-Fidelity PDF Export</li>
-        <li><span style="color:var(--gold);">○</span> Multi-User Auth</li>
+        <li><span style="color:var(--brand-accent-light);">○</span> Client Dashboard</li>
+        <li><span style="color:var(--brand-accent-light);">○</span> High-Fidelity PDF Export</li>
+        <li><span style="color:var(--brand-accent-light);">○</span> Multi-User Auth</li>
       </ul>
     </div>
 
-    <div class="sidebar-logo-container">
-      <img src="elk-design-logo.png" alt="ELK Digital" class="sidebar-logo">
+    <div class="sidebar-logo-container" style="padding: 24px 20px;">
+      <?php if ($logo_url): ?>
+        <img src="<?php echo htmlspecialchars($logo_url); ?>" alt="<?php echo htmlspecialchars($firm['name']); ?>" style="max-height: 50px; width: auto; display: block; filter: drop-shadow(0 0 10px var(--brand-accent-glow));">
+      <?php else: ?>
+        <img src="elk-design-logo.png" alt="ELK Digital" style="max-height: 50px; width: auto; display: block; filter: drop-shadow(0 0 10px var(--brand-accent-glow));">
+      <?php endif; ?>
     </div>
   </nav>
 
@@ -831,10 +835,15 @@ function populateExtractedData(data) {
 
 // ── NAV ──
 function goTo(idx) {
+  // Toggle Page Visibility
   document.querySelectorAll('.page').forEach((p, i) => p.classList.toggle('active', i === idx));
-  document.querySelectorAll('.nav-item').forEach((n, i) => {
+  
+  // Toggle Sidebar Step Highlighting (only for the Steps section)
+  const steps = document.querySelectorAll('.sidebar-section:nth-of-type(2) .nav-item');
+  steps.forEach((n, i) => {
     n.classList.toggle('active', i === idx);
   });
+  
   if (idx === 5) calcResults();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
