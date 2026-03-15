@@ -5,19 +5,21 @@
 The application has successfully transitioned from a single-firm tool into a multi-tenant SaaS foundation.
 
 ### Key Features Implemented:
+*   **High-Fidelity PDF Engine:** Pixel-perfect report generation via **Puppeteer & Headless Chrome**.
+*   **Google Sans Typography:** Standardised clean, modern fonts (Open Sans) across the entire platform.
 *   **ELK AI Extraction Engine:** Powered by **Gemini 3.1 Pro Preview** via Vertex AI.
 *   **Universal PDF Parser:** Specialized in UK Statutory Accounts (3-year P&L + Balance Sheet).
 *   **Smart PDF Relocation:** Upload moved to Step 1 for full auto-population.
 *   **Multi-Tenant Authentication:** Secure `login.php` tying users to their specific `firm_id`.
 *   **SaaS Dashboard:** `dashboard.php` provides a centralized view of a firm's valuation pipeline.
 *   **Dynamic Branding Portal:** `settings.php` allows firms to customize their name, primary/surface colors, and logos.
-*   **Color Intelligence:** Automatic brightness adjustment for UI surface variants (Mid/Light) based on brand choice.
+*   **Color Intelligence:** Automatic brightness adjustment for UI surface variants (Mid/Light) based on brand choice (Light/Dark support).
 
 ---
 
 ## 🗺️ Roadmap: The ELK Digital SaaS Platform
 
-### Phase 3: Multi-Tenant Foundation (ELK Core) - FINALIZING
+### Phase 3: Multi-Tenant Foundation (ELK Core) - COMPLETE
 *   [x] **Firm-Based Database Schema:** `firms` and `users` tables live in Cloud SQL.
 *   [x] **Multi-User Authentication:** Session-based security and firm isolation.
 *   [x] **Dynamic Theming Engine:** CSS-variable injection with professional presets.
@@ -25,14 +27,16 @@ The application has successfully transitioned from a single-firm tool into a mul
 *   [x] **View & Edit Mode:** Ability to reopen and refine saved valuations from the dashboard.
 *   [x] **ELK Super-Admin:** Dashboard for ELK Digital to manage subscriptions and monitor AI costs.
 
-### Phase 4: Professionalization & Scale
+### Phase 4: Professionalization & Scale - COMPLETE
 *   [x] **High-Fidelity PDF Export:** Professional, branded PDF report generation via Puppeteer.
-*   [ ] **AI Logic Protection:** Moving core prompts behind a protected ELK Digital internal API.
+*   [x] **Google Sans Integration:** Clean, high-end typography implemented platform-wide.
+*   [x] **Dynamic Light/Dark Logic:** Robust theme engine supporting black-on-white reporting.
 
-### Phase 5: Commercial SaaS Launch
-*   **Subscription Engine:** 12-month term enforcement and automated billing via Stripe.
-*   **Pricing Strategy:** Positioning at £250/month per firm.
-*   **Usage-Based Auditing:** Tracking extraction volume for profitability management.
+### Phase 5: Commercial SaaS Launch (NEXT)
+*   [ ] **AI Logic Protection:** Moving core prompts behind a protected ELK Digital internal API.
+*   [ ] **Subscription Engine:** 12-month term enforcement and automated billing via Stripe.
+*   [ ] **Usage-Based Auditing:** Tracking extraction volume for profitability management.
+*   [ ] **Public Marketing Site:** High-converting landing page for ELK Valuations.
 
 ---
 *Owner: ELK Digital Limited | Strategic Partner: GTA Accounting | Last Updated: 15 March 2026*
