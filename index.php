@@ -589,8 +589,8 @@ if (isset($_GET['edit'])) {
         <div class="spacer"></div>
         <div id="saveInfo" style="font-size:11px; color:var(--text-faint); margin-right:12px; display:none;">Last saved: <span id="saveTime"></span></div>
         <button id="saveBtn" class="btn btn-outline" style="color:var(--success); border-color:var(--success);" onclick="saveValuation()">💾 Save Valuation</button>
-        <button class="btn btn-outline" onclick="window.print()">🖨 Print Report</button>
-        <button class="btn btn-primary btn-lg" onclick="showStatus('Report generation coming soon — PDF export will be available in the full version.')">Generate PDF Report</button>
+        <button class="btn btn-outline" onclick="window.print()">🖨 Print View</button>
+        <button class="btn btn-primary btn-lg" onclick="if(window.EDIT_DATA && window.EDIT_DATA.id) { window.open('export-pdf.php?id=' + window.EDIT_DATA.id, '_blank'); } else { showStatus('Please save the valuation first to generate a PDF.'); }">Generate PDF Report</button>
       </div>
     </div>
 

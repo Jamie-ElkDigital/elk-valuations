@@ -138,7 +138,7 @@ function fmtShort($n) {
     <span class="header-label">Viewing Report: <?php echo htmlspecialchars($v['client_name']); ?></span>
   </div>
   <div class="header-right" style="display: flex; align-items: center; gap: 16px;">
-    <button class="btn btn-outline" onclick="window.print()" style="font-size: 11px; padding: 6px 12px;">🖨 Print Report</button>
+    <a href="export-pdf.php?id=<?php echo $v['id']; ?>" target="_blank" class="btn btn-outline" style="font-size: 11px; padding: 6px 12px;">🖨 Download PDF</a>
     <a href="index.php?edit=<?php echo $v['id']; ?>" class="btn btn-primary" style="font-size: 11px; padding: 6px 12px;">✏️ Edit Data</a>
   </div>
 </header>

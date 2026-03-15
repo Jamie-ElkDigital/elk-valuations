@@ -25,8 +25,8 @@ The application has successfully transitioned from a single-firm tool into a mul
 *   [x] **View & Edit Mode:** Ability to reopen and refine saved valuations from the dashboard.
 *   [x] **ELK Super-Admin:** Dashboard for ELK Digital to manage subscriptions and monitor AI costs.
 
-### Phase 4: Professionalization & Scale (NEXT)
-*   [ ] **High-Fidelity PDF Export:** Professional, branded PDF report generation.
+### Phase 4: Professionalization & Scale
+*   [x] **High-Fidelity PDF Export:** Professional, branded PDF report generation via Puppeteer.
 *   [ ] **Dynamic Whitelabeling:** Support for custom subdomains (e.g., `gta.valuations.elkdigital.co.uk`).
 *   [ ] **AI Logic Protection:** Moving core prompts behind a protected ELK Digital internal API.
 
