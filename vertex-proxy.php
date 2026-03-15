@@ -5,54 +5,30 @@
  */
 
 define('GCP_PROJECT_ID',    'gta-valuations');
-define('GCP_LOCATION',      'global');
+define('GCP_LOCATION',      'europe-west2');
 define('GEMINI_MODEL',      'gemini-3.1-pro-preview'); 
 
-// Load secrets from Environment Variables (Set in Google Cloud Run)
-define('OAUTH_CLIENT_ID',     getenv('OAUTH_CLIENT_ID'));
-define('OAUTH_CLIENT_SECRET', getenv('OAUTH_CLIENT_SECRET'));
-define('OAUTH_REFRESH_TOKEN', getenv('OAUTH_REFRESH_TOKEN'));
-
-define('TOKEN_CACHE_FILE',  '/tmp/vertex_token_cache.json');
-
-header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: https://valuations.gtaaccounting.co.uk');
-header('Access-Control-Allow-Methods: POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
-
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') { http_response_code(405); echo json_encode(['error' => 'Method not allowed']); exit; }
-
+/**
+ * Get a fresh access token using the Service Account (Application Default Credentials)
+ */
 function get_access_token(): string {
-    if (file_exists(TOKEN_CACHE_FILE)) {
-        $cache = json_decode(file_get_contents(TOKEN_CACHE_FILE), true);
-        if (isset($cache['access_token'], $cache['expires_at']) && $cache['expires_at'] > (time() + 300)) {
-            return $cache['access_token'];
-        }
-    }
-    $ch = curl_init('https://oauth2.googleapis.com/token');
+    // On Cloud Run, we get a token directly from the internal Metadata Server
+    $ch = curl_init('http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token');
     curl_setopt_array($ch, [
         CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_POST           => true,
-        CURLOPT_POSTFIELDS     => http_build_query([
-            'client_id'     => OAUTH_CLIENT_ID,
-            'client_secret' => OAUTH_CLIENT_SECRET,
-            'refresh_token' => OAUTH_REFRESH_TOKEN,
-            'grant_type'    => 'refresh_token',
-        ]),
-        CURLOPT_HTTPHEADER => ['Content-Type: application/x-www-form-urlencoded'],
+        CURLOPT_HTTPHEADER     => ['Metadata-Flavor: Google'],
     ]);
+    
     $response = curl_exec($ch);
     $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
-    if ($http_code !== 200) throw new RuntimeException('Token refresh failed: ' . $response);
+
+    if ($http_code !== 200) {
+        throw new RuntimeException('Metadata server token fetch failed. Ensure this is running on Google Cloud.');
+    }
+
     $data = json_decode($response, true);
-    if (empty($data['access_token'])) throw new RuntimeException('No access token: ' . $response);
-    file_put_contents(TOKEN_CACHE_FILE, json_encode([
-        'access_token' => $data['access_token'],
-        'expires_at'   => time() + ($data['expires_in'] ?? 3600),
-    ]));
-    return $data['access_token'];
+    return $data['access_token'] ?? '';
 }
 
 $input = json_decode(file_get_contents('php://input'), true);
