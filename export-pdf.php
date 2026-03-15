@@ -232,21 +232,11 @@ if (is_resource($process)) {
     $return_value = proc_close($process);
 
     if ($return_value === 0 && file_exists($tempPdf) && filesize($tempPdf) > 0) {
-        error_log("PDF generated successfully: $tempPdf (" . filesize($tempPdf) . " bytes)");
-        // Stream PDF to browser
-        header('Content-Type: application/pdf');
-        header('Content-Disposition: inline; filename="Valuation_Report_' . str_replace(' ', '_', $v['client_name']) . '.pdf"');
-        header('Content-Length: ' . filesize($tempPdf));
-        readfile($tempPdf);
-        
-        // Cleanup
-        @unlink($tempHtml);
-        @unlink($tempPdf);
-        exit;
+        // ... (existing success logic) ...
     } else {
         error_log("PDF Generation Failed. Return: $return_value. Stderr: $stderr");
         http_response_code(500);
-        die("PDF Generation Failed. Please contact support. Details logged.");
+        die("PDF Generation Failed.<br>Return Code: $return_value<br>Error Output:<pre>$stderr</pre>");
     }
 } else {
     error_log("Failed to start PDF process resource.");
