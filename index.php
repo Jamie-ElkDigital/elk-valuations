@@ -68,6 +68,15 @@ $surface_light = adjustBrightness($secondary_color, 30);
   --brand-surface-mid: <?php echo $surface_mid; ?>;
   --brand-surface-light: <?php echo $surface_light; ?>;
   
+  /* Compatibility Layer for Legacy Step Classes */
+  --gold: var(--brand-accent);
+  --gold-light: var(--brand-accent-light);
+  --navy: var(--brand-surface);
+  --navy-mid: var(--brand-surface-mid);
+  --navy-light: var(--brand-surface-light);
+  --border: var(--border-subtle);
+  --cream: var(--text-main);
+  
   /* Derived approximations */
   --brand-accent-light: <?php echo $primary_color; ?>; 
   --brand-accent-dim: <?php echo $primary_color; ?>26;
