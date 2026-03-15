@@ -4,6 +4,7 @@
  * Saves the valuation data to Cloud SQL using organized columns.
  */
 
+session_start();
 require_once 'db.php';
 
 header('Content-Type: application/json');
@@ -27,9 +28,9 @@ if (!$input || empty($input['companyName'])) {
 try {
     $pdo = DB::getInstance();
     
-    // For now, we assume Firm 1 and User 1
-    $firm_id = 1; 
-    $user_id = 1; 
+    // Get session context or default to GTA Accounting (Firm 1)
+    $firm_id = $_SESSION['firm_id'] ?? 1;
+    $user_id = $_SESSION['user_id'] ?? 1;
 
     $sql = "INSERT INTO valuations (
                 firm_id, user_id, client_name, company_number, sector, 

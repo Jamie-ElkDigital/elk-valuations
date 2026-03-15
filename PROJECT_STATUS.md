@@ -1,24 +1,26 @@
 # ELK Valuations Platform - Project Status
 *Proprietary Platform by ELK Digital Limited*
 
-## 🚀 Current Status (Phase 2 Complete)
-The application has been transformed into a high-performance AI extraction engine. While currently deployed for GTA Accounting, the architecture has been prepared for multi-tenant whitelabeling.
+## 🚀 Current Status (Phase 3 In Progress)
+The application is being transitioned into a multi-tenant SaaS foundation.
 
 ### Key Features Implemented:
 *   **ELK AI Extraction Engine:** Powered by **Gemini 3.1 Pro Preview** via Vertex AI.
 *   **Universal PDF Parser:** Specialized in UK Statutory Accounts (3-year P&L + Balance Sheet).
 *   **Advanced Valuation Logic:** ELK's proprietary "Net Debt Bridge" methodology.
 *   **Professional Narrative Suite:** Automated, high-fidelity commentary generation.
+*   **Smart PDF Relocation:** Upload moved to Step 1 for full auto-population.
 
 ---
 
 ## 🗺️ Roadmap: The ELK Digital SaaS Platform
 
-### Phase 3: Multi-Tenant Foundation (ELK Core)
-*   **Firm-Based Database:** MySQL backend with strict data isolation (`firm_id`).
-*   **Self-Serve Branding Portal:** Firm admin dashboard to upload logos and manage corporate identities.
-*   **Dynamic Theming Engine:** CSS-variable injection based on firm-specific color choices.
-*   **ELK Super-Admin:** Dashboard for ELK Digital to manage subscriptions and monitor AI costs.
+### Phase 3: Multi-Tenant Foundation (ELK Core) - IN PROGRESS
+*   [x] **Firm-Based Database Schema:** Initial `firms` and `users` tables designed.
+*   [x] **Dynamic Theming Engine:** CSS-variable injection based on firm-specific color choices.
+*   [ ] **Self-Serve Branding Portal:** Firm admin dashboard to upload logos and manage corporate identities.
+*   [ ] **Multi-User Authentication:** Secure login for firm employees.
+*   [ ] **ELK Super-Admin:** Dashboard for ELK Digital to manage subscriptions and monitor AI costs.
 
 ### Phase 4: Professionalization & Scale
 *   **Dynamic Whitelabeling:** Ability to spin up new accounting firms via subdomain or custom domain.
@@ -32,4 +34,4 @@ The application has been transformed into a high-performance AI extraction engin
 *   **Client Management:** Full CRM features for accountants to manage their client pipeline.
 
 ---
-*Owner: ELK Digital Limited | Strategic Partner: GTA Accounting | Last Updated: 14 March 2026*
+*Owner: ELK Digital Limited | Strategic Partner: GTA Accounting | Last Updated: 15 March 2026*

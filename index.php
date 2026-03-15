@@ -1,30 +1,69 @@
 <?php
 session_start();
-// Uncomment below to enable password protection:
-// if (!isset($_SESSION['authenticated'])) {
-//     header('Location: login.php');
-//     exit;
-// }
+require_once 'db.php';
+
+// Authentication Guard
+if (!isset($_SESSION['authenticated']) || !$_SESSION['authenticated']) {
+    header('Location: login.php');
+    exit;
+}
+
+$firm_id = $_SESSION['firm_id'];
+$user_name = $_SESSION['user_name'];
+$firm_name = $_SESSION['firm_name'];
+
+try {
+    $pdo = DB::getInstance();
+    $stmt = $pdo->prepare("SELECT * FROM firms WHERE id = ?");
+    $stmt->execute([$firm_id]);
+    $firm = $stmt->fetch();
+
+    if (!$firm) {
+        die("Firm configuration missing.");
+    }
+} catch (Exception $e) {
+    die("Database Error: " . $e->getMessage());
+}
+
+// Map database colors to CSS variables
+$primary_color = $firm['primary_color'] ?? '#c5a059';
+$secondary_color = $firm['secondary_color'] ?? '#050505';
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ELK Valuations | AI-Powered Business Intelligence</title>
+<title>ELK Valuations | <?php echo htmlspecialchars($firm['name']); ?></title>
 <link rel="icon" type="image/webp" href="favicon.webp">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css?v=<?php echo filemtime('style.css'); ?>">
+<style>
+:root {
+  /* Dynamic overrides from database */
+  --brand-accent: <?php echo $primary_color; ?>;
+  --brand-surface: <?php echo $secondary_color; ?>;
+  
+  /* Derived approximations */
+  --brand-accent-light: <?php echo $primary_color; ?>; 
+  --brand-accent-dim: <?php echo $primary_color; ?>26; /* 15% opacity hex */
+  --brand-accent-border: <?php echo $primary_color; ?>4d; /* 30% opacity hex */
+  --brand-accent-glow: <?php echo $primary_color; ?>33; /* 20% opacity hex */
+}
+</style>
 </head>
 <body>
 
 <header>
   <div class="header-left">
     <span class="header-label" id="clientNameDisplay">New Valuation</span>
+    <span style="margin: 0 12px; color: var(--border-subtle);">|</span>
+    <span style="font-size: 11px; color: var(--text-muted);"><?php echo htmlspecialchars($firm_name); ?></span>
   </div>
-  <div class="header-right">
-    <span style="font-size:10px; text-transform:uppercase; letter-spacing:0.12em; color:var(--text-faint);">ELK Valuations Cloud</span>
+  <div class="header-right" style="display: flex; align-items: center; gap: 20px;">
+    <span style="font-size: 11px; color: var(--text-faint);"><?php echo htmlspecialchars($user_name); ?></span>
+    <a href="logout.php" style="font-size: 10px; color: var(--brand-accent); text-decoration: none; text-transform: uppercase; letter-spacing: 0.1em; border: 1px solid var(--brand-accent-border); padding: 4px 8px; border-radius: 2px;">Logout</a>
   </div>
 </header>
 
@@ -40,8 +79,20 @@ session_start();
 <div class="app-wrapper">
   <nav class="sidebar">
     <div class="sidebar-section">
+      <div class="sidebar-section-label">Main</div>
+      <a href="dashboard.php" class="nav-item">
+        <span style="width:20px; text-align:center;">📊</span>
+        Dashboard
+      </a>
+      <a href="index.php" class="nav-item active">
+        <span style="width:20px; text-align:center;">➕</span>
+        New Valuation
+      </a>
+    </div>
+
+    <div class="sidebar-section">
       <div class="sidebar-section-label">Steps</div>
-      <div class="nav-item active" onclick="goTo(0)" id="nav0">
+      <div class="nav-item" onclick="goTo(0)" id="nav0">
         <div class="nav-step">1</div>
         Business Details
       </div>
@@ -80,7 +131,7 @@ session_start();
         <li><span style="color:var(--success);">✓</span> Smart PDF Upload</li>
         <li><span style="color:var(--success);">✓</span> AI Data Extraction</li>
         <li><span style="color:var(--success);">✓</span> Net Debt Calculations</li>
-        <li><span style="color:var(--gold);">○</span> Save to Database</li>
+        <li><span style="color:var(--success);">✓</span> Save to Database</li>
         <li><span style="color:var(--gold);">○</span> Client Dashboard</li>
         <li><span style="color:var(--gold);">○</span> High-Fidelity PDF Export</li>
         <li><span style="color:var(--gold);">○</span> Multi-User Auth</li>
