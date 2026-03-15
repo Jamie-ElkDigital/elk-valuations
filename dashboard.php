@@ -33,6 +33,26 @@ try {
 
 $primary_color = $firm['primary_color'] ?? '#c5a059';
 $secondary_color = $firm['secondary_color'] ?? '#050505';
+$logo_url = $firm['logo_url'] ?? '';
+
+// Helper for dynamic surface variations
+function adjustBrightness($hex, $steps) {
+    $steps = max(-255, min(255, $steps));
+    $hex = str_replace('#', '', $hex);
+    if (strlen($hex) == 3) {
+        $hex = str_repeat(substr($hex, 0, 1), 2) . str_repeat(substr($hex, 1, 1), 2) . str_repeat(substr($hex, 2, 1), 2);
+    }
+    $r = hexdec(substr($hex, 0, 2));
+    $g = hexdec(substr($hex, 2, 2));
+    $b = hexdec(substr($hex, 4, 2));
+    $r = max(0, min(255, $r + $steps));
+    $g = max(0, min(255, $g + $steps));
+    $b = max(0, min(255, $b + $steps));
+    return '#' . str_pad(dechex($r), 2, '0', STR_PAD_LEFT) . str_pad(dechex($g), 2, '0', STR_PAD_LEFT) . str_pad(dechex($b), 2, '0', STR_PAD_LEFT);
+}
+
+$surface_mid = adjustBrightness($secondary_color, 15);
+$surface_light = adjustBrightness($secondary_color, 30);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -49,6 +69,8 @@ $secondary_color = $firm['secondary_color'] ?? '#050505';
   /* Dynamic overrides from database */
   --brand-accent: <?php echo $primary_color; ?>;
   --brand-surface: <?php echo $secondary_color; ?>;
+  --brand-surface-mid: <?php echo $surface_mid; ?>;
+  --brand-surface-light: <?php echo $surface_light; ?>;
   
   /* Derived approximations */
   --brand-accent-light: <?php echo $primary_color; ?>; 
@@ -133,13 +155,6 @@ $secondary_color = $firm['secondary_color'] ?? '#050505';
     transition: background 0.2s;
 }
 .btn-new:hover { background: var(--brand-accent-hover); }
-
-/* Remove active state from index-specific nav items if needed */
-.nav-item.active {
-    background: var(--brand-accent-dim);
-    border-color: var(--brand-accent-border);
-    border-left: 3px solid var(--brand-accent);
-}
 </style>
 </head>
 <body>
@@ -176,13 +191,12 @@ $secondary_color = $firm['secondary_color'] ?? '#050505';
       </a>
     </div>
 
-    <div style="margin-top:auto; padding: 24px 20px;">
-        <div style="font-size:10px; color: var(--text-faint); text-transform:uppercase; letter-spacing:0.1em;">Support</div>
-        <div style="font-size:11px; color: var(--text-muted); margin-top:4px;">ELK Digital Concierge</div>
-    </div>
-
     <div class="sidebar-logo-container">
-      <img src="elk-design-logo.png" alt="ELK Digital" class="sidebar-logo">
+      <?php if ($logo_url): ?>
+        <img src="<?php echo htmlspecialchars($logo_url); ?>" alt="<?php echo htmlspecialchars($firm_name); ?>" class="sidebar-logo">
+      <?php else: ?>
+        <img src="elk-design-logo.png" alt="ELK Digital" class="sidebar-logo">
+      <?php endif; ?>
     </div>
   </nav>
 

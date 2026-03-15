@@ -15,10 +15,12 @@ $message = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = $_POST['firm_name'] ?? '';
     $primary_color = $_POST['primary_color'] ?? '#c5a059';
+    $secondary_color = $_POST['secondary_color'] ?? '#050505';
+    $logo_url = $_POST['logo_url'] ?? '';
 
     try {
-        $stmt = $pdo->prepare("UPDATE firms SET name = ?, primary_color = ? WHERE id = ?");
-        $stmt->execute([$name, $primary_color, $firm_id]);
+        $stmt = $pdo->prepare("UPDATE firms SET name = ?, primary_color = ?, secondary_color = ?, logo_url = ? WHERE id = ?");
+        $stmt->execute([$name, $primary_color, $secondary_color, $logo_url, $firm_id]);
         $_SESSION['firm_name'] = $name;
         $message = 'Firm settings updated successfully.';
     } catch (Exception $e) {
@@ -33,6 +35,7 @@ $firm = $stmt->fetch();
 
 $primary_color = $firm['primary_color'] ?? '#c5a059';
 $secondary_color = $firm['secondary_color'] ?? '#050505';
+$logo_url = $firm['logo_url'] ?? '';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -62,20 +65,59 @@ $secondary_color = $firm['secondary_color'] ?? '#050505';
     border-radius: var(--radius-lg);
 }
 
-.color-picker-wrapper {
+.palette-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 32px;
+}
+
+.palette-option {
+    border: 2px solid var(--border-subtle);
+    border-radius: 6px;
+    padding: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+}
+
+.palette-option:hover {
+    border-color: var(--brand-accent);
+    transform: translateY(-2px);
+}
+
+.palette-preview {
+    height: 32px;
+    border-radius: 3px;
+    margin-bottom: 8px;
     display: flex;
-    align-items: center;
-    gap: 16px;
-    margin-top: 8px;
+}
+
+.palette-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+}
+
+.color-picker-group {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+.color-input-item {
+    flex: 1;
 }
 
 input[type="color"] {
     -webkit-appearance: none;
     border: none;
-    width: 48px;
-    height: 48px;
+    width: 100%;
+    height: 40px;
     cursor: pointer;
     background: none;
+    padding: 0;
 }
 input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
 input[type="color"]::-webkit-color-swatch {
@@ -128,7 +170,11 @@ input[type="color"]::-webkit-color-swatch {
     </div>
 
     <div class="sidebar-logo-container">
-      <img src="elk-design-logo.png" alt="ELK Digital" class="sidebar-logo">
+      <?php if ($logo_url): ?>
+        <img src="<?php echo htmlspecialchars($logo_url); ?>" alt="<?php echo htmlspecialchars($firm['name']); ?>" class="sidebar-logo">
+      <?php else: ?>
+        <img src="elk-design-logo.png" alt="ELK Digital" class="sidebar-logo">
+      <?php endif; ?>
     </div>
   </nav>
 
@@ -143,32 +189,74 @@ input[type="color"]::-webkit-color-swatch {
     <?php endif; ?>
 
     <form method="POST" class="settings-container">
-        <div class="form-group full" style="margin-bottom: 24px;">
+        <div class="form-group full" style="margin-bottom: 32px;">
             <label>Legal Firm Name</label>
             <input type="text" name="firm_name" value="<?php echo htmlspecialchars($firm['name']); ?>" required>
             <p style="font-size:11px; color: var(--text-faint); margin-top:8px;">This appears in report headers and the portal dashboard.</p>
         </div>
 
-        <div class="form-group full">
-            <label>Primary Brand Colour</label>
-            <div class="color-picker-wrapper">
-                <input type="color" name="primary_color" value="<?php echo htmlspecialchars($primary_color); ?>">
-                <input type="text" value="<?php echo htmlspecialchars($primary_color); ?>" readonly style="width: 120px; font-family: 'DM Mono', monospace; text-align: center;">
+        <div class="section-title" style="margin-top: 0; border: none; padding: 0; margin-bottom: 12px;">Branding Presets</div>
+        <div class="palette-grid">
+            <div class="palette-option" onclick="setPalette('#c5a059', '#050505')">
+                <div class="palette-preview">
+                    <div style="flex:3; background:#c5a059;"></div>
+                    <div style="flex:7; background:#050505;"></div>
+                </div>
+                <div class="palette-label">ELK Gold</div>
             </div>
-            <p style="font-size:11px; color: var(--text-faint); margin-top:8px;">The main accent color used for buttons, active states, and highlights.</p>
+            <div class="palette-option" onclick="setPalette('#1e40af', '#0f172a')">
+                <div class="palette-preview">
+                    <div style="flex:3; background:#1e40af;"></div>
+                    <div style="flex:7; background:#0f172a;"></div>
+                </div>
+                <div class="palette-label">GTA Blue</div>
+            </div>
+            <div class="palette-option" onclick="setPalette('#059669', '#064e3b')">
+                <div class="palette-preview">
+                    <div style="flex:3; background:#059669;"></div>
+                    <div style="flex:7; background:#064e3b;"></div>
+                </div>
+                <div class="palette-label">Emerald</div>
+            </div>
+            <div class="palette-option" onclick="setPalette('#ef4444', '#1a1a1a')">
+                <div class="palette-preview">
+                    <div style="flex:3; background:#ef4444;"></div>
+                    <div style="flex:7; background:#1a1a1a;"></div>
+                </div>
+                <div class="palette-label">ELK Red</div>
+            </div>
+        </div>
+
+        <div class="color-picker-group">
+            <div class="color-input-item">
+                <label>Accent Colour</label>
+                <input type="color" id="primary_color" name="primary_color" value="<?php echo htmlspecialchars($primary_color); ?>">
+            </div>
+            <div class="color-input-item">
+                <label>Surface Colour</label>
+                <input type="color" id="secondary_color" name="secondary_color" value="<?php echo htmlspecialchars($secondary_color); ?>">
+            </div>
+        </div>
+
+        <div class="form-group full" style="margin-bottom: 24px;">
+            <label>Logo URL (PNG/SVG)</label>
+            <input type="text" name="logo_url" value="<?php echo htmlspecialchars($logo_url); ?>" placeholder="https://yourfirm.com/logo.png">
+            <p style="font-size:11px; color: var(--text-faint); margin-top:8px;">Provide a public URL to your firm's logo. If empty, the ELK Digital logo will be used.</p>
         </div>
 
         <div style="margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--border-subtle);">
             <button type="submit" class="btn btn-primary" style="padding: 12px 24px;">Save Firm Settings</button>
         </div>
     </form>
-    
-    <div style="margin-top: 40px; padding: 24px; border: 1px solid var(--error); border-radius: 4px; background: rgba(229, 115, 115, 0.05); max-width: 640px;">
-        <h4 style="color: var(--error); margin-bottom: 8px;">Subscription & License</h4>
-        <p style="font-size: 13px; color: var(--text-muted);">Your account is currently managed by ELK Digital Super-Admin. Contact Jamie Elkins for billing or to add user seats.</p>
-    </div>
   </main>
 </div>
+
+<script>
+function setPalette(primary, secondary) {
+    document.getElementById('primary_color').value = primary;
+    document.getElementById('secondary_color').value = secondary;
+}
+</script>
 
 </body>
 </html>
