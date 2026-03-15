@@ -1,10 +1,10 @@
 :root {
-  --navy: #050505;
-  --navy-mid: #0a0a15;
-  --navy-light: #121220;
-  --gold: #c5a059;
-  --gold-light: #dfbc82;
-  --gold-dim: rgba(197, 160, 89, 0.15);
+  --brand-surface: #050505;
+  --brand-surface-mid: #0a0a15;
+  --brand-surface-light: #121220;
+  --brand-accent: #c5a059;
+  --brand-accent-light: #dfbc82;
+  --brand-accent-dim: rgba(197, 160, 89, 0.15);
   --cream: #ffffff;
   --cream-dim: rgba(255,255,255,0.05);
   --text: #ffffff;
@@ -15,7 +15,7 @@
   --border-subtle: rgba(255,255,255,0.08);
   --input-bg: #000000;
   --input-border: #27272a;
-  --input-focus: #c5a059;
+  --input-focus: var(--brand-accent);
   --radius: 2px;
   --radius-lg: 4px;
 }
@@ -24,7 +24,7 @@
 
 body {
   font-family: 'Barlow', sans-serif;
-  background: var(--navy);
+  background: var(--brand-surface);
   color: var(--text);
   min-height: 100vh;
   font-size: 15px;
@@ -41,7 +41,7 @@ body {
   max-width: 800px;
   max-height: 80vh;
   background: #111;
-  border: 2px solid var(--gold);
+  border: 2px solid var(--brand-accent);
   border-radius: 8px;
   z-index: 1000;
   padding: 24px;
@@ -368,15 +368,17 @@ textarea { resize: vertical; min-height: 80px; }
   vertical-align: middle;
 }
 
-.fin-table td:first-child {
+.fin-table td:first-child,
+.share-table td:first-child {
+  text-align: left;
   color: var(--text-muted);
   font-size: 13px;
 }
 
-.fin-table td:not(:first-child) {
+.fin-table td:not(:first-child),
+.share-table td:not(:first-child) {
   text-align: center;
 }
-
 .fin-table tr.subtotal td {
   background: var(--cream-dim);
   font-weight: 600;

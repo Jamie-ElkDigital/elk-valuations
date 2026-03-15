@@ -89,7 +89,6 @@ session_start();
 
     <div style="margin-top:auto; padding:32px 24px; display:flex; flex-direction:column; align-items:flex-start; gap:12px;">
       <img src="elk-design-logo.png" alt="ELK Digital" style="height:100px; width:auto; display:block; filter: drop-shadow(0 0 10px rgba(197,160,89,0.2));">
-      <div style="font-size:10px; text-transform:uppercase; letter-spacing:0.2em; color:var(--gold); font-weight:700; opacity:0.8;">Valuations</div>
     </div>
   </nav>
 
@@ -1201,7 +1200,7 @@ init();
     letter-spacing: 0.04em;
   ">
     <span>&copy; 2026 ELK Valuations (ELK Digital). All rights reserved.</span>
-    <span>Design &amp; Development by <a href="https://elkdesignservices.com" target="_blank" style="color:rgba(237,237,240,0.5); text-decoration:none; border-bottom:1px solid rgba(102,14,12,0.4);">ELK Digital</a> &mdash; elkdesignservices.com <span style="margin-left:8px; opacity:0.5;">
+    <span>Design &amp; Development by <a href="https://elkdesignservices.com" target="_blank" style="color:rgba(237,237,240,0.5); text-decoration:none; border-bottom:1px solid rgba(102,14,12,0.4);">ELK Digital</a> &mdash; elkdesignservices.com <span style="margin-left:8px; color:#ffffff; opacity:0.8;">
       <?php 
         $version = getenv('APP_VERSION') ?: '3.1.x';
         $buildTime = getenv('BUILD_TIME') ?: date('j M Y H:i');
