@@ -259,20 +259,25 @@ input[type="color"]::-webkit-color-swatch {
 
                 <div style="font-size:11px; color: var(--text-faint); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Presets</div>
                 <div class="palette-grid">
+                    <!-- DARK THEMES -->
                     <div class="palette-option" onclick="setPalette('#c5a059', '#050505')">
                         <div class="palette-preview"><div style="flex:3; background:#c5a059;"></div><div style="flex:7; background:#050505;"></div></div>
-                        <div class="palette-label">ELK Gold (Dark)</div>
+                        <div class="palette-label">Midnight Gold</div>
                     </div>
                     <div class="palette-option" onclick="setPalette('#1e40af', '#0f172a')">
                         <div class="palette-preview"><div style="flex:3; background:#1e40af;"></div><div style="flex:7; background:#0f172a;"></div></div>
-                        <div class="palette-label">GTA Blue (Dark)</div>
+                        <div class="palette-label">Deep Oceanic</div>
+                    </div>
+                    <div class="palette-option" onclick="setPalette('#059669', '#064e3b')">
+                        <div class="palette-preview"><div style="flex:3; background:#059669;"></div><div style="flex:7; background:#064e3b;"></div></div>
+                        <div class="palette-label">Forest Night</div>
                     </div>
                     <div class="palette-option" onclick="setPalette('#ef4444', '#1a1a1a')">
                         <div class="palette-preview"><div style="flex:3; background:#ef4444;"></div><div style="flex:7; background:#1a1a1a;"></div></div>
-                        <div class="palette-label">ELK Red (Dark)</div>
+                        <div class="palette-label">Ruby Noir</div>
                     </div>
                     
-                    <!-- REAL LIGHT THEMES -->
+                    <!-- LIGHT THEMES -->
                     <div class="palette-option" onclick="setPalette('#1e40af', '#ffffff')">
                         <div class="palette-preview"><div style="flex:3; background:#1e40af;"></div><div style="flex:7; background:#ffffff;"></div></div>
                         <div class="palette-label">Corporate Light</div>
