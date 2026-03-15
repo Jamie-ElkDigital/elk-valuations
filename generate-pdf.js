@@ -25,8 +25,7 @@ const fs = require('fs');
                     '--disable-dev-shm-usage',
                     '--disable-gpu',
                     '--disable-extensions',
-                    '--font-render-hinting=none',
-                    '--single-process'
+                    '--font-render-hinting=none'
                 ]
             });
 
@@ -37,7 +36,7 @@ const fs = require('fs');
 
             // Set content and wait for network to be idle (ensure images/fonts load)
             await page.setContent(html, { 
-                waitUntil: ['load', 'networkidle0'],
+                waitUntil: ['load', 'networkidle2'],
                 timeout: 30000 
             });
 
