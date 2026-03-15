@@ -154,10 +154,10 @@ header {
 }
 
 .nav-item.active {
-  background: rgba(102,14,12,0.15);
-  border-color: rgba(102,14,12,0.5);
-  border-left: 3px solid var(--gold);
-  color: var(--gold-light);
+  background: rgba(197, 160, 89, 0.1);
+  border-color: rgba(197, 160, 89, 0.3);
+  border-left: 3px solid var(--brand-accent);
+  color: var(--brand-accent-light);
   font-weight: 500;
 }
 
@@ -332,9 +332,9 @@ textarea { resize: vertical; min-height: 80px; }
 .section-title .pill {
   font-family: 'Barlow', sans-serif;
   font-size: 10px;
-  background: rgba(102,14,12,0.15);
+  background: rgba(197, 160, 89,0.15);
   color: var(--gold-light);
-  border: 1px solid rgba(102,14,12,0.3);
+  border: 1px solid rgba(197, 160, 89,0.3);
   padding: 2px 8px;
   border-radius: 20px;
   text-transform: uppercase;
@@ -388,12 +388,12 @@ textarea { resize: vertical; min-height: 80px; }
 }
 
 .fin-table tr.total td {
-  background: rgba(102,14,12,0.1);
+  background: rgba(197, 160, 89,0.1);
   font-weight: 600;
   color: var(--gold-light);
   font-family: 'DM Mono', monospace;
   font-size: 13px;
-  border-top: 1px solid rgba(102,14,12,0.3);
+  border-top: 1px solid rgba(197, 160, 89,0.3);
 }
 
 .fin-table input[type="number"] {
@@ -439,8 +439,8 @@ textarea { resize: vertical; min-height: 80px; }
 }
 
 .adj-row.total-row {
-  background: rgba(102,14,12,0.12);
-  border-top: 1px solid rgba(102,14,12,0.3);
+  background: rgba(197, 160, 89,0.12);
+  border-top: 1px solid rgba(197, 160, 89,0.3);
   border-bottom: none;
   font-weight: 600;
   color: var(--gold-light);
@@ -502,7 +502,7 @@ textarea { resize: vertical; min-height: 80px; }
 .multiple-card:hover { border-color: var(--text-muted); }
 
 .multiple-card.selected {
-  background: rgba(102,14,12,0.15);
+  background: rgba(197, 160, 89,0.15);
   border-color: var(--gold);
 }
 
@@ -527,7 +527,7 @@ textarea { resize: vertical; min-height: 80px; }
   position: absolute;
   top: -60px; right: -60px;
   width: 200px; height: 200px;
-  background: radial-gradient(circle, rgba(102,14,12,0.2) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(197, 160, 89,0.2) 0%, transparent 70%);
   pointer-events: none;
 }
 
