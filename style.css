@@ -157,7 +157,7 @@ header {
   background: rgba(102,14,12,0.15);
   border-color: rgba(102,14,12,0.5);
   border-left: 3px solid var(--gold);
-  color: #f08080;
+  color: var(--gold-light);
   font-weight: 500;
 }
 
@@ -212,7 +212,7 @@ header {
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.14em;
-  color: #f08080;
+  color: var(--gold-light);
   font-weight: 600;
   margin-bottom: 8px;
 }
@@ -333,7 +333,7 @@ textarea { resize: vertical; min-height: 80px; }
   font-family: 'Barlow', sans-serif;
   font-size: 10px;
   background: rgba(102,14,12,0.15);
-  color: #f08080;
+  color: var(--gold-light);
   border: 1px solid rgba(102,14,12,0.3);
   padding: 2px 8px;
   border-radius: 20px;
@@ -388,7 +388,7 @@ textarea { resize: vertical; min-height: 80px; }
 .fin-table tr.total td {
   background: rgba(102,14,12,0.1);
   font-weight: 600;
-  color: #f08080;
+  color: var(--gold-light);
   font-family: 'DM Mono', monospace;
   font-size: 13px;
   border-top: 1px solid rgba(102,14,12,0.3);
@@ -441,7 +441,7 @@ textarea { resize: vertical; min-height: 80px; }
   border-top: 1px solid rgba(102,14,12,0.3);
   border-bottom: none;
   font-weight: 600;
-  color: #f08080;
+  color: var(--gold-light);
   margin-top: 4px;
 }
 
@@ -553,7 +553,7 @@ textarea { resize: vertical; min-height: 80px; }
 
 .val-point .label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 6px; }
 .val-point .amount { font-family: 'Barlow', sans-serif; font-size: 32px; color: var(--cream); }
-.val-point.mid .amount { font-size: 44px; color: #f08080; }
+.val-point.mid .amount { font-size: 44px; color: var(--gold-light); }
 .val-point .sublabel { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
 
 .results-grid {
@@ -594,7 +594,7 @@ textarea { resize: vertical; min-height: 80px; }
 .breakdown-row .year { font-size: 12px; color: var(--text-muted); }
 .breakdown-row .ebitda-val { font-family: 'DM Mono', monospace; font-size: 13px; }
 .breakdown-row .weight { font-size: 11px; color: var(--text-muted); background: var(--cream-dim); padding: 2px 8px; border-radius: 20px; }
-.breakdown-row .weighted { font-family: 'DM Mono', monospace; font-size: 13px; color: #f08080; }
+.breakdown-row .weighted { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--gold-light); }
 
 .share-table {
   width: 100%;
@@ -637,7 +637,7 @@ textarea { resize: vertical; min-height: 80px; }
   color: #ffffff;
 }
 
-.btn-primary:hover { background: #7a1210; }
+.btn-primary:hover { background: #8a6d3b; }
 
 .btn-outline {
   background: transparent;
