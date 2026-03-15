@@ -27,7 +27,6 @@ The application has successfully transitioned from a single-firm tool into a mul
 
 ### Phase 4: Professionalization & Scale
 *   [x] **High-Fidelity PDF Export:** Professional, branded PDF report generation via Puppeteer.
-*   [ ] **Dynamic Whitelabeling:** Support for custom subdomains (e.g., `gta.valuations.elkdigital.co.uk`).
 *   [ ] **AI Logic Protection:** Moving core prompts behind a protected ELK Digital internal API.
 
 ### Phase 5: Commercial SaaS Launch
