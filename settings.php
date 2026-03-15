@@ -36,6 +36,25 @@ $firm = $stmt->fetch();
 $primary_color = $firm['primary_color'] ?? '#c5a059';
 $secondary_color = $firm['secondary_color'] ?? '#050505';
 $logo_url = $firm['logo_url'] ?? '';
+
+// Helper for dynamic surface variations
+function adjustBrightness($hex, $steps) {
+    $steps = max(-255, min(255, $steps));
+    $hex = str_replace('#', '', $hex);
+    if (strlen($hex) == 3) {
+        $hex = str_repeat(substr($hex, 0, 1), 2) . str_repeat(substr($hex, 1, 1), 2) . str_repeat(substr($hex, 2, 1), 2);
+    }
+    $r = hexdec(substr($hex, 0, 2));
+    $g = hexdec(substr($hex, 2, 2));
+    $b = hexdec(substr($hex, 4, 2));
+    $r = max(0, min(255, $r + $steps));
+    $g = max(0, min(255, $g + $steps));
+    $b = max(0, min(255, $b + $steps));
+    return '#' . str_pad(dechex($r), 2, '0', STR_PAD_LEFT) . str_pad(dechex($g), 2, '0', STR_PAD_LEFT) . str_pad(dechex($b), 2, '0', STR_PAD_LEFT);
+}
+
+$surface_mid = adjustBrightness($secondary_color, 15);
+$surface_light = adjustBrightness($secondary_color, 30);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -46,11 +65,16 @@ $logo_url = $firm['logo_url'] ?? '';
 <link rel="icon" type="image/webp" href="favicon.webp">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=<?php echo filemtime('style.css'); ?>">
+<link rel="stylesheet" href="style.css?v=3.2.1">
 <style>
 :root {
+  /* Dynamic overrides from database */
   --brand-accent: <?php echo $primary_color; ?>;
   --brand-surface: <?php echo $secondary_color; ?>;
+  --brand-surface-mid: <?php echo $surface_mid; ?>;
+  --brand-surface-light: <?php echo $surface_light; ?>;
+  
+  /* Derived approximations */
   --brand-accent-light: <?php echo $primary_color; ?>; 
   --brand-accent-dim: <?php echo $primary_color; ?>26;
   --brand-accent-border: <?php echo $primary_color; ?>4d;
@@ -250,6 +274,28 @@ input[type="color"]::-webkit-color-swatch {
     </form>
   </main>
 </div>
+
+  <footer style="
+    background: #0d0d18;
+    border-top: 1px solid rgba(197, 160, 89, 0.1);
+    padding: 16px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: 'Barlow', sans-serif;
+    font-size: 11px;
+    color: rgba(237,237,240,0.3);
+    letter-spacing: 0.04em;
+  ">
+    <span>&copy; 2026 ELK Valuations (ELK Digital). All rights reserved.</span>
+    <span>Design &amp; Development by <a href="https://elkdesignservices.com" target="_blank" style="color:rgba(237,237,240,0.5); text-decoration:none; border-bottom:1px solid rgba(197, 160, 89, 0.2);">ELK Digital</a> &mdash; elkdesignservices.com <span style="margin-left:8px; color:#ffffff; opacity:1.0;">
+      <?php 
+        $version = getenv('APP_VERSION') ?: '3.2.x';
+        $buildTime = getenv('BUILD_TIME') ?: date('j M Y H:i');
+        echo "v{$version} (Built: {$buildTime})"; 
+      ?>
+    </span></span>
+  </footer>
 
 <script>
 function setPalette(primary, secondary) {

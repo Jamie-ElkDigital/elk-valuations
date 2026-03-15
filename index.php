@@ -59,7 +59,7 @@ $surface_light = adjustBrightness($secondary_color, 30);
 <link rel="icon" type="image/webp" href="favicon.webp">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=<?php echo filemtime('style.css'); ?>">
+<link rel="stylesheet" href="style.css?v=3.2.1">
 <style>
 :root {
   /* Dynamic overrides from database */
@@ -70,9 +70,9 @@ $surface_light = adjustBrightness($secondary_color, 30);
   
   /* Derived approximations */
   --brand-accent-light: <?php echo $primary_color; ?>; 
-  --brand-accent-dim: <?php echo $primary_color; ?>26; /* 15% opacity hex */
-  --brand-accent-border: <?php echo $primary_color; ?>4d; /* 30% opacity hex */
-  --brand-accent-glow: <?php echo $primary_color; ?>33; /* 20% opacity hex */
+  --brand-accent-dim: <?php echo $primary_color; ?>26;
+  --brand-accent-border: <?php echo $primary_color; ?>4d;
+  --brand-accent-glow: <?php echo $primary_color; ?>33;
 }
 </style>
 </head>
@@ -1263,7 +1263,7 @@ init();
 
   <footer style="
     background: #0d0d18;
-    border-top: 1px solid rgba(102,14,12,0.25);
+    border-top: 1px solid rgba(197, 160, 89, 0.1);
     padding: 16px 40px;
     display: flex;
     align-items: center;
@@ -1274,9 +1274,9 @@ init();
     letter-spacing: 0.04em;
   ">
     <span>&copy; 2026 ELK Valuations (ELK Digital). All rights reserved.</span>
-    <span>Design &amp; Development by <a href="https://elkdesignservices.com" target="_blank" style="color:rgba(237,237,240,0.5); text-decoration:none; border-bottom:1px solid rgba(102,14,12,0.4);">ELK Digital</a> &mdash; elkdesignservices.com <span style="margin-left:8px; color:#ffffff; opacity:0.8;">
+    <span>Design &amp; Development by <a href="https://elkdesignservices.com" target="_blank" style="color:rgba(237,237,240,0.5); text-decoration:none; border-bottom:1px solid rgba(197,160,89,0.2);">ELK Digital</a> &mdash; elkdesignservices.com <span style="margin-left:8px; color:#ffffff; opacity:1.0;">
       <?php 
-        $version = getenv('APP_VERSION') ?: '3.1.x';
+        $version = getenv('APP_VERSION') ?: '3.2.x';
         $buildTime = getenv('BUILD_TIME') ?: date('j M Y H:i');
         echo "v{$version} (Built: {$buildTime})"; 
       ?>
