@@ -1,7 +1,7 @@
 <?php
 /**
  * ELK Valuations - Save API
- * Saves the valuation data to Cloud SQL using organized columns.
+ * Saves or Updates the valuation data.
  */
 
 session_start();
@@ -28,25 +28,10 @@ if (!$input || empty($input['companyName'])) {
 try {
     $pdo = DB::getInstance();
     
-    // Get session context or default to GTA Accounting (Firm 1)
     $firm_id = $_SESSION['firm_id'] ?? 1;
     $user_id = $_SESSION['user_id'] ?? 1;
 
-    $sql = "INSERT INTO valuations (
-                firm_id, user_id, client_name, company_number, sector, 
-                year_end, years_trading, employees, purpose, report_date, 
-                financials_json, adjustments_json, shareholders_json, 
-                methodology_json, valuation_mid, accountant_notes, ai_narrative
-            ) VALUES (
-                :firm, :user, :client, :co_num, :sector,
-                :year_end, :years_trad, :emp, :purpose, :rep_date,
-                :fin_json, :adj_json, :sh_json,
-                :meth_json, :val_mid, :notes, :ai_nar
-            )";
-    
-    $stmt = $pdo->prepare($sql);
-    
-    // Prepare JSON blobs
+    // Methodology JSON
     $meth_json = json_encode([
         'weighting' => $input['weighting'] ?? [],
         'multiples' => $input['multiples'] ?? [],
@@ -54,7 +39,7 @@ try {
         'deductionDesc' => $input['deductionDesc'] ?? ''
     ]);
 
-    $stmt->execute([
+    $data = [
         'firm'       => $firm_id,
         'user'       => $user_id,
         'client'     => $input['companyName'],
@@ -65,6 +50,7 @@ try {
         'emp'        => (int)($input['employees'] ?? 0),
         'purpose'    => $input['purpose'] ?? '',
         'rep_date'   => $input['reportDate'] ?? '',
+        'bus_desc'   => $input['businessDesc'] ?? '',
         'fin_json'   => json_encode($input['financials'] ?? []),
         'adj_json'   => json_encode($input['adjustments'] ?? []),
         'sh_json'    => json_encode($input['shareholders'] ?? []),
@@ -72,13 +58,61 @@ try {
         'val_mid'    => $input['valuationMid'] ?? 0,
         'notes'      => $input['accountantNotes'] ?? '',
         'ai_nar'     => $input['aiNarrative'] ?? ''
-    ]);
+    ];
 
-    echo json_encode([
-        'success' => true,
-        'id' => $pdo->lastInsertId(),
-        'message' => 'Valuation saved successfully'
-    ]);
+    if (!empty($input['id'])) {
+        // UPDATE
+        $sql = "UPDATE valuations SET 
+                    client_name = :client,
+                    company_number = :co_num,
+                    sector = :sector,
+                    year_end = :year_end,
+                    years_trading = :years_trad,
+                    employees = :emp,
+                    purpose = :purpose,
+                    report_date = :rep_date,
+                    business_desc = :bus_desc,
+                    financials_json = :fin_json,
+                    adjustments_json = :adj_json,
+                    shareholders_json = :sh_json,
+                    methodology_json = :meth_json,
+                    valuation_mid = :val_mid,
+                    accountant_notes = :notes,
+                    ai_narrative = :ai_nar
+                WHERE id = :id AND firm_id = :firm";
+        
+        $data['id'] = (int)$input['id'];
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($data);
+        
+        echo json_encode([
+            'success' => true,
+            'id' => $data['id'],
+            'message' => 'Valuation updated successfully'
+        ]);
+    } else {
+        // INSERT
+        $sql = "INSERT INTO valuations (
+                    firm_id, user_id, client_name, company_number, sector, 
+                    year_end, years_trading, employees, purpose, report_date, 
+                    business_desc, financials_json, adjustments_json, shareholders_json, 
+                    methodology_json, valuation_mid, accountant_notes, ai_narrative
+                ) VALUES (
+                    :firm, :user, :client, :co_num, :sector,
+                    :year_end, :years_trad, :emp, :purpose, :rep_date,
+                    :bus_desc, :fin_json, :adj_json, :sh_json,
+                    :meth_json, :val_mid, :notes, :ai_nar
+                )";
+        
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($data);
+
+        echo json_encode([
+            'success' => true,
+            'id' => $pdo->lastInsertId(),
+            'message' => 'Valuation saved successfully'
+        ]);
+    }
 
 } catch (Exception $e) {
     http_response_code(500);

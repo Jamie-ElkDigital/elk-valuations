@@ -10,7 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     try {
         $pdo = DB::getInstance();
-        $stmt = $pdo->prepare("SELECT u.*, f.name as firm_name FROM users u JOIN firms f ON u.firm_id = f.id WHERE u.email = ?");
+        $stmt = $pdo->prepare("SELECT u.*, f.name as firm_name, f.slug as firm_slug FROM users u JOIN firms f ON u.firm_id = f.id WHERE u.email = ?");
         $stmt->execute([$email]);
         $user = $stmt->fetch();
 
@@ -20,8 +20,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['firm_id'] = $user['firm_id'];
             $_SESSION['user_name'] = $user['name'];
             $_SESSION['firm_name'] = $user['firm_name'];
+            $_SESSION['firm_slug'] = $user['firm_slug'];
             
-            header('Location: index.php');
+            if ($user['firm_slug'] === 'elk') {
+                header('Location: super-admin.php');
+            } else {
+                header('Location: dashboard.php');
+            }
             exit;
         } else {
             $error = 'Invalid email or password.';

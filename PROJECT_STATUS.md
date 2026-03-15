@@ -22,11 +22,11 @@ The application has successfully transitioned from a single-firm tool into a mul
 *   [x] **Multi-User Authentication:** Session-based security and firm isolation.
 *   [x] **Dynamic Theming Engine:** CSS-variable injection with professional presets.
 *   [x] **Self-Serve Branding Portal:** Firm admins can manage their own corporate identity.
-*   [ ] **ELK Super-Admin:** Dashboard for ELK Digital to manage subscriptions and monitor AI costs.
+*   [x] **View & Edit Mode:** Ability to reopen and refine saved valuations from the dashboard.
+*   [x] **ELK Super-Admin:** Dashboard for ELK Digital to manage subscriptions and monitor AI costs.
 
 ### Phase 4: Professionalization & Scale (NEXT)
 *   [ ] **High-Fidelity PDF Export:** Professional, branded PDF report generation.
-*   [ ] **View & Edit Mode:** Ability to reopen and refine saved valuations from the dashboard.
 *   [ ] **Dynamic Whitelabeling:** Support for custom subdomains (e.g., `gta.valuations.elkdigital.co.uk`).
 *   [ ] **AI Logic Protection:** Moving core prompts behind a protected ELK Digital internal API.
 

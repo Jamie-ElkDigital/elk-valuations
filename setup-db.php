@@ -49,15 +49,27 @@ try {
     if (!$existing) {
         $pdo->exec("INSERT INTO firms (name, slug, primary_color, secondary_color) 
                    VALUES ('GTA Accounting', 'gta', '#c5a059', '#050505')");
-        $firm_id = $pdo->lastInsertId();
+        $gta_id = $pdo->lastInsertId();
         
         // Initial user
         $password = password_hash('ELK_GTA_2026!', PASSWORD_DEFAULT);
         $pdo->exec("INSERT INTO users (firm_id, email, password_hash, name, role) 
-                   VALUES ($firm_id, 'jamie@elk.digital', '$password', 'Jamie Elkins', 'admin')");
-    } else {
-        // Update existing GTA entry to ensure secondary color is set
-        $pdo->exec("UPDATE firms SET secondary_color = '#050505' WHERE slug = 'gta' AND (secondary_color IS NULL OR secondary_color = '')");
+                   VALUES ($gta_id, 'jamie@elk.digital', '$password', 'Jamie Elkins', 'admin')");
+    }
+
+    // 4. Seed ELK Digital (Super Admin Firm)
+    $stmt = $pdo->prepare("SELECT id FROM firms WHERE slug = 'elk'");
+    $stmt->execute();
+    $elk = $stmt->fetch();
+
+    if (!$elk) {
+        $pdo->exec("INSERT INTO firms (name, slug, primary_color, secondary_color) 
+                   VALUES ('ELK Digital', 'elk', '#00ffcc', '#0a0a0a')");
+        $elk_id = $pdo->lastInsertId();
+
+        $password = password_hash('ELK_Super_2026!', PASSWORD_DEFAULT);
+        $pdo->exec("INSERT INTO users (firm_id, email, password_hash, name, role) 
+                   VALUES ($elk_id, 'admin@elk.digital', '$password', 'ELK Super Admin', 'admin')");
     }
 
     echo "Database setup/migration completed successfully.";

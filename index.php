@@ -49,6 +49,15 @@ function adjustBrightness($hex, $steps) {
 
 $surface_mid = adjustBrightness($secondary_color, 15);
 $surface_light = adjustBrightness($secondary_color, 30);
+
+// Fetch existing valuation if in Edit Mode
+$edit_data = null;
+if (isset($_GET['edit'])) {
+    $edit_id = (int)$_GET['edit'];
+    $stmt = $pdo->prepare("SELECT * FROM valuations WHERE id = ? AND firm_id = ?");
+    $stmt->execute([$edit_id, $firm_id]);
+    $edit_data = $stmt->fetch();
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -84,6 +93,9 @@ $surface_light = adjustBrightness($secondary_color, 30);
   --brand-accent-glow: <?php echo $primary_color; ?>33;
 }
 </style>
+<script>
+  window.EDIT_DATA = <?php echo $edit_data ? json_encode($edit_data) : 'null'; ?>;
+</script>
 </head>
 <body>
 
@@ -1056,6 +1068,7 @@ async function saveValuation() {
   
   // Gather all data
   const data = {
+    id: window.EDIT_DATA ? window.EDIT_DATA.id : null,
     companyName: document.getElementById('companyName')?.value,
     companyNumber: document.getElementById('companyNumber')?.value,
     sector: document.getElementById('sector')?.value,
@@ -1138,6 +1151,12 @@ async function saveValuation() {
     btn.innerHTML = '💾 Saved';
     document.getElementById('saveInfo').style.display = 'block';
     document.getElementById('saveTime').textContent = new Date().toLocaleTimeString();
+    
+    // If it was a new valuation, we might want to update window.EDIT_DATA with the new ID
+    if (!data.id && result.id) {
+        window.EDIT_DATA = { id: result.id };
+    }
+
     setTimeout(() => {
       btn.innerHTML = '💾 Save Valuation';
       btn.disabled = false;
@@ -1260,20 +1279,96 @@ Write 4-5 detailed paragraphs. Analyze the growth trends, discuss the balance sh
 
 // ── INIT ──
 function init() {
-  // Default adjustment rows based on View HR pattern
-  addAdjRow('Director salary adjustment', '', '', '');
-  addAdjRow('Director pension addback', '', '', '');
-  addAdjRow('Non-recurring / one-off costs', '', '', '');
+  if (window.EDIT_DATA) {
+    const d = window.EDIT_DATA;
+    document.getElementById('companyName').value = d.client_name || '';
+    document.getElementById('companyNumber').value = d.company_number || '';
+    document.getElementById('sector').value = d.sector || '';
+    document.getElementById('yearEnd').value = d.year_end || '';
+    document.getElementById('yearsTrading').value = d.years_trading || '';
+    document.getElementById('employees').value = d.employees || '';
+    document.getElementById('purpose').value = d.purpose || '';
+    document.getElementById('reportDate').value = d.report_date || '';
+    document.getElementById('businessDesc').value = d.business_desc || '';
 
-  // Default shareholders
-  addShareholderRow('', '', 'Ordinary');
+    // Financials
+    const fin = JSON.parse(d.financials_json || '{}');
+    if (fin.turnover) {
+      for (let i = 0; i < 3; i++) {
+        document.getElementById(`f_turn${i+1}`).value = fin.turnover[i] || 0;
+        document.getElementById(`f_cos${i+1}`).value = fin.cos[i] || 0;
+        document.getElementById(`f_admin${i+1}`).value = fin.admin[i] || 0;
+        document.getElementById(`f_other${i+1}`).value = fin.other[i] || 0;
+        document.getElementById(`f_dep${i+1}`).value = fin.depreciation[i] || 0;
+      }
+      if (fin.balanceSheet) {
+        document.getElementById('b_netassets').value = fin.balanceSheet.netAssets || 0;
+        document.getElementById('b_cash').value = fin.balanceSheet.cash || 0;
+        document.getElementById('b_debtors').value = fin.balanceSheet.debtors || 0;
+        document.getElementById('b_loans').value = fin.balanceSheet.loans || 0;
+      }
+    }
 
-  // Default weighting
-  document.getElementById('w123').classList.add('selected');
+    // Adjustments
+    const adj = JSON.parse(d.adjustments_json || '[]');
+    const adjContainer = document.getElementById('adjRows');
+    adjContainer.innerHTML = '';
+    adjRowCount = 0;
+    adj.forEach(a => addAdjRow(a.label, a.v1, a.v2, a.v3, a.note));
+    if (adj.length === 0) {
+      addAdjRow('Director salary adjustment', '', '', '');
+      addAdjRow('Director pension addback', '', '', '');
+      addAdjRow('Non-recurring / one-off costs', '', '', '');
+    }
 
-  // Set default report date
-  const now = new Date();
-  document.getElementById('reportDate').value = now.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+    // Shareholders
+    const sh = JSON.parse(d.shareholders_json || '[]');
+    const shContainer = document.getElementById('shareholderRows');
+    shContainer.innerHTML = '';
+    shareRowCount = 0;
+    sh.forEach(s => addShareholderRow(s.name, s.shares, s.class));
+    if (sh.length === 0) addShareholderRow('', '', 'Ordinary');
+
+    // Methodology
+    const meth = JSON.parse(d.methodology_json || '{}');
+    if (meth.weighting) {
+      weighting = meth.weighting;
+      const wKey = weighting.join('-');
+      document.querySelectorAll('.multiple-card').forEach(c => c.classList.remove('selected'));
+      if (wKey === '1-2-3') document.getElementById('w123').classList.add('selected');
+      else if (wKey === '1-1-3') document.getElementById('w113').classList.add('selected');
+      else if (wKey === '1-1-1') document.getElementById('w111').classList.add('selected');
+    }
+    if (meth.multiples) {
+      document.getElementById('multLow').value = meth.multiples.low || 2.5;
+      document.getElementById('multMid').value = meth.multiples.mid || 3.5;
+      document.getElementById('multHigh').value = meth.multiples.high || 5;
+    }
+    document.getElementById('deduction').value = meth.deduction || 0;
+    document.getElementById('deductionDesc').value = meth.deductionDesc || '';
+
+    // Narratives
+    document.getElementById('accountantNotes').value = d.accountant_notes || '';
+    document.getElementById('r_narrative').value = d.ai_narrative || '';
+
+    updateHeader();
+    calcFinancials();
+  } else {
+    // Default adjustment rows based on View HR pattern
+    addAdjRow('Director salary adjustment', '', '', '');
+    addAdjRow('Director pension addback', '', '', '');
+    addAdjRow('Non-recurring / one-off costs', '', '', '');
+
+    // Default shareholders
+    addShareholderRow('', '', 'Ordinary');
+
+    // Default weighting
+    document.getElementById('w123').classList.add('selected');
+
+    // Set default report date
+    const now = new Date();
+    document.getElementById('reportDate').value = now.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+  }
 }
 
 init();
