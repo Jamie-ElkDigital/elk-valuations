@@ -1,13 +1,14 @@
 steps:
-  # 1. Build the container image
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'europe-west2-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/elk-valuations:$COMMIT_SHA', '.']
+  # Use Kaniko for extremely fast builds with aggressive layer caching
+  - name: 'gcr.io/kaniko-project/executor:latest'
+    args:
+      - --destination=europe-west2-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/elk-valuations:$COMMIT_SHA
+      - --cache=true
+      - --cache-ttl=168h  # Cache layers for 7 days
+      - --dockerfile=Dockerfile
+      - --context=dir:///workspace
 
-  # 2. Push the image to Artifact Registry
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'europe-west2-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/elk-valuations:$COMMIT_SHA']
-
-  # 3. Deploy to Cloud Run with SaaS scaling configuration
+  # Deploy to Cloud Run with SaaS scaling configuration
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
     args:
