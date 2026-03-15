@@ -11,20 +11,40 @@ if (!isset($_SESSION['authenticated']) || !$_SESSION['authenticated']) {
 $firm_id = $_SESSION['firm_id'];
 $pdo = DB::getInstance();
 $message = '';
+$error = '';
 
+// Handle POST actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $name = $_POST['firm_name'] ?? '';
-    $primary_color = $_POST['primary_color'] ?? '#c5a059';
-    $secondary_color = $_POST['secondary_color'] ?? '#050505';
-    $logo_url = $_POST['logo_url'] ?? '';
+    $action = $_POST['action'] ?? 'save_settings';
 
-    try {
-        $stmt = $pdo->prepare("UPDATE firms SET name = ?, primary_color = ?, secondary_color = ?, logo_url = ? WHERE id = ?");
-        $stmt->execute([$name, $primary_color, $secondary_color, $logo_url, $firm_id]);
-        $_SESSION['firm_name'] = $name;
-        $message = 'Firm settings updated successfully.';
-    } catch (Exception $e) {
-        $message = 'Error: ' . $e->getMessage();
+    if ($action === 'save_settings') {
+        $name = $_POST['firm_name'] ?? '';
+        $primary_color = $_POST['primary_color'] ?? '#c5a059';
+        $secondary_color = $_POST['secondary_color'] ?? '#050505';
+        $logo_url = $_POST['logo_url'] ?? '';
+
+        try {
+            $stmt = $pdo->prepare("UPDATE firms SET name = ?, primary_color = ?, secondary_color = ?, logo_url = ? WHERE id = ?");
+            $stmt->execute([$name, $primary_color, $secondary_color, $logo_url, $firm_id]);
+            $_SESSION['firm_name'] = $name;
+            $message = 'Firm settings updated successfully.';
+        } catch (Exception $e) {
+            $error = 'Error: ' . $e->getMessage();
+        }
+    } elseif ($action === 'add_user') {
+        $user_name = $_POST['user_name'] ?? '';
+        $user_email = $_POST['user_email'] ?? '';
+        $user_pass = $_POST['user_pass'] ?? '';
+        $user_role = $_POST['user_role'] ?? 'user';
+
+        try {
+            $hash = password_hash($user_pass, PASSWORD_DEFAULT);
+            $stmt = $pdo->prepare("INSERT INTO users (firm_id, email, password_hash, name, role) VALUES (?, ?, ?, ?, ?)");
+            $stmt->execute([$firm_id, $user_email, $hash, $user_name, $user_role]);
+            $message = 'User added successfully.';
+        } catch (Exception $e) {
+            $error = 'Error adding user: ' . $e->getMessage();
+        }
     }
 }
 
@@ -36,6 +56,11 @@ $firm = $stmt->fetch();
 $primary_color = $firm['primary_color'] ?? '#c5a059';
 $secondary_color = $firm['secondary_color'] ?? '#050505';
 $logo_url = $firm['logo_url'] ?? '';
+
+// Fetch firm users
+$stmt = $pdo->prepare("SELECT id, name, email, role, created_at FROM users WHERE firm_id = ? ORDER BY created_at DESC");
+$stmt->execute([$firm_id]);
+$users = $stmt->fetchAll();
 
 // Helper for dynamic surface variations
 function adjustBrightness($hex, $steps) {
@@ -81,11 +106,17 @@ $surface_light = adjustBrightness($secondary_color, 30);
   --brand-accent-glow: <?php echo $primary_color; ?>33;
 }
 
+.settings-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    align-items: start;
+}
+
 .settings-container {
-    max-width: 640px;
     background: var(--brand-surface-mid);
     border: 1px solid var(--border-subtle);
-    padding: 40px;
+    padding: 32px;
     border-radius: var(--radius-lg);
 }
 
@@ -111,14 +142,14 @@ $surface_light = adjustBrightness($secondary_color, 30);
 }
 
 .palette-preview {
-    height: 32px;
+    height: 24px;
     border-radius: 3px;
     margin-bottom: 8px;
     display: flex;
 }
 
 .palette-label {
-    font-size: 10px;
+    font-size: 9px;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: var(--text-muted);
@@ -126,7 +157,7 @@ $surface_light = adjustBrightness($secondary_color, 30);
 
 .color-picker-group {
     display: flex;
-    gap: 24px;
+    gap: 20px;
     margin-bottom: 24px;
 }
 
@@ -138,7 +169,7 @@ input[type="color"] {
     -webkit-appearance: none;
     border: none;
     width: 100%;
-    height: 40px;
+    height: 36px;
     cursor: pointer;
     background: none;
     padding: 0;
@@ -149,14 +180,45 @@ input[type="color"]::-webkit-color-swatch {
     border-radius: 4px;
 }
 
-.alert-success {
-    background: rgba(16, 185, 129, 0.1);
-    border: 1px solid rgba(16, 185, 129, 0.2);
-    color: var(--success);
-    padding: 16px;
-    border-radius: 4px;
-    margin-bottom: 32px;
-    font-size: 14px;
+.user-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+.user-table th, .user-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-subtle);
+}
+.user-table th { color: var(--text-faint); text-transform: uppercase; font-size: 10px; letter-spacing: 0.1em; }
+
+.alert { padding: 16px; border-radius: 4px; margin-bottom: 32px; font-size: 14px; }
+.alert-success { background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); color: var(--success); }
+.alert-error { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #ef4444; }
+
+.modal {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--brand-surface-mid);
+    border: 1px solid var(--brand-accent);
+    padding: 40px;
+    border-radius: 8px;
+    z-index: 100;
+    width: 400px;
+    box-shadow: 0 0 50px rgba(0,0,0,0.8);
+}
+.overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.8);
+    z-index: 90;
 }
 </style>
 </head>
@@ -204,74 +266,128 @@ input[type="color"]::-webkit-color-swatch {
 
   <main class="main">
     <div class="page-header">
-      <h1 class="page-title">Firm Branding & Identity</h1>
-      <p class="page-desc">Customise how your firm appears to your staff and in generated reports.</p>
+      <h1 class="page-title">Firm Management</h1>
+      <p class="page-desc">Manage your firm's brand identity and team access.</p>
     </div>
 
     <?php if ($message): ?>
-        <div class="alert-success"><?php echo htmlspecialchars($message); ?></div>
+        <div class="alert alert-success"><?php echo htmlspecialchars($message); ?></div>
+    <?php endif; ?>
+    <?php if ($error): ?>
+        <div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div>
     <?php endif; ?>
 
-    <form method="POST" class="settings-container">
-        <div class="form-group full" style="margin-bottom: 32px;">
-            <label>Legal Firm Name</label>
-            <input type="text" name="firm_name" value="<?php echo htmlspecialchars($firm['name']); ?>" required>
-            <p style="font-size:11px; color: var(--text-faint); margin-top:8px;">This appears in report headers and the portal dashboard.</p>
+    <div class="settings-grid">
+        <!-- BRANDING SECTION -->
+        <div class="settings-container">
+            <h2 class="section-title" style="margin-top:0;">Branding & Identity</h2>
+            <form method="POST">
+                <input type="hidden" name="action" value="save_settings">
+                <div class="form-group full" style="margin-bottom: 24px;">
+                    <label>Legal Firm Name</label>
+                    <input type="text" name="firm_name" value="<?php echo htmlspecialchars($firm['name']); ?>" required>
+                </div>
+
+                <div style="font-size:11px; color: var(--text-faint); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Presets</div>
+                <div class="palette-grid">
+                    <div class="palette-option" onclick="setPalette('#c5a059', '#050505')">
+                        <div class="palette-preview"><div style="flex:3; background:#c5a059;"></div><div style="flex:7; background:#050505;"></div></div>
+                        <div class="palette-label">ELK Gold</div>
+                    </div>
+                    <div class="palette-option" onclick="setPalette('#1e40af', '#0f172a')">
+                        <div class="palette-preview"><div style="flex:3; background:#1e40af;"></div><div style="flex:7; background:#0f172a;"></div></div>
+                        <div class="palette-label">GTA Blue</div>
+                    </div>
+                    <div class="palette-option" onclick="setPalette('#059669', '#064e3b')">
+                        <div class="palette-preview"><div style="flex:3; background:#059669;"></div><div style="flex:7; background:#064e3b;"></div></div>
+                        <div class="palette-label">Emerald</div>
+                    </div>
+                    <div class="palette-option" onclick="setPalette('#ef4444', '#1a1a1a')">
+                        <div class="palette-preview"><div style="flex:3; background:#ef4444;"></div><div style="flex:7; background:#1a1a1a;"></div></div>
+                        <div class="palette-label">ELK Red</div>
+                    </div>
+                </div>
+
+                <div class="color-picker-group">
+                    <div class="color-input-item">
+                        <label>Accent</label>
+                        <input type="color" id="primary_color" name="primary_color" value="<?php echo htmlspecialchars($primary_color); ?>">
+                    </div>
+                    <div class="color-input-item">
+                        <label>Surface</label>
+                        <input type="color" id="secondary_color" name="secondary_color" value="<?php echo htmlspecialchars($secondary_color); ?>">
+                    </div>
+                </div>
+
+                <div class="form-group full" style="margin-bottom: 24px;">
+                    <label>Logo URL</label>
+                    <input type="text" name="logo_url" value="<?php echo htmlspecialchars($logo_url); ?>" placeholder="https://yourfirm.com/logo.png">
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width:100%;">Save Branding</button>
+            </form>
         </div>
 
-        <div class="section-title" style="margin-top: 0; border: none; padding: 0; margin-bottom: 12px;">Branding Presets</div>
-        <div class="palette-grid">
-            <div class="palette-option" onclick="setPalette('#c5a059', '#050505')">
-                <div class="palette-preview">
-                    <div style="flex:3; background:#c5a059;"></div>
-                    <div style="flex:7; background:#050505;"></div>
-                </div>
-                <div class="palette-label">ELK Gold</div>
+        <!-- USER SECTION -->
+        <div class="settings-container">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                <h2 class="section-title" style="margin:0;">Team Members</h2>
+                <button class="btn btn-outline" onclick="showAddUser()" style="font-size: 10px; padding: 6px 12px;">+ Add User</button>
             </div>
-            <div class="palette-option" onclick="setPalette('#1e40af', '#0f172a')">
-                <div class="palette-preview">
-                    <div style="flex:3; background:#1e40af;"></div>
-                    <div style="flex:7; background:#0f172a;"></div>
-                </div>
-                <div class="palette-label">GTA Blue</div>
-            </div>
-            <div class="palette-option" onclick="setPalette('#059669', '#064e3b')">
-                <div class="palette-preview">
-                    <div style="flex:3; background:#059669;"></div>
-                    <div style="flex:7; background:#064e3b;"></div>
-                </div>
-                <div class="palette-label">Emerald</div>
-            </div>
-            <div class="palette-option" onclick="setPalette('#ef4444', '#1a1a1a')">
-                <div class="palette-preview">
-                    <div style="flex:3; background:#ef4444;"></div>
-                    <div style="flex:7; background:#1a1a1a;"></div>
-                </div>
-                <div class="palette-label">ELK Red</div>
-            </div>
+            
+            <table class="user-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($users as $u): ?>
+                    <tr>
+                        <td style="color: var(--text-main); font-weight: 500;"><?php echo htmlspecialchars($u['name']); ?></td>
+                        <td><?php echo htmlspecialchars($u['email']); ?></td>
+                        <td><span style="text-transform: uppercase; font-size: 9px; padding: 2px 6px; border: 1px solid var(--border-subtle); border-radius: 4px;"><?php echo $u['role']; ?></span></td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
         </div>
+    </div>
 
-        <div class="color-picker-group">
-            <div class="color-input-item">
-                <label>Accent Colour</label>
-                <input type="color" id="primary_color" name="primary_color" value="<?php echo htmlspecialchars($primary_color); ?>">
+    <!-- ADD USER MODAL -->
+    <div id="addUserModal" class="modal">
+        <h3 style="margin-top: 0; color: var(--brand-accent);">Add Team Member</h3>
+        <form method="POST">
+            <input type="hidden" name="action" value="add_user">
+            <div class="form-group" style="margin-bottom: 16px;">
+                <label>Full Name</label>
+                <input type="text" name="user_name" required placeholder="e.g. Sarah Jenkins">
             </div>
-            <div class="color-input-item">
-                <label>Surface Colour</label>
-                <input type="color" id="secondary_color" name="secondary_color" value="<?php echo htmlspecialchars($secondary_color); ?>">
+            <div class="form-group" style="margin-bottom: 16px;">
+                <label>Email Address</label>
+                <input type="email" name="user_email" required placeholder="sarah@firm.com">
             </div>
-        </div>
+            <div class="form-group" style="margin-bottom: 16px;">
+                <label>Role</label>
+                <select name="user_role" style="width:100%; background:var(--brand-surface); border:1px solid var(--border-subtle); color:var(--text); padding:10px; border-radius:4px;">
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 24px;">
+                <label>Temporary Password</label>
+                <input type="text" name="user_pass" required value="VAL_<?php echo rand(1000,9999); ?>!">
+            </div>
+            <div style="display: flex; gap: 12px;">
+                <button type="submit" class="btn btn-primary" style="flex: 1;">Create User</button>
+                <button type="button" class="btn btn-outline" onclick="hideAddUser()" style="flex: 1;">Cancel</button>
+            </div>
+        </form>
+    </div>
+    <div id="modalOverlay" class="overlay" onclick="hideAddUser()"></div>
 
-        <div class="form-group full" style="margin-bottom: 24px;">
-            <label>Logo URL (PNG/SVG)</label>
-            <input type="text" name="logo_url" value="<?php echo htmlspecialchars($logo_url); ?>" placeholder="https://yourfirm.com/logo.png">
-            <p style="font-size:11px; color: var(--text-faint); margin-top:8px;">Provide a public URL to your firm's logo. If empty, the ELK Digital logo will be used.</p>
-        </div>
-
-        <div style="margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--border-subtle);">
-            <button type="submit" class="btn btn-primary" style="padding: 12px 24px;">Save Firm Settings</button>
-        </div>
-    </form>
   </main>
 </div>
 
@@ -301,6 +417,14 @@ input[type="color"]::-webkit-color-swatch {
 function setPalette(primary, secondary) {
     document.getElementById('primary_color').value = primary;
     document.getElementById('secondary_color').value = secondary;
+}
+function showAddUser() {
+    document.getElementById('addUserModal').style.display = 'block';
+    document.getElementById('modalOverlay').style.display = 'block';
+}
+function hideAddUser() {
+    document.getElementById('addUserModal').style.display = 'none';
+    document.getElementById('modalOverlay').style.display = 'none';
 }
 </script>
 
