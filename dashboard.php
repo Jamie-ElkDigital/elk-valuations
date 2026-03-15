@@ -257,13 +257,10 @@ $surface_light = adjustBrightness($secondary_color, 30);
     letter-spacing: 0.04em;
   ">
     <span>&copy; 2026 ELK Valuations (ELK Digital). All rights reserved.</span>
-    <span>Design &amp; Development by <a href="https://elkdesignservices.com" target="_blank" style="color:rgba(237,237,240,0.5); text-decoration:none; border-bottom:1px solid rgba(197,160,89,0.2);">ELK Digital</a> &mdash; elkdesignservices.com <span style="margin-left:8px; color:#ffffff; opacity:1.0;">
-      <?php 
-        $version = getenv('APP_VERSION') ?: '3.2.x';
-        $buildTime = getenv('BUILD_TIME') ?: date('j M Y H:i');
-        echo "v{$version} (Built: {$buildTime})"; 
-      ?>
+    <span>Design &amp; Development by <a href="https://elkdesignservices.com" target="_blank" style="color:rgba(237,237,240,0.5); text-decoration:none; border-bottom:1px solid rgba(197, 160, 89, 0.2);">ELK Digital</a> &mdash; elkdesignservices.com <span style="margin-left:8px; color:#ffffff; opacity:1.0;">
+      v3.2.1 (Built: 15 Mar 2026 14:30)
     </span></span>
+
   </footer>
 </body>
 </html>
