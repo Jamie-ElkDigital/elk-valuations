@@ -81,48 +81,9 @@ header {
   z-index: 100;
 }
 
-.logo {
+.header-left {
   display: flex;
   align-items: center;
-  gap: 14px;
-}
-
-.logo-mark {
-  width: 36px;
-  height: 36px;
-  background: var(--gold);
-  border-radius: 3px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: 'Barlow', sans-serif;
-  font-weight: 800;
-  font-size: 11px;
-  letter-spacing: 0.05em;
-  color: var(--navy);
-  flex-shrink: 0;
-}
-
-.logo-text {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-
-.logo-name {
-  font-family: 'Barlow', sans-serif;
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--cream);
-  letter-spacing: 0.02em;
-}
-
-.logo-sub {
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: rgba(255,120,118,0.8);
-  font-weight: 500;
 }
 
 .header-right {
@@ -132,10 +93,10 @@ header {
 }
 
 .header-label {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gold-light);
+  letter-spacing: 0.02em;
 }
 
 /* ── LAYOUT ── */
@@ -149,13 +110,14 @@ header {
 .sidebar {
   background: var(--navy-mid);
   border-right: 1px solid var(--border-subtle);
-  padding: 32px 0;
+  padding: 32px 0 0;
   position: sticky;
   top: 64px;
   height: calc(100vh - 64px);
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
-
 .sidebar-section {
   padding: 0 20px 24px;
   border-bottom: 1px solid var(--border-subtle);

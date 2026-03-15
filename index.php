@@ -20,15 +20,12 @@ session_start();
 <body>
 
 <header>
-    <div class="logo">
-    <img src="elk-design-logo.png" alt="ELK Valuations" style="height:32px; width:auto; display:block;">
-    <span style="width:1px; height:28px; background:rgba(255,255,255,0.15); display:block;margin:0 4px;"></span>
-    <span style="font-size:10px; text-transform:uppercase; letter-spacing:0.14em; color:rgba(255,120,118,0.7); font-weight:600; font-family:'Barlow',sans-serif;">Business
-      Valuations</span>
-    </div>
-    <div class="header-right">
-      <span class="header-label" id="clientNameDisplay">New Valuation</span>
-    </div>
+  <div class="header-left">
+    <span class="header-label" id="clientNameDisplay">New Valuation</span>
+  </div>
+  <div class="header-right">
+    <span style="font-size:10px; text-transform:uppercase; letter-spacing:0.12em; color:var(--text-faint);">ELK Valuations Cloud</span>
+  </div>
 </header>
 
 <div id="debugOverlay" onclick="closeDebug()"></div>
@@ -88,6 +85,11 @@ session_start();
         <li><span style="color:var(--gold);">○</span> High-Fidelity PDF Export</li>
         <li><span style="color:var(--gold);">○</span> Multi-User Auth</li>
       </ul>
+    </div>
+
+    <div style="margin-top:auto; padding:32px 24px; display:flex; flex-direction:column; align-items:flex-start; gap:12px;">
+      <img src="elk-design-logo.png" alt="ELK Digital" style="height:100px; width:auto; display:block; filter: drop-shadow(0 0 10px rgba(197,160,89,0.2));">
+      <div style="font-size:10px; text-transform:uppercase; letter-spacing:0.2em; color:var(--gold); font-weight:700; opacity:0.8;">Valuations</div>
     </div>
   </nav>
 
