@@ -73,6 +73,22 @@ function injectTheme($primary, $secondary) {
       --border-subtle: $border_subtle;
       --input-bg: $input_bg;
       --input-border: $input_border;
+      
+      /* Typography */
+      --font-primary: 'Open Sans', sans-serif;
+      --title-font: 'Open Sans', sans-serif;
+      --secondary-title-font: 'Open Sans', sans-serif;
+    }
+    
+    /* Global font refinements */
+    body, input, select, textarea, button {
+        font-family: var(--font-primary);
+        letter-spacing: -0.01em;
+    }
+    h1, h2, h3, .page-title {
+        font-family: var(--title-font);
+        font-weight: 700;
+        letter-spacing: -0.02em;
     }
     </style>";
 }

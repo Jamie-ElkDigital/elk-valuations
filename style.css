@@ -29,17 +29,26 @@
   /* ── CONSTANTS ── */
   --radius: 2px;
   --radius-lg: 4px;
+
+  /* ── TYPOGRAPHY DEFAULTS (Overridden by theme-engine) ── */
+  --font-primary: 'Barlow', sans-serif;
+  --title-font: 'Barlow', sans-serif;
+  --secondary-title-font: 'Barlow', sans-serif;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  font-family: 'Barlow', sans-serif;
+  font-family: var(--font-primary), sans-serif;
   background: var(--brand-surface);
   color: var(--text-main);
   min-height: 100vh;
   font-size: 15px;
   line-height: 1.6;
+}
+
+h1, h2, h3, .page-title {
+  font-family: var(--title-font), sans-serif;
 }
 
 /* Debug Modal */
@@ -150,7 +159,7 @@ header {
 }
 
 .nav-item:hover {
-  background: var(--cream-dim);
+  background: var(--bg-dim);
   color: var(--text-main);
 }
 
@@ -219,7 +228,6 @@ header {
 }
 
 .page-title {
-  font-family: 'Barlow', sans-serif;
   font-size: 26px;
   font-weight: 600;
   color: var(--text-main);
@@ -256,7 +264,7 @@ header {
 
 /* ── SECTION TITLES ── */
 .section-title {
-  font-family: 'Barlow', sans-serif;
+  font-family: var(--secondary-title-font), sans-serif;
   font-size: 16px;
   font-weight: 600;
   color: var(--text-main);
@@ -270,7 +278,7 @@ header {
 }
 
 .section-title .pill {
-  font-family: 'Barlow', sans-serif;
+  font-family: var(--font-primary), sans-serif;
   font-size: 10px;
   background: var(--brand-accent-dim);
   color: var(--brand-accent-light);
@@ -360,7 +368,7 @@ header {
   justify-content: center;
   padding: 10px 18px;
   border-radius: var(--radius);
-  font-family: 'Barlow', sans-serif;
+  font-family: var(--font-primary), sans-serif;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -396,7 +404,7 @@ header {
 }
 .btn-ghost:hover {
   color: var(--text-main);
-  background: var(--cream-dim);
+  background: var(--bg-dim);
 }
 
 .btn-lg {
@@ -483,7 +491,7 @@ header {
   padding: 12px 14px;
   border-radius: var(--radius);
   color: var(--text-main);
-  font-family: 'Barlow', sans-serif;
+  font-family: var(--font-primary), sans-serif;
   font-size: 14px;
   outline: none;
   transition: all 0.2s;
@@ -655,4 +663,4 @@ header {
 .remove-btn { background: none; border: none; color: var(--error); cursor: pointer; font-size: 18px; opacity: 0.6; }
 .remove-btn:hover { opacity: 1; }
 .narrative-box { width: 100%; min-height: 200px; line-height: 1.7; }
-.report-disclaimer { margin-top: 40px; padding: 24px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-subtle); font-size: 12px; color: var(--text-faint); border-radius: var(--radius); }
+.report-disclaimer { margin-top: 40px; padding: 24px; background: var(--bg-dim); border: 1px solid var(--border-subtle); font-size: 12px; color: var(--text-faint); border-radius: var(--radius); }

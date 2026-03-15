@@ -5,7 +5,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    font-family: 'Barlow', sans-serif;
+    font-family: 'Open Sans', sans-serif;
     font-size: 11px;
     color: rgba(237,237,240,0.3);
     letter-spacing: 0.04em;
