@@ -216,7 +216,7 @@ $descriptorspec = [
    2 => ["pipe", "w"]  // stderr
 ];
 
-error_log("Starting PDF generation for valuation $id");
+error_log("Starting PDF generation for valuation $uuid");
 $process = proc_open($cmd, $descriptorspec, $pipes);
 
 if (is_resource($process)) {
