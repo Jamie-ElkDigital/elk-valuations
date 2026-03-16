@@ -38,3 +38,6 @@ EXPOSE 8080
 
 # Update Apache port
 RUN sed -i 's/80/8080/g' /etc/apache2/sites-available/000-default.conf /etc/apache2/ports.conf
+
+# Pass environment variables to PHP
+RUN echo "PassEnv SMTP_PASS SMTP_USER APP_COMMIT_SHA DB_PASS DB_HOST DB_NAME DB_USER" >> /etc/apache2/apache2.conf
