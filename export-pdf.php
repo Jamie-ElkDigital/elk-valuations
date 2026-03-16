@@ -1,7 +1,7 @@
 <?php
 /**
- * ELK Valuations - High-Fidelity PDF Export
- * Re-uses branding and data logic to generate a pixel-perfect PDF via Puppeteer.
+ * ELK Valuations - High-Fidelity PDF Export & Persistence
+ * Generates pixel-perfect PDFs via Puppeteer and snapshots them to GCS.
  */
 
 // Increase memory and timeout for Puppeteer
@@ -11,6 +11,9 @@ set_time_limit(120);
 session_start();
 require_once 'db.php';
 require_once 'theme-engine.php';
+
+// Bucket Configuration (GCP)
+define('GCS_BUCKET_NAME', 'gta-valuations-reports');
 
 $uuid = $_GET['uuid'] ?? null;
 if (!$uuid) {
@@ -36,6 +39,7 @@ if (isset($_SESSION['authenticated']) && $_SESSION['authenticated']) {
 }
 
 $firm_id = $v['firm_id'];
+$user_id = $_SESSION['user_id'] ?? $v['user_id'];
 
 try {
     // Decode JSON data
@@ -49,7 +53,6 @@ try {
     $stmt = $pdo->prepare("SELECT * FROM firms WHERE id = ?");
     $stmt->execute([$firm_id]);
     $firm = $stmt->fetch();
-
 } catch (Exception $e) {
     die("Database Error: " . $e->getMessage());
 }
@@ -71,6 +74,49 @@ function fmtShort($n) {
     return fmt($n);
 }
 
+/**
+ * Get OAuth2 Token from Metadata Server
+ */
+function get_gcs_token(): string {
+    $ch = curl_init('http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token');
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_HTTPHEADER     => ['Metadata-Flavor: Google'],
+    ]);
+    $response = curl_exec($ch);
+    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    if ($http_code !== 200) return '';
+    $data = json_decode($response, true);
+    return $data['access_token'] ?? '';
+}
+
+/**
+ * Upload PDF to Google Cloud Storage
+ */
+function upload_to_gcs($local_path, $gcs_name) {
+    $token = get_gcs_token();
+    if (!$token) return false;
+
+    $url = "https://storage.googleapis.com/upload/storage/v1/b/" . GCS_BUCKET_NAME . "/o?uploadType=media&name=" . urlencode($gcs_name);
+    
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST           => true,
+        CURLOPT_POSTFIELDS     => file_get_contents($local_path),
+        CURLOPT_HTTPHEADER     => [
+            'Authorization: Bearer ' . $token,
+            'Content-Type: application/pdf'
+        ],
+    ]);
+    $response = curl_exec($ch);
+    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    return ($http_code === 200);
+}
+
 // Generate the HTML for Puppeteer
 ob_start();
 ?>
@@ -84,8 +130,6 @@ ob_start();
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
     <style>
         <?php echo file_get_contents('style.css'); ?>
-        
-        /* PDF Overrides */
         body { background: var(--brand-surface) !important; -webkit-print-color-adjust: exact; }
         .main { max-width: 100% !important; padding: 0 !important; }
         .report-container { width: 100%; padding: 40px; }
@@ -93,11 +137,7 @@ ob_start();
         .results-hero { margin-top: 40px; }
         .section-title { margin-top: 50px; border-bottom: 1px solid var(--border-subtle); }
         .share-table th { background: var(--brand-surface-mid); }
-        
-        /* Force page breaks */
         .page-break { page-break-before: always; }
-        
-        /* Ensure background colors render */
         * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
     </style>
     <?php injectTheme($primary_color, $secondary_color, true); ?>
@@ -232,7 +272,25 @@ if (is_resource($process)) {
     $return_value = proc_close($process);
 
     if ($return_value === 0 && file_exists($tempPdf) && filesize($tempPdf) > 0) {
-        error_log("PDF generated successfully: $tempPdf (" . filesize($tempPdf) . " bytes)");
+        error_log("PDF generated successfully for $uuid");
+
+        // ── SNAPSHOT PERSISTENCE ──
+        $timestamp = date('Y-m-d_His');
+        $gcs_name = "reports/{$firm_id}/{$uuid}/Valuation_{$timestamp}.pdf";
+        
+        if (upload_to_gcs($tempPdf, $gcs_name)) {
+            // Log Version
+            $stmt = $pdo->prepare("SELECT COALESCE(MAX(version_number), 0) FROM valuation_versions WHERE valuation_id = ?");
+            $stmt->execute([$v['id']]);
+            $next_version = (int)$stmt->fetchColumn() + 1;
+
+            $stmt = $pdo->prepare("INSERT INTO valuation_versions (valuation_id, version_number, gcs_path, valuation_mid, created_by) VALUES (?, ?, ?, ?, ?)");
+            $stmt->execute([$v['id'], $next_version, $gcs_name, $v['valuation_mid'], $user_id]);
+            error_log("GCS Snapshot created: $gcs_name");
+        } else {
+            error_log("GCS Upload failed. Serving temporary file only.");
+        }
+
         // Stream PDF to browser
         header('Content-Type: application/pdf');
         header('Content-Disposition: inline; filename="Valuation_Report_' . str_replace(' ', '_', $v['client_name']) . '.pdf"');
@@ -246,7 +304,7 @@ if (is_resource($process)) {
     } else {
         error_log("PDF Generation Failed. Return: $return_value. Stderr: $stderr");
         http_response_code(500);
-        die("PDF Generation Failed. Please contact support. Details logged.");
+        die("PDF Generation Failed. Details logged.");
     }
 } else {
     error_log("Failed to start PDF process resource.");
