@@ -38,6 +38,25 @@ try {
         }
     }
 
+    // Handle Password Reset
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'reset_pass') {
+        $uid = (int)$_POST['user_id'];
+        $new_raw = "ELK_" . rand(1000, 9999) . "!";
+        $new_hash = password_hash($new_raw, PASSWORD_DEFAULT);
+        
+        $stmt = $pdo->prepare("UPDATE users SET password_hash = ? WHERE id = ?");
+        $stmt->execute([$new_hash, $uid]);
+        $message = "Password reset successfully. New password: <strong>$new_raw</strong>";
+    }
+
+    // Handle User Deletion
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete_user') {
+        $uid = (int)$_POST['user_id'];
+        $stmt = $pdo->prepare("DELETE FROM users WHERE id = ?");
+        $stmt->execute([$uid]);
+        $message = "User deleted successfully.";
+    }
+
     // 1. Overview Stats
     $stmt = $pdo->query("SELECT COUNT(*) FROM firms");
     $totalFirms = $stmt->fetchColumn();
@@ -60,7 +79,15 @@ try {
     $stmt = $pdo->query($sql);
     $firmStats = $stmt->fetchAll();
 
-    // 3. Recent Logs
+    // 3. Global User List
+    $sql = "SELECT u.*, f.name as firm_name 
+            FROM users u 
+            JOIN firms f ON u.firm_id = f.id 
+            ORDER BY f.name ASC, u.name ASC";
+    $stmt = $pdo->query($sql);
+    $allUsers = $stmt->fetchAll();
+
+    // 4. Recent Logs
     $sql = "SELECT u.*, f.name as firm_name, us.name as user_name
             FROM usage_log u
             JOIN firms f ON u.firm_id = f.id
@@ -242,6 +269,46 @@ th { color: var(--text-faint); font-weight: 600; text-transform: uppercase; font
                 <td style="font-family: 'DM Mono', monospace;"><?php echo number_format($f['firm_tokens'] ?: 0); ?></td>
                 <td>£<?php echo number_format(($f['firm_tokens'] / 1000000) * 12, 4); ?></td>
                 <td><span class="pill" style="background: rgba(0,255,204,0.1); color: var(--brand-accent);">Active</span></td>
+            </tr>
+            <?php endforeach; ?>
+        </tbody>
+    </table>
+
+    <h2 class="section-title" style="margin-top: 60px;">Global User List</h2>
+    <p style="font-size: 11px; color: var(--text-faint); margin-bottom: 20px;">Manage all users across all firms. Resetting a password generates a temporary credential immediately.</p>
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Firm</th>
+                <th>Role</th>
+                <th style="text-align: right;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php foreach ($allUsers as $u): ?>
+            <tr class="firm-row">
+                <td style="font-weight: 600; color: var(--text-main);"><?php echo htmlspecialchars($u['name']); ?></td>
+                <td><?php echo htmlspecialchars($u['email']); ?></td>
+                <td><span class="pill" style="background: rgba(197, 160, 89, 0.1); color: #c5a059;"><?php echo htmlspecialchars($u['firm_name']); ?></span></td>
+                <td><span style="text-transform: uppercase; font-size: 10px;"><?php echo htmlspecialchars($u['role']); ?></span></td>
+                <td style="text-align: right;">
+                    <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                        <form method="POST" onsubmit="return confirm('Reset password for this user?');">
+                            <input type="hidden" name="action" value="reset_pass">
+                            <input type="hidden" name="user_id" value="<?php echo $u['id']; ?>">
+                            <button type="submit" class="btn btn-outline" style="font-size: 9px; padding: 4px 8px; color: var(--brand-accent); border-color: rgba(0,255,204,0.3);">Reset Pass</button>
+                        </form>
+                        <?php if ($u['id'] != $_SESSION['user_id']): ?>
+                        <form method="POST" onsubmit="return confirm('Permanently delete this user?');">
+                            <input type="hidden" name="action" value="delete_user">
+                            <input type="hidden" name="user_id" value="<?php echo $u['id']; ?>">
+                            <button type="submit" class="btn btn-outline" style="font-size: 9px; padding: 4px 8px; color: #ff4444; border-color: rgba(255,68,68,0.3);">Delete</button>
+                        </form>
+                        <?php endif; ?>
+                    </div>
+                </td>
             </tr>
             <?php endforeach; ?>
         </tbody>
