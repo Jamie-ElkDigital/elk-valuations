@@ -15,22 +15,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $user = $stmt->fetch();
 
         if ($user && password_verify($password, $user['password_hash'])) {
-            $_SESSION['authenticated'] = true;
-            $_SESSION['user_id'] = $user['id'];
-            $_SESSION['firm_id'] = $user['firm_id'];
-            $_SESSION['user_name'] = $user['name'];
-            $_SESSION['user_role'] = $user['role'];
-            $_SESSION['firm_name'] = $user['firm_name'];
-            $_SESSION['firm_slug'] = $user['firm_slug'];
+            // Step 1: Generate MFA Code
+            $mfa_code = sprintf("%06d", mt_rand(100000, 999999));
+            $mfa_expires = date('Y-m-d H:i:s', strtotime('+5 minutes'));
+
+            // Step 2: Save to DB
+            $stmt = $pdo->prepare("UPDATE users SET mfa_code = ?, mfa_expires_at = ? WHERE id = ?");
+            $stmt->execute([$mfa_code, $mfa_expires, $user['id']]);
+
+            // Step 3: Store "Pending" Session
+            $_SESSION['mfa_pending_user_id'] = $user['id'];
+            $_SESSION['mfa_pending_firm_id'] = $user['firm_id'];
+            $_SESSION['mfa_pending_email'] = $user['email'];
             
-            // CSRF Protection
-            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-            
-            if ($user['firm_slug'] === 'elk') {
-                header('Location: super-admin.php');
-            } else {
-                header('Location: dashboard.php');
-            }
+            // Step 4: Send Email
+            require_once 'email-engine.php';
+            sendMfaEmail($user['email'], $mfa_code);
+
+            header('Location: verify.php');
             exit;
         } else {
             $error = 'Invalid email or password.';

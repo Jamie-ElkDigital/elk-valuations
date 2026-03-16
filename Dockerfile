@@ -1,14 +1,20 @@
 # Use the official PHP image with Apache
 FROM php:8.2-apache
 
-# Install MySQL extension for PDO
-RUN docker-php-ext-install pdo pdo_mysql
+# Install System Dependencies & MySQL extension
+RUN apt-get update && apt-get install -y \
+    libzip-dev \
+    zip \
+    unzip \
+    && docker-php-ext-install pdo pdo_mysql zip
+
+# Install Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Enable Apache rewrite module
 RUN a2enmod rewrite
 
-# Install Node.js, Chrome, and dependencies
-# We install google-chrome-stable because it automatically handles all the complex 'lib' dependencies
+# Install Node.js, Chrome, and dependencies for PDF generation
 RUN apt-get update && apt-get install -y wget gnupg curl ca-certificates --no-install-recommends \
     && curl -fsSL https://dl-ssl.google.com/linux/linux_signing_key.pub | gpg --dearmor -o /usr/share/keyrings/google-chrome.gpg \
     && echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome.gpg] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list \
@@ -23,17 +29,18 @@ RUN apt-get update && apt-get install -y wget gnupg curl ca-certificates --no-in
 # Set the working directory
 WORKDIR /var/www/html/
 
-# Copy package files first to leverage Docker cache
-COPY package*.json ./
+# Copy dependency files first
+COPY composer.json ./
+RUN composer install --no-dev --optimize-autoloader
 
-# Install Node dependencies
+COPY package*.json ./
 RUN npm install
 
-# Copy your application files to the container
+# Copy application files
 COPY . /var/www/html/
 
-# Expose port 8080 (Cloud Run default)
+# Expose port 8080
 EXPOSE 8080
 
-# Update Apache to listen on port 8080
+# Update Apache port
 RUN sed -i 's/80/8080/g' /etc/apache2/sites-available/000-default.conf /etc/apache2/ports.conf
