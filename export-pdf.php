@@ -28,7 +28,7 @@ $firm_id = $_SESSION['firm_id'];
 try {
     $pdo = DB::getInstance();
     
-    // Fetch Valuation
+    // Fetch Valuation with strict firm isolation
     $stmt = $pdo->prepare("SELECT * FROM valuations WHERE id = ? AND firm_id = ?");
     $stmt->execute([$id, $firm_id]);
     $v = $stmt->fetch();
