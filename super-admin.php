@@ -109,39 +109,57 @@ try {
 <title>Super-Admin | ELK Valuations</title>
 <link rel="icon" type="image/webp" href="favicon.webp">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css?v=3.2.1">
 <style>
 :root {
-  --brand-accent: #00ffcc;
-  --brand-surface: #0a0a0a;
-  --brand-surface-mid: #151515;
-  --brand-surface-light: #202020;
+  --brand-accent: #c5a059;
+  --brand-surface: #f8fafc;
+  --brand-surface-mid: #ffffff;
+  --brand-surface-light: #f1f5f9;
+  --text-main: #1e293b;
+  --text-muted: #475569;
+  --text-faint: #94a3b8;
+  --border-subtle: #e2e8f0;
 }
+
+body {
+    background: var(--brand-surface);
+    color: var(--text-main);
+}
+
+.main {
+    max-width: 1600px !important;
+    margin: 0 auto;
+    padding: 40px;
+}
+
 .stat-card {
     background: var(--brand-surface-mid);
     border: 1px solid var(--border-subtle);
-    padding: 24px;
-    border-radius: 8px;
+    padding: 32px;
+    border-radius: 12px;
     text-align: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 .stat-val {
-    font-size: 32px;
+    font-size: 36px;
     font-weight: 700;
     color: var(--brand-accent);
     font-family: 'DM Mono', monospace;
-    margin-bottom: 4px;
+    margin-bottom: 8px;
 }
 .stat-label {
-    font-size: 11px;
+    font-size: 10px;
     text-transform: uppercase;
     letter-spacing: 0.1em;
     color: var(--text-faint);
+    font-weight: 600;
 }
-table { width: 100%; border-collapse: collapse; margin-top: 24px; font-size: 13px; }
-th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border-subtle); }
-th { color: var(--text-faint); font-weight: 600; text-transform: uppercase; font-size: 10px; letter-spacing: 0.1em; }
-.firm-row:hover { background: rgba(0,255,204,0.02); }
+table { width: 100%; border-collapse: collapse; margin-top: 24px; font-size: 13px; background: var(--brand-surface-mid); border-radius: 8px; overflow: hidden; border: 1px solid var(--border-subtle); }
+th, td { padding: 16px; text-align: left; border-bottom: 1px solid var(--border-subtle); white-space: nowrap; }
+th { background: var(--brand-surface-light); color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 10px; letter-spacing: 0.1em; }
+.firm-row:hover { background: var(--brand-surface-light); }
 
 .modal {
     display: none;
@@ -152,10 +170,10 @@ th { color: var(--text-faint); font-weight: 600; text-transform: uppercase; font
     background: var(--brand-surface-mid);
     border: 1px solid var(--brand-accent);
     padding: 40px;
-    border-radius: 8px;
+    border-radius: 12px;
     z-index: 100;
-    width: 400px;
-    box-shadow: 0 0 50px rgba(0,0,0,0.8);
+    width: 450px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.1);
 }
 .overlay {
     display: none;
@@ -164,37 +182,52 @@ th { color: var(--text-faint); font-weight: 600; text-transform: uppercase; font
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0,0,0,0.8);
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(4px);
     z-index: 90;
 }
 .alert {
-    padding: 12px;
-    border-radius: 4px;
-    margin-bottom: 24px;
-    font-size: 13px;
+    padding: 16px;
+    border-radius: 8px;
+    margin-bottom: 32px;
+    font-size: 14px;
+    border: 1px solid transparent;
 }
-.alert-info { background: rgba(0,255,204,0.1); color: var(--brand-accent); border: 1px solid var(--brand-accent); }
+.alert-info { background: #f0fdf4; color: #166534; border-color: #bbf7d0; }
+
+.pill {
+    font-size: 10px;
+    text-transform: uppercase;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 20px;
+}
+
+header {
+    background: #0f172a;
+    border-bottom: 1px solid rgba(197, 160, 89, 0.2);
+}
 </style>
 </head>
 <body>
 
 <header>
   <div class="header-left">
-    <span class="header-label">ELK Super-Admin Dashboard</span>
+    <span class="header-label" style="color: #fff;">ELK Valuations <span style="color: var(--brand-accent); margin-left: 8px;">Super-Admin</span></span>
   </div>
   <div class="header-right">
-    <a href="logout.php" class="btn btn-outline" style="font-size: 10px;">Logout</a>
+    <a href="logout.php" class="btn btn-outline" style="font-size: 10px; color: #fff; border-color: rgba(255,255,255,0.2);">Logout</a>
   </div>
 </header>
 
 <div class="app-wrapper">
-  <main class="main" style="max-width: 1200px; margin: 0 auto; padding: 40px;">
+  <main class="main">
     
     <?php if ($message): ?>
-        <div class="alert alert-info"><?php echo htmlspecialchars($message); ?></div>
+        <div class="alert alert-info"><?php echo $message; ?></div>
     <?php endif; ?>
 
-    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-bottom: 40px;">
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px; margin-bottom: 48px;">
         <div class="stat-card">
             <div class="stat-val"><?php echo $totalFirms; ?></div>
             <div class="stat-label">Active Firms</div>
@@ -213,9 +246,9 @@ th { color: var(--text-faint); font-weight: 600; text-transform: uppercase; font
         </div>
     </div>
 
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-        <h2 class="section-title" style="margin: 0;">Firm &amp; User Management</h2>
-        <button class="btn btn-primary" onclick="showAddFirm()" style="font-size: 11px;">+ Create New Firm / User</button>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px;">
+        <h2 class="section-title" style="margin: 0; color: var(--text-main);">Firm &amp; Usage Metrics</h2>
+        <button class="btn btn-primary" onclick="showAddFirm()" style="font-size: 11px; background: var(--brand-accent); border: none;">+ Register New Firm</button>
     </div>
 
     <div id="addFirmModal" class="modal">
@@ -224,27 +257,27 @@ th { color: var(--text-faint); font-weight: 600; text-transform: uppercase; font
             <input type="hidden" name="action" value="create_firm">
             <div class="form-group" style="margin-bottom: 16px;">
                 <label>Firm Name</label>
-                <input type="text" name="name" required placeholder="e.g. Smith &amp; Co">
+                <input type="text" name="name" required placeholder="e.g. Smith &amp; Co" style="width: 100%; border: 1px solid var(--border-subtle); padding: 10px; border-radius: 4px;">
             </div>
             <div class="form-group" style="margin-bottom: 16px;">
                 <label>Firm Slug (unique)</label>
-                <input type="text" name="slug" required placeholder="e.g. smith">
+                <input type="text" name="slug" required placeholder="e.g. smith" style="width: 100%; border: 1px solid var(--border-subtle); padding: 10px; border-radius: 4px;">
             </div>
             <h4 style="color: var(--text-faint); margin: 24px 0 12px; font-size: 11px; text-transform: uppercase;">Initial Admin User</h4>
             <div class="form-group" style="margin-bottom: 16px;">
                 <label>Admin Name</label>
-                <input type="text" name="user_name" required placeholder="John Smith">
+                <input type="text" name="user_name" required placeholder="John Smith" style="width: 100%; border: 1px solid var(--border-subtle); padding: 10px; border-radius: 4px;">
             </div>
             <div class="form-group" style="margin-bottom: 16px;">
                 <label>Admin Email</label>
-                <input type="email" name="user_email" required placeholder="john@smith.com">
+                <input type="email" name="user_email" required placeholder="john@smith.com" style="width: 100%; border: 1px solid var(--border-subtle); padding: 10px; border-radius: 4px;">
             </div>
             <div class="form-group" style="margin-bottom: 24px;">
                 <label>Initial Password</label>
-                <input type="text" name="user_pass" required value="ELK_<?php echo rand(1000,9999); ?>!">
+                <input type="text" name="user_pass" required value="ELK_<?php echo rand(1000,9999); ?>!" style="width: 100%; border: 1px solid var(--border-subtle); padding: 10px; border-radius: 4px;">
             </div>
             <div style="display: flex; gap: 12px;">
-                <button type="submit" class="btn btn-primary" style="flex: 1;">Create Firm</button>
+                <button type="submit" class="btn btn-primary" style="flex: 1; background: var(--brand-accent); border: none;">Create Firm</button>
                 <button type="button" class="btn btn-outline" onclick="hideAddFirm()" style="flex: 1;">Cancel</button>
             </div>
         </form>
@@ -257,25 +290,24 @@ th { color: var(--text-faint); font-weight: 600; text-transform: uppercase; font
                 <th>Firm Name</th>
                 <th>Requests</th>
                 <th>Total Tokens</th>
-                <th>Avg. Cost/Val</th>
+                <th>Estimated Cost</th>
                 <th>Status</th>
             </tr>
         </thead>
         <tbody>
             <?php foreach ($firmStats as $f): ?>
             <tr class="firm-row">
-                <td style="font-weight: 600; color: var(--text-main);"><?php echo htmlspecialchars($f['name']); ?></td>
+                <td style="font-weight: 700; color: var(--text-main);"><?php echo htmlspecialchars($f['name']); ?></td>
                 <td><?php echo $f['total_requests']; ?></td>
                 <td style="font-family: 'DM Mono', monospace;"><?php echo number_format($f['firm_tokens'] ?: 0); ?></td>
-                <td>£<?php echo number_format(($f['firm_tokens'] / 1000000) * 12, 4); ?></td>
-                <td><span class="pill" style="background: rgba(0,255,204,0.1); color: var(--brand-accent);">Active</span></td>
+                <td style="color: var(--brand-accent); font-weight: 600;">£<?php echo number_format(($f['firm_tokens'] / 1000000) * 12, 2); ?></td>
+                <td><span class="pill" style="background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0;">Active</span></td>
             </tr>
             <?php endforeach; ?>
         </tbody>
     </table>
 
-    <h2 class="section-title" style="margin-top: 60px;">Global User List</h2>
-    <p style="font-size: 11px; color: var(--text-faint); margin-bottom: 20px;">Manage all users across all firms. Resetting a password generates a temporary credential immediately.</p>
+    <h2 class="section-title" style="margin-top: 80px; color: var(--text-main);">Global User Management</h2>
     <table>
         <thead>
             <tr>
@@ -291,20 +323,20 @@ th { color: var(--text-faint); font-weight: 600; text-transform: uppercase; font
             <tr class="firm-row">
                 <td style="font-weight: 600; color: var(--text-main);"><?php echo htmlspecialchars($u['name']); ?></td>
                 <td><?php echo htmlspecialchars($u['email']); ?></td>
-                <td><span class="pill" style="background: rgba(197, 160, 89, 0.1); color: #c5a059;"><?php echo htmlspecialchars($u['firm_name']); ?></span></td>
-                <td><span style="text-transform: uppercase; font-size: 10px;"><?php echo htmlspecialchars($u['role']); ?></span></td>
+                <td><span class="pill" style="background: var(--brand-surface-light); color: var(--brand-accent); border: 1px solid var(--border-subtle);"><?php echo htmlspecialchars($u['firm_name']); ?></span></td>
+                <td><span style="text-transform: uppercase; font-size: 10px; font-weight: 700; color: var(--text-muted);"><?php echo htmlspecialchars($u['role']); ?></span></td>
                 <td style="text-align: right;">
                     <div style="display: flex; gap: 8px; justify-content: flex-end;">
                         <form method="POST" onsubmit="return confirm('Reset password for this user?');">
                             <input type="hidden" name="action" value="reset_pass">
                             <input type="hidden" name="user_id" value="<?php echo $u['id']; ?>">
-                            <button type="submit" class="btn btn-outline" style="font-size: 9px; padding: 4px 8px; color: var(--brand-accent); border-color: rgba(0,255,204,0.3);">Reset Pass</button>
+                            <button type="submit" class="btn btn-outline" style="font-size: 9px; padding: 6px 12px; color: var(--brand-accent); border-color: var(--brand-accent);">Reset Pass</button>
                         </form>
                         <?php if ($u['id'] != $_SESSION['user_id']): ?>
                         <form method="POST" onsubmit="return confirm('Permanently delete this user?');">
                             <input type="hidden" name="action" value="delete_user">
                             <input type="hidden" name="user_id" value="<?php echo $u['id']; ?>">
-                            <button type="submit" class="btn btn-outline" style="font-size: 9px; padding: 4px 8px; color: #ff4444; border-color: rgba(255,68,68,0.3);">Delete</button>
+                            <button type="submit" class="btn btn-outline" style="font-size: 9px; padding: 6px 12px; color: #ef4444; border-color: #ef4444;">Delete</button>
                         </form>
                         <?php endif; ?>
                     </div>
@@ -314,25 +346,25 @@ th { color: var(--text-faint); font-weight: 600; text-transform: uppercase; font
         </tbody>
     </table>
 
-    <h2 class="section-title" style="margin-top: 60px;">Live Usage Feed</h2>
+    <h2 class="section-title" style="margin-top: 80px; color: var(--text-main);">Live System Logs</h2>
     <table>
         <thead>
             <tr>
-                <th>Time</th>
-                <th>Firm</th>
-                <th>User</th>
-                <th>Action</th>
-                <th>Tokens</th>
+                <th>Timestamp</th>
+                <th>Firm Identity</th>
+                <th>Active User</th>
+                <th>System Action</th>
+                <th>Token Load</th>
             </tr>
         </thead>
         <tbody>
             <?php foreach ($logs as $l): ?>
             <tr style="font-size: 11px;">
-                <td style="color: var(--text-faint);"><?php echo date('H:i:s d/m', strtotime($l['created_at'])); ?></td>
-                <td style="color: var(--brand-accent);"><?php echo htmlspecialchars($l['firm_name']); ?></td>
+                <td style="color: var(--text-faint);"><?php echo date('H:i:s d/m/Y', strtotime($l['created_at'])); ?></td>
+                <td style="font-weight: 600; color: var(--text-main);"><?php echo htmlspecialchars($l['firm_name']); ?></td>
                 <td><?php echo htmlspecialchars($l['user_name']); ?></td>
-                <td><span style="text-transform: uppercase; font-size: 9px; padding: 2px 6px; border: 1px solid var(--border-subtle); border-radius: 4px;"><?php echo $l['action']; ?></span></td>
-                <td style="font-family: 'DM Mono', monospace;"><?php echo number_format($l['total_tokens']); ?></td>
+                <td><span style="text-transform: uppercase; font-size: 9px; padding: 2px 8px; border: 1px solid var(--border-subtle); border-radius: 4px; color: var(--text-muted);"><?php echo $l['action']; ?></span></td>
+                <td style="font-family: 'DM Mono', monospace; font-weight: 600;"><?php echo number_format($l['total_tokens']); ?></td>
             </tr>
             <?php endforeach; ?>
         </tbody>
