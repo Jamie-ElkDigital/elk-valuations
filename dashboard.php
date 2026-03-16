@@ -52,6 +52,9 @@ $secondary_color = $firm['secondary_color'] ?? '#050505';
 <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Barlow:wght@600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css?v=3.2.1">
 <?php injectTheme($primary_color, $secondary_color); ?>
+<script>
+  window.CSRF_TOKEN = "<?php echo $_SESSION['csrf_token'] ?? ''; ?>";
+</script>
 <style>
 .company-list { margin-top: 32px; background: var(--brand-surface-mid); border: 1px solid var(--border-subtle); border-radius: 8px; overflow: hidden; }
 .company-row { display: grid; grid-template-columns: 1fr 180px 180px 140px 60px; padding: 20px 24px; border-bottom: 1px solid var(--border-subtle); cursor: pointer; transition: background 0.2s; align-items: center; }
@@ -237,7 +240,10 @@ async function deleteCompany(uuid, name) {
     try {
         const res = await fetch('delete-action.php', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': window.CSRF_TOKEN
+            },
             body: JSON.stringify({ action: 'delete_company', uuid })
         });
         const data = await res.json();
@@ -257,7 +263,10 @@ async function deleteVersion(versionId, vNum) {
     try {
         const res = await fetch('delete-action.php', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': window.CSRF_TOKEN
+            },
             body: JSON.stringify({ action: 'delete_version', version_id: versionId })
         });
         const data = await res.json();

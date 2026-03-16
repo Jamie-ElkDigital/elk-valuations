@@ -23,6 +23,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['firm_name'] = $user['firm_name'];
             $_SESSION['firm_slug'] = $user['firm_slug'];
             
+            // CSRF Protection
+            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+            
             if ($user['firm_slug'] === 'elk') {
                 header('Location: super-admin.php');
             } else {

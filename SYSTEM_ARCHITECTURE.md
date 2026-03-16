@@ -49,11 +49,21 @@ To protect ELK Digital's Intellectual Property (IP), the system uses a **Hydrati
 
 ---
 
-## 4. Infrastructure & DevOps
+## 4. Security Framework
+*   **Multi-Tenancy**: Strict `firm_id` isolation at the DB layer via prepared statements.
+*   **Authentication**: Session-based with cryptographically secure UUIDs for public endpoints.
+*   **CSRF Protection**: All POST/PUT/DELETE requests require a valid `X-CSRF-Token` header, verified against the user's session.
+*   **Secrets Management**: Database credentials and API keys are injected via Environment Variables (Cloud Run Secret Manager integration).
+*   **Output Sanitization**: `htmlspecialchars()` for PHP rendering and safe DOM manipulation (no `innerHTML`) for JS extraction results.
+
+---
+
+## 5. Infrastructure & DevOps
 ### 4.1 Deployment Pipeline
-*   **Environment**: Google Cloud Run (Serverless).
+*   **Environment**: Google Cloud Run (Serverless) with `--session-affinity` enabled to support stable PHP sessions across multiple horizontally scaled instances.
 *   **Containerization**: Docker-based builds optimized with native caching.
 *   **Database**: Google Cloud SQL (MySQL) accessed via Private IP for maximum security.
+*   **Storage**: Google Cloud Storage (GCS) bucket (`gta-valuations-reports`) used as an immutable audit trail for permanently storing PDF snapshots.
 *   **Build Optimization**: Uses `E2_HIGHCPU_8` machines for ~2 minute deployment cycles.
 
 ### 4.2 Usage Auditing

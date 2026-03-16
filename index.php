@@ -54,6 +54,7 @@ if (isset($_GET['edit'])) {
 <?php injectTheme($primary_color, $secondary_color); ?>
 <script>
   window.EDIT_DATA = <?php echo $edit_data ? json_encode($edit_data) : 'null'; ?>;
+  window.CSRF_TOKEN = "<?php echo $_SESSION['csrf_token'] ?? ''; ?>";
 </script>
 </head>
 <body>
@@ -650,7 +651,10 @@ async function handleFileUpload(event) {
 
     const response = await fetch('vertex-proxy.php', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': window.CSRF_TOKEN
+      },
       body: JSON.stringify({ 
         action: 'extract',
         files: fileData 
@@ -885,45 +889,49 @@ function addAdjRow(label = '', v1 = '', v2 = '', v3 = '', notes = '') {
   const row = document.createElement('div');
   row.className = 'adj-row';
   row.id = `adjRow${id}`;
-  row.innerHTML = `
-    <input type="text" class="adj-input" style="text-align:left; border-bottom: 1px solid var(--input-border); font-family:inherit;" placeholder="e.g. Director salary addback" value="${label}" oninput="calcAdjustments()">
-    <input type="number" class="adj-input" placeholder="0" value="${v1}" oninput="calcAdjustments()">
-    <input type="number" class="adj-input" placeholder="0" value="${v2}" oninput="calcAdjustments()">
-    <input type="number" class="adj-input" placeholder="0" value="${v3}" oninput="calcAdjustments()">
-    <input type="text" class="adj-input" style="text-align:left; font-family:inherit; font-size:11px;" placeholder="Note…" value="${notes}">
-  `;
+  
+  // Create inputs manually to avoid XSS from label/notes
+  const labelInp = document.createElement('input');
+  labelInp.type = 'text';
+  labelInp.className = 'adj-input';
+  labelInp.style.textAlign = 'left';
+  labelInp.style.borderBottom = '1px solid var(--input-border)';
+  labelInp.style.fontFamily = 'inherit';
+  labelInp.placeholder = 'e.g. Director salary addback';
+  labelInp.value = label;
+  labelInp.oninput = calcAdjustments;
+
+  const v1Inp = createNumericAdjInput(v1);
+  const v2Inp = createNumericAdjInput(v2);
+  const v3Inp = createNumericAdjInput(v3);
+
+  const notesInp = document.createElement('input');
+  notesInp.type = 'text';
+  notesInp.className = 'adj-input';
+  notesInp.style.textAlign = 'left';
+  notesInp.style.fontFamily = 'inherit';
+  notesInp.style.fontSize = '11px';
+  notesInp.placeholder = 'Note…';
+  notesInp.value = notes;
+
+  row.appendChild(labelInp);
+  row.appendChild(v1Inp);
+  row.appendChild(v2Inp);
+  row.appendChild(v3Inp);
+  row.appendChild(notesInp);
+
   document.getElementById('adjRows').appendChild(row);
   calcAdjustments();
 }
 
-function calcAdjustments() {
-  const container = document.getElementById('adjRows');
-  const rows = container.querySelectorAll('.adj-row');
-  const totals = [0, 0, 0];
-  rows.forEach(row => {
-    const inputs = row.querySelectorAll('input[type="number"]');
-    inputs.forEach((inp, i) => {
-      totals[i] += parseFloat(inp.value) || 0;
-    });
-  });
-  for (let i = 0; i < 3; i++) {
-    const el = document.getElementById(`adj_tot${i+1}`);
-    el.textContent = fmt(totals[i]);
-    el.className = 'adj-value ' + (totals[i] >= 0 ? 'positive' : 'negative');
-    const adjEbitda = getPreAdjEbitda(i + 1) + totals[i];
-    document.getElementById(`adj_ebitda${i+1}`).textContent = fmt(adjEbitda);
-  }
-}
-
-function getAdjEbitda(y) {
-  const container = document.getElementById('adjRows');
-  const rows = container.querySelectorAll('.adj-row');
-  let total = 0;
-  rows.forEach(row => {
-    const inputs = row.querySelectorAll('input[type="number"]');
-    if (inputs[y - 1]) total += parseFloat(inputs[y - 1].value) || 0;
-  });
-  return getPreAdjEbitda(y) + total;
+function createNumericAdjInput(val) {
+  const inp = document.createElement('input');
+  inp.type = 'number';
+  inp.className = 'adj-input';
+  inp.placeholder = '0';
+  inp.value = val;
+  inp.oninput = calcAdjustments;
+  return inp;
 }
 
 function addShareholderRow(name = '', shares = '', cls = 'Ordinary') {
@@ -931,18 +939,42 @@ function addShareholderRow(name = '', shares = '', cls = 'Ordinary') {
   const row = document.createElement('div');
   row.className = 'shareholder-row';
   row.id = `shRow${id}`;
-  row.innerHTML = `
-    <input type="text" style="background:var(--input-bg); border:1px solid var(--input-border); border-radius:var(--radius); padding:8px 10px; color:var(--text-main); font-family:inherit; font-size:13px; width:100%; outline:none;" placeholder="Shareholder name" value="${name}" oninput="updateShareTotal()">
-    <input type="number" style="background:var(--input-bg); border:1px solid var(--input-border); border-radius:var(--radius); padding:8px 10px; color:var(--text-main); font-family:'DM Mono',monospace; font-size:13px; width:100%; outline:none;" placeholder="100" value="${shares}" min="1" oninput="updateShareTotal()">
-    <select style="background:var(--input-bg); border:1px solid var(--input-border); border-radius:var(--radius); padding:8px 10px; color:var(--text-main); font-family:inherit; font-size:13px; width:100%; outline:none;">
-      <option ${cls==='Ordinary'?'selected':''}>Ordinary</option>
-      <option ${cls==='Ordinary A'?'selected':''}>Ordinary A</option>
-      <option ${cls==='Ordinary B'?'selected':''}>Ordinary B</option>
-      <option ${cls==='Ordinary C'?'selected':''}>Ordinary C</option>
-      <option ${cls==='Preference'?'selected':''}>Preference</option>
-    </select>
-    <button class="remove-btn" onclick="this.closest('.shareholder-row').remove(); updateShareTotal()">×</button>
-  `;
+  
+  const nameInp = document.createElement('input');
+  nameInp.type = 'text';
+  nameInp.style.cssText = 'background:var(--input-bg); border:1px solid var(--input-border); border-radius:var(--radius); padding:8px 10px; color:var(--text-main); font-family:inherit; font-size:13px; width:100%; outline:none;';
+  nameInp.placeholder = 'Shareholder name';
+  nameInp.value = name;
+  nameInp.oninput = updateShareTotal;
+
+  const sharesInp = document.createElement('input');
+  sharesInp.type = 'number';
+  sharesInp.style.cssText = 'background:var(--input-bg); border:1px solid var(--input-border); border-radius:var(--radius); padding:8px 10px; color:var(--text-main); font-family:\'DM Mono\',monospace; font-size:13px; width:100%; outline:none;';
+  sharesInp.placeholder = '100';
+  sharesInp.value = shares;
+  sharesInp.min = '1';
+  sharesInp.oninput = updateShareTotal;
+
+  const select = document.createElement('select');
+  select.style.cssText = 'background:var(--input-bg); border:1px solid var(--input-border); border-radius:var(--radius); padding:8px 10px; color:var(--text-main); font-family:inherit; font-size:13px; width:100%; outline:none;';
+  ['Ordinary', 'Ordinary A', 'Ordinary B', 'Ordinary C', 'Preference'].forEach(o => {
+    const opt = document.createElement('option');
+    opt.value = o;
+    opt.textContent = o;
+    if (o === cls) opt.selected = true;
+    select.appendChild(opt);
+  });
+
+  const btn = document.createElement('button');
+  btn.className = 'remove-btn';
+  btn.textContent = '×';
+  btn.onclick = () => { row.remove(); updateShareTotal(); };
+
+  row.appendChild(nameInp);
+  row.appendChild(sharesInp);
+  row.appendChild(select);
+  row.appendChild(btn);
+
   document.getElementById('shareholderRows').appendChild(row);
   updateShareTotal();
 }
@@ -1130,7 +1162,10 @@ async function saveValuation() {
   try {
     const response = await fetch('save-valuation.php', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': window.CSRF_TOKEN
+      },
       body: JSON.stringify(data)
     });
     const result = await response.json();
@@ -1233,7 +1268,10 @@ async function generateNarrative(targetId = 'r_narrative') {
   try {
     const response = await fetch('vertex-proxy.php', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': window.CSRF_TOKEN
+      },
       body: JSON.stringify({ action: 'narrative', prompt: prompt })
     });
 

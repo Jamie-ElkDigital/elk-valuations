@@ -9,6 +9,15 @@ if (!isset($_SESSION['authenticated']) || !$_SESSION['authenticated']) {
     exit;
 }
 
+// CSRF Verification
+$headers = getallheaders();
+$csrf_token = $headers['X-CSRF-Token'] ?? $headers['x-csrf-token'] ?? '';
+if (!$csrf_token || $csrf_token !== $_SESSION['csrf_token']) {
+    http_response_code(403);
+    echo json_encode(['error' => 'CSRF validation failed.']);
+    exit;
+}
+
 $firm_id = $_SESSION['firm_id'];
 $input = json_decode(file_get_contents('php://input'), true);
 $action = $input['action'] ?? '';
