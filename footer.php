@@ -14,8 +14,9 @@
     <span>Design &amp; Development by <a href="https://elkdesignservices.com" target="_blank" style="color:rgba(237,237,240,0.5); text-decoration:none; border-bottom:1px solid rgba(197, 160, 89, 0.2);">ELK Digital</a> &mdash; elkdesignservices.com <span style="margin-left:8px; color:#ffffff; opacity:1.0;">
       <?php 
         $version = getenv('APP_VERSION') ?: '3.2.1';
+        $commit = getenv('APP_COMMIT_SHA') ?: 'dev';
         $buildTime = getenv('BUILD_TIME') ?: date('j F Y', filemtime(__FILE__));
-        echo "v{$version} (Built: {$buildTime})"; 
+        echo "v{$version} [{$commit}] (Built: {$buildTime})"; 
       ?>
     </span></span>
   </footer>
