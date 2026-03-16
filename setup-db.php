@@ -112,7 +112,22 @@ try {
         FOREIGN KEY (firm_id) REFERENCES firms(id) ON DELETE CASCADE
     ) ENGINE=InnoDB;");
 
-    // 6. Seed initial data (GTA Accounting)
+    // 6. Create company_profiles table (Corporate Intelligence)
+    $pdo->exec("CREATE TABLE IF NOT EXISTS company_profiles (
+        company_number VARCHAR(8) NOT NULL,
+        firm_id INT NOT NULL,
+        company_name VARCHAR(255),
+        incorporation_date DATE,
+        sic_codes VARCHAR(255),
+        share_change_count INT DEFAULT 0,
+        director_change_count INT DEFAULT 0,
+        intelligence_json JSON,
+        last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        PRIMARY KEY (company_number, firm_id),
+        FOREIGN KEY (firm_id) REFERENCES firms(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB;");
+
+    // 7. Seed initial data (GTA Accounting)
     $stmt = $pdo->prepare("SELECT id FROM firms WHERE slug = 'gta'");
     $stmt->execute();
     $existing = $stmt->fetch();
