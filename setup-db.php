@@ -41,7 +41,67 @@ try {
         FOREIGN KEY (firm_id) REFERENCES firms(id) ON DELETE CASCADE
     ) ENGINE=InnoDB;");
 
-    // 3. Seed initial data (GTA Accounting)
+    // 3. Create valuations table (with status and uuid)
+    $pdo->exec("CREATE TABLE IF NOT EXISTS valuations (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        uuid VARCHAR(36) NOT NULL UNIQUE,
+        firm_id INT NOT NULL,
+        user_id INT NOT NULL,
+        client_name VARCHAR(255) NOT NULL,
+        company_number VARCHAR(50),
+        sector VARCHAR(100),
+        year_end VARCHAR(50),
+        years_trading INT,
+        employees INT,
+        purpose VARCHAR(255),
+        report_date DATE,
+        business_desc TEXT,
+        financials_json JSON,
+        adjustments_json JSON,
+        shareholders_json JSON,
+        methodology_json JSON,
+        valuation_mid DECIMAL(15,2),
+        accountant_notes TEXT,
+        ai_narrative TEXT,
+        status ENUM('draft', 'finalised') DEFAULT 'draft',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (firm_id) REFERENCES firms(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB;");
+
+    // Ensure status column exists for older databases
+    $cols = $pdo->query("SHOW COLUMNS FROM valuations")->fetchAll(PDO::FETCH_COLUMN);
+    if (!in_array('status', $cols)) {
+        $pdo->exec("ALTER TABLE valuations ADD COLUMN status ENUM('draft', 'finalised') DEFAULT 'draft' AFTER ai_narrative");
+    }
+
+    // 4. Create valuation_versions table (PDF Snapshots)
+    $pdo->exec("CREATE TABLE IF NOT EXISTS valuation_versions (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        valuation_id INT NOT NULL,
+        version_number INT NOT NULL,
+        gcs_path VARCHAR(512),
+        valuation_mid DECIMAL(15,2),
+        created_by INT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (valuation_id) REFERENCES valuations(id) ON DELETE CASCADE,
+        FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+    ) ENGINE=InnoDB;");
+
+    // 5. Create usage_log table (AI Auditing)
+    $pdo->exec("CREATE TABLE IF NOT EXISTS usage_log (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        firm_id INT NOT NULL,
+        user_id INT,
+        action VARCHAR(50),
+        prompt_tokens INT DEFAULT 0,
+        completion_tokens INT DEFAULT 0,
+        total_tokens INT DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (firm_id) REFERENCES firms(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB;");
+
+    // 6. Seed initial data (GTA Accounting)
     $stmt = $pdo->prepare("SELECT id FROM firms WHERE slug = 'gta'");
     $stmt->execute();
     $existing = $stmt->fetch();

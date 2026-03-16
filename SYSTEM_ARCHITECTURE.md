@@ -39,6 +39,7 @@ The ELK Valuations Platform is a high-security, multi-tenant SaaS application de
     *   **Super-Admin (ELK)**: Global visibility, firm creation, and AI cost auditing.
     *   **Firm-Admin**: Team management and branding control.
     *   **User**: Standard valuation entry and report generation.
+*   **Authoritative Disclaimers**: Every report includes a "Data Verification" footer that professionally frames the AI extraction as high-end analytical tooling, protecting the firm's liability and perceived value.
 
 ### 3.3 The "Hydration" AI Pattern (AI Logic Protection)
 To protect ELK Digital's Intellectual Property (IP), the system uses a **Hydration Pattern**:
@@ -57,7 +58,7 @@ To protect ELK Digital's Intellectual Property (IP), the system uses a **Hydrati
 
 ### 4.2 Usage Auditing
 *   **Token Tracking**: Every AI request logs `prompt_tokens`, `completion_tokens`, and `total_tokens`.
-*   **Cost Monitoring**: Real-time GBP cost estimation (£12 per 1M tokens) provided to Super-Admins to monitor SaaS margins.
+*   **Cost Monitoring**: Real-time GBP cost estimation (£12 per 1M tokens) provided to ELK Digital to monitor SaaS margins.
 
 ---
 
@@ -66,5 +67,5 @@ To protect ELK Digital's Intellectual Property (IP), the system uses a **Hydrati
 *   **Git Integrity**: Versioning is baked into the UI footer via Git Short SHAs, ensuring traceability of every deployment.
 
 ---
-*Document Version: 1.1 (Phase 5 Complete)*  
+*Document Version: 1.2 (Phase 5 Finalized)*  
 *Last Updated: 16 March 2026*
