@@ -1,0 +1,9 @@
+.git
+node_modules
+*.pdf
+screens/
+plans/
+.env
+Dockerfile
+cloudbuild.yaml
+.dockerignore

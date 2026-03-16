@@ -1,14 +1,29 @@
 steps:
-  # Use Kaniko for extremely fast builds with aggressive layer caching
-  - name: 'gcr.io/kaniko-project/executor:latest'
+  # 1. Pull the previous image to use as a cache source (fails gracefully if none exists)
+  - name: 'gcr.io/cloud-builders/docker'
+    entrypoint: 'bash'
     args:
-      - --destination=europe-west2-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/elk-valuations:$COMMIT_SHA
-      - --cache=true
-      - --cache-ttl=168h  # Cache layers for 7 days
-      - --dockerfile=Dockerfile
-      - --context=dir:///workspace
+      - '-c'
+      - |
+        docker pull europe-west2-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/elk-valuations:latest || exit 0
 
-  # Deploy to Cloud Run with SaaS scaling configuration
+  # 2. Build the container image using the 'latest' image as a layer cache
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'build',
+      '-t', 'europe-west2-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/elk-valuations:$COMMIT_SHA',
+      '-t', 'europe-west2-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/elk-valuations:latest',
+      '--cache-from', 'europe-west2-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/elk-valuations:latest',
+      '.'
+    ]
+
+  # 3. Push the specific version AND the 'latest' tag for future builds
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'europe-west2-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/elk-valuations:$COMMIT_SHA']
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'europe-west2-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/elk-valuations:latest']
+
+  # 4. Deploy to Cloud Run with SaaS scaling configuration
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
     args:
@@ -34,4 +49,5 @@ steps:
       - '300'
 
 options:
+  machineType: 'E2_HIGHCPU_8'  # Use a much faster build machine
   logging: CLOUD_LOGGING_ONLY
