@@ -182,39 +182,39 @@ if (isset($_GET['edit'])) {
             <input type="text" id="companyNumber" placeholder="e.g. 12345678" style="flex: 1;">
             <button class="btn btn-outline" onclick="searchCompaniesHouse()" id="chSearchBtn" style="padding: 0 16px;">🔍 Lookup</button>
           </div>
-          
-          <!-- Corporate Intelligence Panel (Nested inside group) -->
-          <div id="intelPanel" class="intel-panel full">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-              <h3 style="margin: 0; font-size: 16px; color: var(--text-main);">Corporate Intelligence Summary</h3>
-              <span class="pill" style="background: var(--brand-accent-dim); color: var(--brand-accent-light);">Companies House Verified</span>
-            </div>
-            
-            <div class="intel-grid">
-              <div class="intel-stat">
-                <span class="label">Incorporated</span>
-                <div class="value" id="intel_inc">—</div>
-                <div class="sub" id="intel_stability">Checking stability...</div>
-              </div>
-              <div class="intel-stat">
-                <span class="label">Share Changes</span>
-                <div class="value" id="intel_sh">—</div>
-                <div class="sub">Allotments since formation</div>
-              </div>
-              <div class="intel-stat">
-                <span class="label">Director Churn</span>
-                <div class="value" id="intel_dir">—</div>
-                <div class="sub">Appointments/Terminations</div>
-              </div>
-            </div>
+        </div>
 
-            <div class="ch-accounts-list">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                <span style="font-size: 12px; font-weight: 600; color: var(--text-muted);">Available Statutory Accounts</span>
-                <button class="btn btn-primary" style="font-size: 11px; padding: 6px 12px;" onclick="importCHAccounts()" id="chImportBtn">Import & Extract Last 3 Years</button>
-              </div>
-              <div id="chAccountsContainer"></div>
+        <!-- Corporate Intelligence Panel (Full Width Row) -->
+        <div id="intelPanel" class="intel-panel full" style="grid-column: 1 / -1;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 style="margin: 0; font-size: 16px; color: var(--text-main);">Corporate Intelligence Summary</h3>
+            <span class="pill" style="background: var(--brand-accent-dim); color: var(--brand-accent-light);">Companies House Verified</span>
+          </div>
+          
+          <div class="intel-grid">
+            <div class="intel-stat">
+              <span class="label">Incorporated</span>
+              <div class="value" id="intel_inc">—</div>
+              <div class="sub" id="intel_stability">Checking stability...</div>
             </div>
+            <div class="intel-stat">
+              <span class="label">Share Changes</span>
+              <div class="value" id="intel_sh">—</div>
+              <div class="sub">Allotments since formation</div>
+            </div>
+            <div class="intel-stat">
+              <span class="label">Director Churn</span>
+              <div class="value" id="intel_dir">—</div>
+              <div class="sub">Appointments/Terminations</div>
+            </div>
+          </div>
+
+          <div class="ch-accounts-list">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <span style="font-size: 12px; font-weight: 600; color: var(--text-muted);">Available Statutory Accounts</span>
+              <button class="btn btn-primary" style="font-size: 11px; padding: 6px 12px;" onclick="importCHAccounts()" id="chImportBtn">Import & Extract Last 3 Years</button>
+            </div>
+            <div id="chAccountsContainer"></div>
           </div>
         </div>
         <div class="form-group">
