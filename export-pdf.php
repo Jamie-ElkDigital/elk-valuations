@@ -117,6 +117,52 @@ function upload_to_gcs($local_path, $gcs_name) {
     return ($http_code === 200);
 }
 
+/**
+ * Download PDF from Google Cloud Storage
+ */
+function download_from_gcs($gcs_name) {
+    $token = get_gcs_token();
+    if (!$token) return false;
+
+    $url = "https://storage.googleapis.com/download/storage/v1/b/" . GCS_BUCKET_NAME . "/o/" . urlencode($gcs_name) . "?alt=media";
+    
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_HTTPHEADER     => [
+            'Authorization: Bearer ' . $token,
+        ],
+    ]);
+    $response = curl_exec($ch);
+    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    return ($http_code === 200) ? $response : false;
+}
+
+// Check for historical version request
+if (isset($_GET['v']) && is_numeric($_GET['v'])) {
+    $v_num = (int)$_GET['v'];
+    $stmt = $pdo->prepare("SELECT gcs_path FROM valuation_versions WHERE valuation_id = ? AND version_number = ?");
+    $stmt->execute([$v['id'], $v_num]);
+    $version = $stmt->fetch();
+    
+    if ($version && $version['gcs_path']) {
+        $pdf_content = download_from_gcs($version['gcs_path']);
+        if ($pdf_content) {
+            header('Content-Type: application/pdf');
+            header('Content-Disposition: inline; filename="Valuation_Report_' . str_replace(' ', '_', $v['client_name']) . '_v' . $v_num . '.pdf"');
+            header('Content-Length: ' . strlen($pdf_content));
+            echo $pdf_content;
+            exit;
+        } else {
+            die("Error: Could not retrieve the requested PDF version from storage.");
+        }
+    } else {
+        die("Error: Version not found.");
+    }
+}
+
 // Generate the HTML for Puppeteer
 ob_start();
 ?>
