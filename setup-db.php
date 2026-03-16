@@ -127,7 +127,17 @@ try {
         FOREIGN KEY (firm_id) REFERENCES firms(id) ON DELETE CASCADE
     ) ENGINE=InnoDB;");
 
-    // 7. Seed initial data (GTA Accounting)
+    // 7. Create user_sessions table (Persistent Login)
+    $pdo->exec("CREATE TABLE IF NOT EXISTS user_sessions (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        session_token VARCHAR(64) NOT NULL UNIQUE,
+        expires_at TIMESTAMP NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB;");
+
+    // 8. Seed initial data (GTA Accounting)
     $stmt = $pdo->prepare("SELECT id FROM firms WHERE slug = 'gta'");
     $stmt->execute();
     $existing = $stmt->fetch();

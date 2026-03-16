@@ -1,13 +1,6 @@
 <?php
-session_start();
-require_once 'db.php';
+require_once 'auth-guard.php';
 require_once 'theme-engine.php';
-
-// Authentication Guard
-if (!isset($_SESSION['authenticated']) || !$_SESSION['authenticated']) {
-    header('Location: login.php');
-    exit;
-}
 
 // Firm Admin Guard (Only 'admin' role can modify settings/users)
 $is_admin = (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin');

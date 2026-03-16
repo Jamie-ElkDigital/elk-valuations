@@ -36,6 +36,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Generate CSRF Token
             $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 
+            // Create Persistent Session Token (12 Hours)
+            $token = bin2hex(random_bytes(32));
+            $expires = date('Y-m-d H:i:s', strtotime('+12 hours'));
+            $stmt = $pdo->prepare("INSERT INTO user_sessions (user_id, session_token, expires_at) VALUES (?, ?, ?)");
+            $stmt->execute([$user['id'], $token, $expires]);
+
+            // Set Secure Cookie (12 Hours)
+            setcookie('elk_session', $token, [
+                'expires' => time() + (12 * 3600),
+                'path' => '/',
+                'httponly' => true,
+                'samesite' => 'Lax'
+            ]);
+
             // Clean up MFA data
             $stmt = $pdo->prepare("UPDATE users SET mfa_code = NULL, mfa_expires_at = NULL WHERE id = ?");
             $stmt->execute([$user['id']]);

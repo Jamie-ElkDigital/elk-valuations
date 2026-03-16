@@ -1,17 +1,6 @@
 <?php
-/**
- * ELK Valuations - Relational Dashboard
- * Grouped by Company with nested report history.
- */
-
-session_start();
-require_once 'db.php';
+require_once 'auth-guard.php';
 require_once 'theme-engine.php';
-
-if (!isset($_SESSION['authenticated']) || !$_SESSION['authenticated']) {
-    header('Location: login.php');
-    exit;
-}
 
 $firm_id = $_SESSION['firm_id'];
 $pdo = DB::getInstance();
