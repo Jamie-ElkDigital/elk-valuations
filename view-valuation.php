@@ -139,7 +139,17 @@ function fmtShort($n) {
     <span class="header-label">Viewing Report: <?php echo htmlspecialchars($v['client_name']); ?></span>
   </div>
   <div class="header-right" style="display: flex; align-items: center; gap: 16px;">
-    <a href="export-pdf.php?uuid=<?php echo $v['uuid']; ?>" target="_blank" class="btn btn-outline" style="font-size: 11px; padding: 6px 12px;">🖨 Download PDF</a>
+    <?php
+      // Try to determine the latest version number for this valuation ID to provide a quick snapshot link
+      $stmt = $pdo->prepare("SELECT version_number FROM valuation_versions WHERE valuation_id = ? ORDER BY version_number DESC LIMIT 1");
+      $stmt->execute([$v['id']]);
+      $latest_ver = $stmt->fetchColumn();
+      $pdf_link = "export-pdf.php?uuid=" . $v['uuid'];
+      if ($latest_ver) {
+          $pdf_link .= "&v=" . $latest_ver;
+      }
+    ?>
+    <a href="<?php echo $pdf_link; ?>" target="_blank" class="btn btn-outline" style="font-size: 11px; padding: 6px 12px;">🖨 Download PDF</a>
     <a href="index.php?edit=<?php echo $v['uuid']; ?>" class="btn btn-primary" style="font-size: 11px; padding: 6px 12px;">✏️ Edit Data</a>
   </div>
 </header>

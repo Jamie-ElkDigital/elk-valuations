@@ -95,27 +95,27 @@ if (isset($_GET['edit'])) {
 
     <div class="sidebar-section">
       <div class="sidebar-section-label">Steps</div>
-      <div class="nav-item" onclick="goTo(0)" id="nav0">
+      <div class="nav-item step-indicator" id="nav0">
         <div class="nav-step">1</div>
         Business Details
       </div>
-      <div class="nav-item" onclick="goTo(1)" id="nav1">
+      <div class="nav-item step-indicator" id="nav1">
         <div class="nav-step">2</div>
         Financial Data
       </div>
-      <div class="nav-item" onclick="goTo(2)" id="nav2">
+      <div class="nav-item step-indicator" id="nav2">
         <div class="nav-step">3</div>
         Adjustments
       </div>
-      <div class="nav-item" onclick="goTo(3)" id="nav3">
+      <div class="nav-item step-indicator" id="nav3">
         <div class="nav-step">4</div>
         Shareholders
       </div>
-      <div class="nav-item" onclick="goTo(4)" id="nav4">
+      <div class="nav-item step-indicator" id="nav4">
         <div class="nav-step">5</div>
         Methodology
       </div>
-      <div class="nav-item" onclick="goTo(5)" id="nav5">
+      <div class="nav-item step-indicator" id="nav5">
         <div class="nav-step">6</div>
         Results &amp; Report
       </div>
