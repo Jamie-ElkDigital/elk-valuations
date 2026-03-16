@@ -39,7 +39,7 @@ try {
     $vid = $valuation['id'];
 
     // Fetch Versions
-    $stmt = $pdo->prepare("SELECT version_number, valuation_mid, created_at 
+    $stmt = $pdo->prepare("SELECT id, version_number, valuation_mid, created_at 
                            FROM valuation_versions 
                            WHERE valuation_id = ? 
                            ORDER BY version_number DESC");
