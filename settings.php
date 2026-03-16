@@ -9,6 +9,9 @@ if (!isset($_SESSION['authenticated']) || !$_SESSION['authenticated']) {
     exit;
 }
 
+// Firm Admin Guard (Only 'admin' role can modify settings/users)
+$is_admin = (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin');
+
 $firm_id = $_SESSION['firm_id'];
 $pdo = DB::getInstance();
 $message = '';
@@ -16,35 +19,74 @@ $error = '';
 
 // Handle POST actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $action = $_POST['action'] ?? 'save_settings';
+    if (!$is_admin) {
+        $error = 'Unauthorised: Admin permissions required for this action.';
+    } else {
+        $action = $_POST['action'] ?? 'save_settings';
 
-    if ($action === 'save_settings') {
-        $name = $_POST['firm_name'] ?? '';
-        $primary_color = $_POST['primary_color'] ?? '#c5a059';
-        $secondary_color = $_POST['secondary_color'] ?? '#050505';
-        $logo_url = $_POST['logo_url'] ?? '';
+        if ($action === 'save_settings') {
+            $name = $_POST['firm_name'] ?? '';
+            $primary_color = $_POST['primary_color'] ?? '#c5a059';
+            $secondary_color = $_POST['secondary_color'] ?? '#050505';
+            $logo_url = $_POST['logo_url'] ?? '';
 
-        try {
-            $stmt = $pdo->prepare("UPDATE firms SET name = ?, primary_color = ?, secondary_color = ?, logo_url = ? WHERE id = ?");
-            $stmt->execute([$name, $primary_color, $secondary_color, $logo_url, $firm_id]);
-            $_SESSION['firm_name'] = $name;
-            $message = 'Firm settings updated successfully.';
-        } catch (Exception $e) {
-            $error = 'Error: ' . $e->getMessage();
-        }
-    } elseif ($action === 'add_user') {
-        $user_name = $_POST['user_name'] ?? '';
-        $user_email = $_POST['user_email'] ?? '';
-        $user_pass = $_POST['user_pass'] ?? '';
-        $user_role = $_POST['user_role'] ?? 'user';
+            try {
+                $stmt = $pdo->prepare("UPDATE firms SET name = ?, primary_color = ?, secondary_color = ?, logo_url = ? WHERE id = ?");
+                $stmt->execute([$name, $primary_color, $secondary_color, $logo_url, $firm_id]);
+                $_SESSION['firm_name'] = $name;
+                $message = 'Firm settings updated successfully.';
+            } catch (Exception $e) {
+                $error = 'Error: ' . $e->getMessage();
+            }
+        } elseif ($action === 'add_user') {
+            $user_name = $_POST['user_name'] ?? '';
+            $user_email = $_POST['user_email'] ?? '';
+            $user_pass = $_POST['user_pass'] ?? '';
+            $user_role = $_POST['user_role'] ?? 'user';
 
-        try {
-            $hash = password_hash($user_pass, PASSWORD_DEFAULT);
-            $stmt = $pdo->prepare("INSERT INTO users (firm_id, email, password_hash, name, role) VALUES (?, ?, ?, ?, ?)");
-            $stmt->execute([$firm_id, $user_email, $hash, $user_name, $user_role]);
-            $message = 'User added successfully.';
-        } catch (Exception $e) {
-            $error = 'Error adding user: ' . $e->getMessage();
+            try {
+                $hash = password_hash($user_pass, PASSWORD_DEFAULT);
+                $stmt = $pdo->prepare("INSERT INTO users (firm_id, email, password_hash, name, role) VALUES (?, ?, ?, ?, ?)");
+                $stmt->execute([$firm_id, $user_email, $hash, $user_name, $user_role]);
+                $message = 'User added successfully.';
+            } catch (Exception $e) {
+                $error = 'Error adding user: ' . $e->getMessage();
+            }
+        } elseif ($action === 'reset_pass') {
+            $uid = (int)$_POST['user_id'];
+            $new_raw = "VAL_" . rand(1000, 9999) . "!";
+            $new_hash = password_hash($new_raw, PASSWORD_DEFAULT);
+            
+            try {
+                // Ensure the user belongs to the same firm
+                $stmt = $pdo->prepare("UPDATE users SET password_hash = ? WHERE id = ? AND firm_id = ?");
+                $stmt->execute([$new_hash, $uid, $firm_id]);
+                if ($stmt->rowCount() > 0) {
+                    $message = "Password reset successfully. New password: <strong>$new_raw</strong>";
+                } else {
+                    $error = "User not found or access denied.";
+                }
+            } catch (Exception $e) {
+                $error = "Error: " . $e->getMessage();
+            }
+        } elseif ($action === 'delete_user') {
+            $uid = (int)$_POST['user_id'];
+            try {
+                // Ensure the user belongs to the same firm and isn't the current user
+                if ($uid === $_SESSION['user_id']) {
+                    $error = "You cannot delete your own account.";
+                } else {
+                    $stmt = $pdo->prepare("DELETE FROM users WHERE id = ? AND firm_id = ?");
+                    $stmt->execute([$uid, $firm_id]);
+                    if ($stmt->rowCount() > 0) {
+                        $message = "User deleted successfully.";
+                    } else {
+                        $error = "User not found or access denied.";
+                    }
+                }
+            } catch (Exception $e) {
+                $error = "Error: " . $e->getMessage();
+            }
         }
     }
 }
@@ -326,6 +368,7 @@ input[type="color"]::-webkit-color-swatch {
                         <th>Name</th>
                         <th>Email</th>
                         <th>Role</th>
+                        <th style="text-align: right;">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -334,6 +377,22 @@ input[type="color"]::-webkit-color-swatch {
                         <td style="color: var(--text-main); font-weight: 500;"><?php echo htmlspecialchars($u['name']); ?></td>
                         <td><?php echo htmlspecialchars($u['email']); ?></td>
                         <td><span style="text-transform: uppercase; font-size: 9px; padding: 2px 6px; border: 1px solid var(--border-subtle); border-radius: 4px;"><?php echo $u['role']; ?></span></td>
+                        <td style="text-align: right;">
+                            <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                                <form method="POST" onsubmit="return confirm('Reset password for this user?');" style="display:inline;">
+                                    <input type="hidden" name="action" value="reset_pass">
+                                    <input type="hidden" name="user_id" value="<?php echo $u['id']; ?>">
+                                    <button type="submit" class="btn-outline" style="font-size: 8px; padding: 3px 6px; color: var(--brand-accent); border: 1px solid rgba(0,255,204,0.2); background:none; cursor:pointer; border-radius:2px;">Reset</button>
+                                </form>
+                                <?php if ($u['id'] != $_SESSION['user_id']): ?>
+                                <form method="POST" onsubmit="return confirm('Delete this user account?');" style="display:inline;">
+                                    <input type="hidden" name="action" value="delete_user">
+                                    <input type="hidden" name="user_id" value="<?php echo $u['id']; ?>">
+                                    <button type="submit" class="btn-outline" style="font-size: 8px; padding: 3px 6px; color: #ff4444; border: 1px solid rgba(255,68,68,0.2); background:none; cursor:pointer; border-radius:2px;">Delete</button>
+                                </form>
+                                <?php endif; ?>
+                            </div>
+                        </td>
                     </tr>
                     <?php endforeach; ?>
                 </tbody>

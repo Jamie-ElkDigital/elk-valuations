@@ -24,10 +24,10 @@ The application has successfully transitioned to secure UUID-based URLs and feat
 ### Phase 5: Commercial SaaS & Admin Tooling (CURRENT FOCUS)
 *   [x] **Enhanced Dashboard:** Grid layout sorted by date with AJAX company search.
 *   [x] **Fix UUID Migration Regressions:** Repaired broken PDF links and internal ID references.
-*   [ ] **Global User Management (Super Admin):** View all firms, create new users, and global password resets.
-*   [ ] **Firm Admin Tools:** Internal team password resets and user management.
+*   [x] **Global User Management (Super Admin):** View all firms, create new users, and global password resets.
+*   [x] **Firm Admin Tools:** Internal team password resets and user management.
 *   [ ] **AI Logic Protection:** Moving core prompts behind a protected ELK Digital internal API.
-*   [ ] **Usage-Based Auditing:** Tracking extraction volume and AI cost monitoring (£12/1M tokens).
+*   [x] **Usage-Based Auditing:** Tracking extraction volume and AI cost monitoring (£12/1M tokens).
 
 ---
 ### 🛠️ Project-Specific Rules for Agent
