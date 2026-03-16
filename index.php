@@ -51,6 +51,20 @@ if (isset($_GET['edit'])) {
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css?v=3.2.1">
+<style>
+.intel-panel { display: none; margin-top: 24px; padding: 24px; background: var(--brand-surface-light); border: 1px solid var(--brand-accent-border); border-radius: 8px; animation: slideDown 0.4s ease; }
+.intel-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; margin-bottom: 24px; }
+.intel-stat { padding: 16px; background: var(--brand-surface-mid); border-radius: 6px; border: 1px solid var(--border-subtle); }
+.intel-stat .label { font-size: 10px; text-transform: uppercase; color: var(--text-faint); margin-bottom: 4px; display: block; }
+.intel-stat .value { font-size: 18px; font-weight: 600; color: var(--brand-accent-light); }
+.intel-stat .sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.ch-accounts-list { border-top: 1px solid var(--border-subtle); padding-top: 20px; }
+.ch-acc-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.ch-acc-item:last-child { border-bottom: none; }
+.ch-acc-info { display: flex; flex-direction: column; gap: 2px; }
+.ch-acc-date { font-size: 13px; font-weight: 600; color: var(--text-main); }
+.ch-acc-type { font-size: 11px; color: var(--text-faint); }
+</style>
 <?php injectTheme($primary_color, $secondary_color); ?>
 <script>
   window.EDIT_DATA = <?php echo $edit_data ? json_encode($edit_data) : 'null'; ?>;
@@ -171,7 +185,44 @@ if (isset($_GET['edit'])) {
         </div>
         <div class="form-group">
           <label>Company Number</label>
-          <input type="text" id="companyNumber" placeholder="e.g. 12345678">
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="companyNumber" placeholder="e.g. 12345678" style="flex: 1;">
+            <button class="btn btn-outline" onclick="searchCompaniesHouse()" id="chSearchBtn" style="padding: 0 16px;">🔍 Lookup</button>
+          </div>
+        </div>
+
+        <!-- Corporate Intelligence Panel -->
+        <div id="intelPanel" class="intel-panel full">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 style="margin: 0; font-size: 16px; color: var(--text-main);">Corporate Intelligence Summary</h3>
+            <span class="pill" style="background: var(--brand-accent-dim); color: var(--brand-accent-light);">Companies House Verified</span>
+          </div>
+          
+          <div class="intel-grid">
+            <div class="intel-stat">
+              <span class="label">Incorporated</span>
+              <div class="value" id="intel_inc">—</div>
+              <div class="sub" id="intel_stability">Checking stability...</div>
+            </div>
+            <div class="intel-stat">
+              <span class="label">Share Changes</span>
+              <div class="value" id="intel_sh">—</div>
+              <div class="sub">Allotments since formation</div>
+            </div>
+            <div class="intel-stat">
+              <span class="label">Director Churn</span>
+              <div class="value" id="intel_dir">—</div>
+              <div class="sub">Appointments/Terminations</div>
+            </div>
+          </div>
+
+          <div class="ch-accounts-list">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <span style="font-size: 12px; font-weight: 600; color: var(--text-muted);">Available Statutory Accounts</span>
+              <button class="btn btn-primary" style="font-size: 11px; padding: 6px 12px;" onclick="importCHAccounts()" id="chImportBtn">Import & Extract Last 3 Years</button>
+            </div>
+            <div id="chAccountsContainer"></div>
+          </div>
         </div>
         <div class="form-group">
           <label>Sector / Industry</label>
@@ -1318,6 +1369,114 @@ async function generateNarrative(targetId = 'r_narrative') {
   } finally {
     btn.disabled = false;
     btn.innerHTML = originalHtml;
+  }
+}
+
+// ── COMPANIES HOUSE LOOKUP ──
+async function searchCompaniesHouse() {
+  const num = document.getElementById('companyNumber').value;
+  if (!num) return showStatus('Please enter a company number first.');
+
+  const btn = document.getElementById('chSearchBtn');
+  const panel = document.getElementById('intelPanel');
+  const originalHtml = btn.innerHTML;
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Searching...';
+
+  try {
+    const response = await fetch(`ch-proxy.php?number=${num}`, {
+      headers: { 'X-CSRF-Token': window.CSRF_TOKEN }
+    });
+    const result = await response.json();
+
+    if (result.error) throw new Error(result.error);
+
+    // Populate Intelligence
+    document.getElementById('companyName').value = result.profile.name;
+    updateHeader();
+
+    const incDate = new Date(result.profile.incorporated);
+    const yearsAgo = Math.floor((new Date() - incDate) / (365.25 * 24 * 60 * 60 * 1000));
+    
+    document.getElementById('intel_inc').textContent = incDate.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+    document.getElementById('intel_stability').textContent = `${yearsAgo} years of trading history.`;
+    document.getElementById('intel_sh').textContent = result.profile.share_changes;
+    document.getElementById('intel_dir').textContent = result.profile.director_changes;
+
+    // Populate Accounts
+    const container = document.getElementById('chAccountsContainer');
+    container.innerHTML = '';
+    result.accounts.forEach(acc => {
+      const item = document.createElement('div');
+      item.className = 'ch-acc-item';
+      item.innerHTML = `
+        <div class="ch-acc-info">
+          <div class="ch-acc-date">Accounts to ${new Date(acc.date).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}</div>
+          <div class="ch-acc-type">${acc.type.toUpperCase()}</div>
+        </div>
+        <input type="checkbox" class="ch-acc-checkbox" value="${acc.pdf_url}" checked>
+      `;
+      container.appendChild(item);
+    });
+
+    panel.style.display = 'block';
+    showStatus('Corporate Intelligence fetched from Companies House ✓');
+
+  } catch (err) {
+    showStatus('Lookup failed: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = originalHtml;
+  }
+}
+
+async function importCHAccounts() {
+  const checkboxes = document.querySelectorAll('.ch-acc-checkbox:checked');
+  if (checkboxes.length === 0) return showStatus('No accounts selected for import.');
+
+  const btn = document.getElementById('chImportBtn');
+  const originalText = btn.innerText;
+  
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Importing Data...';
+  showStatus('Connecting to Companies House Document Vault...');
+
+  try {
+    const fileData = [];
+    for (const cb of checkboxes) {
+      // Because CH Document API is CORS restricted, we proxy the fetch through vertex-proxy.php or a new fetch-pdf.php
+      // For now, we'll extend vertex-proxy to handle URL-based extraction
+      const pdfUrl = cb.value;
+      fileData.push({ url: pdfUrl });
+    }
+
+    const response = await fetch('vertex-proxy.php', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': window.CSRF_TOKEN
+      },
+      body: JSON.stringify({ 
+        action: 'extract_from_urls',
+        files: fileData 
+      })
+    });
+
+    const result = await response.json();
+    if (result.error) throw new Error(result.error);
+
+    populateExtractedData(result.data);
+    showStatus('Accounts data imported & analyzed by Gemini ✓');
+    
+    // Smooth scroll to results
+    setTimeout(() => goTo(1), 1000);
+
+  } catch (err) {
+    showStatus('Import failed: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerText = originalText;
   }
 }
 

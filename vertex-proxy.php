@@ -68,11 +68,35 @@ function get_proprietary_payload($action, $input) {
     }
 
     // Local Implementation (Legacy / Phase 5 Start)
-    if ($action === 'extract') {
+    if ($action === 'extract' || $action === 'extract_from_urls') {
         $parts = [['text' => ElkLogicVault::getExtractionPrompt()]];
-        foreach ($input['files'] as $file) {
-            $parts[] = ['inlineData' => ['mimeType' => $file['mimeType'], 'data' => $file['data']]];
+        
+        if ($action === 'extract_from_urls') {
+            $apiKey = getenv('CH_API_KEY');
+            foreach ($input['files'] as $file) {
+                // Fetch the PDF from CH Document API
+                $ch = curl_init($file['url']);
+                curl_setopt_array($ch, [
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_USERPWD        => $apiKey . ":",
+                    CURLOPT_HTTPAUTH       => CURLAUTH_BASIC,
+                    CURLOPT_FOLLOWLOCATION => true,
+                    CURLOPT_HTTPHEADER     => ['Accept: application/pdf'],
+                    CURLOPT_TIMEOUT        => 30
+                ]);
+                $pdfData = curl_exec($ch);
+                curl_close($ch);
+                
+                if ($pdfData) {
+                    $parts[] = ['inlineData' => ['mimeType' => 'application/pdf', 'data' => base64_encode($pdfData)]];
+                }
+            }
+        } else {
+            foreach ($input['files'] as $file) {
+                $parts[] = ['inlineData' => ['mimeType' => $file['mimeType'], 'data' => $file['data']]];
+            }
         }
+
         return [
             'contents' => [['role' => 'user', 'parts' => $parts]],
             'generationConfig' => ['temperature' => 0.1, 'maxOutputTokens' => 8192]
@@ -165,7 +189,7 @@ try {
     error_log("Usage logging failed: " . $e->getMessage());
 }
 
-if ($action === 'extract') {
+if ($action === 'extract' || $action === 'extract_from_urls') {
     $clean_text = trim($text);
     if (preg_match('/^```(?:json)?\s*([\s\S]*?)\s*```$/', $clean_text, $matches)) { $clean_text = $matches[1]; }
     $json = json_decode($clean_text, true);
