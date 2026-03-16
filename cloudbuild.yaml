@@ -33,8 +33,5 @@ steps:
       - '--timeout'
       - '300'
 
-images:
-  - 'europe-west2-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/elk-valuations:$COMMIT_SHA'
-
 options:
   logging: CLOUD_LOGGING_ONLY
