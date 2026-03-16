@@ -590,9 +590,7 @@ if (isset($_GET['edit'])) {
         <button class="btn btn-ghost" onclick="goTo(4)">← Back</button>
         <div class="spacer"></div>
         <div id="saveInfo" style="font-size:11px; color:var(--text-faint); margin-right:12px; display:none;">Last saved: <span id="saveTime"></span></div>
-        <button id="saveBtn" class="btn btn-outline" style="color:var(--success); border-color:var(--success);" onclick="saveValuation()">💾 Save Valuation</button>
-        <button class="btn btn-outline" onclick="generatePdfReport(this)">🖨 Print / PDF View</button>
-        <button class="btn btn-primary btn-lg" onclick="generatePdfReport(this)">Generate PDF Report</button>
+        <button id="saveAndGenerateBtn" class="btn btn-primary btn-lg" onclick="saveAndGeneratePdf(this)">💾 Save & Generate PDF</button>
       </div>
     </div>
 
@@ -1035,6 +1033,38 @@ function calcResults() {
     tr.innerHTML = `<td>${name}</td><td>${cls}</td><td>${shares.toLocaleString()}</td><td>${fmt(val)}</td>`;
     tbody.appendChild(tr);
   });
+}
+
+async function saveAndGeneratePdf(btn) {
+  const originalText = btn.innerHTML;
+  btn.disabled = true;
+  
+  // 1. Force a save first
+  btn.innerHTML = '<span class="spinner"></span> Saving Valuation...';
+  try {
+    await saveValuation();
+  } catch (e) {
+    // saveValuation already handles showing the error, so we just stop
+    btn.innerHTML = originalText;
+    btn.disabled = false;
+    return;
+  }
+
+  // 2. Generate PDF using the now guaranteed UUID
+  if (window.EDIT_DATA && window.EDIT_DATA.uuid) {
+    btn.innerHTML = '<span class="spinner"></span> Generating PDF (~10s)...';
+    showStatus('Generating high-fidelity PDF report...');
+    window.open('export-pdf.php?uuid=' + window.EDIT_DATA.uuid, '_blank');
+    
+    setTimeout(() => {
+      btn.innerHTML = originalText;
+      btn.disabled = false;
+    }, 5000);
+  } else {
+    showStatus('Error: Could not retrieve UUID after saving.');
+    btn.innerHTML = originalText;
+    btn.disabled = false;
+  }
 }
 
 async function saveValuation() {
