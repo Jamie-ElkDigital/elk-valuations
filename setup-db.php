@@ -125,7 +125,10 @@ try {
         // Initial user
         $password = password_hash('ELK_GTA_2026!', PASSWORD_DEFAULT);
         $pdo->exec("INSERT INTO users (firm_id, email, password_hash, name, role) 
-                   VALUES ($gta_id, 'jamie@elk.digital', '$password', 'Jamie Elkins', 'admin')");
+                   VALUES ($gta_id, 'jamie@elkdigital.co.uk', '$password', 'Jamie Elkins', 'admin')");
+    } else {
+        // Fix for legacy email if it exists
+        $pdo->exec("UPDATE users SET email = 'jamie@elkdigital.co.uk' WHERE email = 'jamie@elk.digital'");
     }
 
     // 4. Seed ELK Digital (Super Admin Firm)
