@@ -236,10 +236,9 @@ function fmtShort($n) {
         </tbody>
     </table>
 
-    <div class="report-disclaimer">
-        <strong>Report Integrity:</strong> This valuation has been generated via the ELK Valuations AI Extraction Engine for <?php echo htmlspecialchars($firm['name']); ?>. 
-        The underlying data was sourced from statutory accounts for <?php echo htmlspecialchars($v['client_name']); ?> (Co. No. <?php echo htmlspecialchars($v['company_number']); ?>).
-        This document is for advisory purposes only.
+    <div class="report-disclaimer" style="font-size: 11px; line-height: 1.6; color: var(--text-faint); background: var(--brand-surface-mid); border: 1px solid var(--border-subtle); padding: 24px; border-radius: 4px; margin-top: 60px;">
+        <strong>Data Verification:</strong> This report was prepared by <?php echo htmlspecialchars($firm['name']); ?> using financial data extracted from the statutory accounts of <?php echo htmlspecialchars($v['client_name']); ?> (Co. No. <?php echo htmlspecialchars($v['company_number']); ?>). 
+        While advanced analytical tools are employed to ensure precision, this document is provided for advisory purposes and should be reviewed in conjunction with full professional consultation.
     </div>
 
   </main>
