@@ -6,6 +6,7 @@
 
 session_start();
 require_once 'db.php';
+require_once 'proprietary-logic.php'; // Local fallback (to be replaced by ELK API call)
 
 // Authentication Guard
 if (!isset($_SESSION['authenticated']) || !$_SESSION['authenticated']) {
@@ -21,11 +22,14 @@ define('GCP_PROJECT_ID',    'gta-valuations');
 define('GCP_LOCATION',      'europe-west2');
 define('GEMINI_MODEL',      'gemini-3.1-pro-preview'); 
 
+// Set this to true to switch from local prompts to ELK Internal API
+define('USE_EXTERNAL_LOGIC', false);
+define('ELK_LOGIC_API_URL',  'https://api.elkdigital.co.uk/v1/valuation-logic');
+
 /**
  * Get a fresh access token using the Service Account (Application Default Credentials)
  */
 function get_access_token(): string {
-    // On Cloud Run, we get a token directly from the internal Metadata Server
     $ch = curl_init('http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token');
     curl_setopt_array($ch, [
         CURLOPT_RETURNTRANSFER => true,
@@ -44,6 +48,35 @@ function get_access_token(): string {
     return $data['access_token'] ?? '';
 }
 
+/**
+ * Hydrates the request with proprietary ELK Digital prompts.
+ */
+function get_proprietary_payload($action, $input) {
+    if (USE_EXTERNAL_LOGIC) {
+        // This is where you would call your internal ELK server to get the prompt
+        // and return the pre-constructed Vertex AI payload.
+        // For now, this is the architectural target.
+    }
+
+    // Local Implementation (Legacy / Phase 5 Start)
+    if ($action === 'extract') {
+        $parts = [['text' => ElkLogicVault::getExtractionPrompt()]];
+        foreach ($input['files'] as $file) {
+            $parts[] = ['inlineData' => ['mimeType' => $file['mimeType'], 'data' => $file['data']]];
+        }
+        return [
+            'contents' => [['role' => 'user', 'parts' => $parts]],
+            'generationConfig' => ['temperature' => 0.1, 'maxOutputTokens' => 8192]
+        ];
+    } else {
+        return [
+            'contents' => [['role' => 'user', 'parts' => [['text' => trim($input['prompt'])]]]],
+            'generationConfig' => ['temperature' => 0.4, 'maxOutputTokens' => 8192, 'topP' => 0.8],
+            'systemInstruction' => ['parts' => [['text' => ElkLogicVault::getNarrativeSystemInstruction()]]]
+        ];
+    }
+}
+
 $input = json_decode(file_get_contents('php://input'), true);
 $action = $input['action'] ?? 'narrative';
 
@@ -58,57 +91,8 @@ $vertex_url = sprintf(
     GCP_PROJECT_ID, GCP_LOCATION, GEMINI_MODEL
 );
 
-if ($action === 'extract') {
-    if (empty($input['files'])) { http_response_code(400); echo json_encode(['error' => 'Missing files']); exit; }
-
-    $parts = [
-        ['text' => "You are a professional business valuation analyst. Extract data from these Final Accounts. 
-        Identify the year for each document.
-        Return ONLY a JSON object with this exact structure:
-        {
-          'year1': { 'year': 2023, 'turnover': 100000, 'cos': 50000, 'admin': 30000, 'other': 0, 'depreciation': 5000, 'directorsSalaries': 40000 },
-          'year2': { ... },
-          'year3': {
-            'year': 2025, 'turnover': 120000, 'cos': 60000, 'admin': 35000, 'other': 0, 'depreciation': 6000, 'directorsSalaries': 45000,
-            'netAssets': 150000, 'cash': 20000, 'debtors': 15000, 'loans': 10000,
-            'companyName': '...', 'companyNumber': '...', 'yearEnd': '30 April', 'employees': 8, 'sector': 'HR & Recruitment',
-            'description': 'A detailed 3-4 sentence professional summary of what the company does.',
-            'performanceCommentary': 'A detailed 2-paragraph analysis of the financial trends, growth, and margins seen in these 3 years of accounts.',
-            'yearsTrading': 10,
-            'directors': ['Name 1', 'Name 2'], 'shareCapital': 100
-          }
-        }
-        Ensure 'year1' is oldest and 'year3' is newest. If a figure is missing, use 0. If a string is missing, use ''.
-        Sectors: [Professional Services, HR & Recruitment, IT & Technology, Construction & Trades, Retail, Hospitality & Leisure, Manufacturing, Healthcare, Financial Services, Property, Other].
-        IMPORTANT: The 'description' and 'performanceCommentary' MUST be professional and detailed. Infer 'yearsTrading' accurately. Return ONLY the complete JSON object."]
-    ];
-
-    foreach ($input['files'] as $file) {
-        $parts[] = [
-            'inlineData' => [
-                'mimeType' => $file['mimeType'],
-                'data'     => $file['data']
-            ]
-        ];
-    }
-
-    $payload = [
-        'contents' => [['role' => 'user', 'parts' => $parts]],
-        'generationConfig' => [
-            'temperature' => 0.1,
-            'maxOutputTokens' => 8192,
-        ]
-    ];
-} else {
-    if (empty($input['prompt'])) { http_response_code(400); echo json_encode(['error' => 'Missing prompt']); exit; }
-    $prompt = trim($input['prompt']);
-
-    $payload = [
-        'contents' => [['role' => 'user', 'parts' => [['text' => $prompt]]]],
-        'generationConfig' => ['temperature' => 0.4, 'maxOutputTokens' => 8192, 'topP' => 0.8],
-        'systemInstruction' => ['parts' => [['text' => 'You are a professional business valuation analyst writing for a UK chartered accountancy firm (GTA Accounting, Petersfield, Hampshire). Write clear, authoritative commentary suitable for inclusion in a formal valuation report. Use UK English. Write in third person. Be factual, measured and professional. Do not use bullet points or headers. Write in flowing paragraphs only.']]]
-    ];
-}
+// Get the payload (Now hydrated by the Logic Vault)
+$payload = get_proprietary_payload($action, $input);
 
 $ch = curl_init($vertex_url);
 curl_setopt_array($ch, [
@@ -142,29 +126,17 @@ try {
                            VALUES (?, ?, ?, ?, ?, ?)");
     $stmt->execute([$firm_id, $user_id, $action, $promptTokens, $compTokens, $totalTokens]);
 } catch (Exception $e) {
-    // Log error but don't fail the request
     error_log("Usage logging failed: " . $e->getMessage());
 }
 
 if ($action === 'extract') {
     $clean_text = trim($text);
-    if (preg_match('/^```(?:json)?\s*([\s\S]*?)\s*```$/', $clean_text, $matches)) {
-        $clean_text = $matches[1];
-    }
-    
+    if (preg_match('/^```(?:json)?\s*([\s\S]*?)\s*```$/', $clean_text, $matches)) { $clean_text = $matches[1]; }
     $json = json_decode($clean_text, true);
-    if (!$json) {
-        if (preg_match('/\{[\s\S]*\}/', $clean_text, $matches)) {
-            $json = json_decode($matches[0], true);
-        }
-    }
+    if (!$json && preg_match('/\{[\s\S]*\}/', $clean_text, $matches)) { $json = json_decode($matches[0], true); }
 
     if (!$json) {
-        echo json_encode([
-            'error' => 'Failed to parse JSON from Gemini', 
-            'finishReason' => $finishReason,
-            'raw' => $text
-        ]);
+        echo json_encode(['error' => 'Failed to parse JSON from Gemini', 'finishReason' => $finishReason, 'raw' => $text]);
     } else {
         echo json_encode(['data' => $json]);
     }

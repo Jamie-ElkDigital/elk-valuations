@@ -26,7 +26,7 @@ The application has successfully transitioned to secure UUID-based URLs and feat
 *   [x] **Fix UUID Migration Regressions:** Repaired broken PDF links and internal ID references.
 *   [x] **Global User Management (Super Admin):** View all firms, create new users, and global password resets.
 *   [x] **Firm Admin Tools:** Internal team password resets and user management.
-*   [ ] **AI Logic Protection:** Moving core prompts behind a protected ELK Digital internal API.
+*   [x] **AI Logic Protection:** Moving core prompts behind a protected ELK Digital internal API.
 *   [x] **Usage-Based Auditing:** Tracking extraction volume and AI cost monitoring (£12/1M tokens).
 
 ---
