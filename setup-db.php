@@ -37,9 +37,20 @@ try {
         password_hash VARCHAR(255) NOT NULL,
         name VARCHAR(255),
         role ENUM('admin', 'user') DEFAULT 'user',
+        mfa_code VARCHAR(6),
+        mfa_expires_at TIMESTAMP NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (firm_id) REFERENCES firms(id) ON DELETE CASCADE
     ) ENGINE=InnoDB;");
+
+    // Migration for 2FA columns
+    $userCols = $pdo->query("SHOW COLUMNS FROM users")->fetchAll(PDO::FETCH_COLUMN);
+    if (!in_array('mfa_code', $userCols)) {
+        $pdo->exec("ALTER TABLE users ADD COLUMN mfa_code VARCHAR(6) AFTER role");
+    }
+    if (!in_array('mfa_expires_at', $userCols)) {
+        $pdo->exec("ALTER TABLE users ADD COLUMN mfa_expires_at TIMESTAMP NULL AFTER mfa_code");
+    }
 
     // 3. Create valuations table (with status and uuid)
     $pdo->exec("CREATE TABLE IF NOT EXISTS valuations (
