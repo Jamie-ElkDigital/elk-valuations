@@ -148,25 +148,28 @@ $secondary_color = $firm['secondary_color'] ?? '#050505';
         <div>Versions</div>
         <div></div>
       </div>
-
-      <?php foreach ($companies as $c): ?>
-        <div class="company-group" data-name="<?php echo htmlspecialchars($c['client_name']); ?>">
-            <div class="company-row" onclick="toggleHistory('<?php echo $c['latest_uuid']; ?>', this)">
-                <div>
-                    <div class="co-name"><?php echo htmlspecialchars($c['client_name']); ?></div>
-                    <div class="co-meta"><?php echo htmlspecialchars($c['company_number'] ?: $c['sector']); ?></div>
-                </div>
-                <div class="co-value">£<?php echo number_format($c['latest_value'] / 1000, 0); ?>k</div>
-                <div class="co-date"><?php echo date('j M Y', strtotime($c['latest_date'])); ?></div>
-                <div><span class="co-count"><?php echo $c['version_count']; ?> Files</span></div>
-                <div style="text-align: right; color: var(--text-faint);">▼</div>
-            </div>
-            <div class="history-panel" id="history-<?php echo $c['latest_uuid']; ?>">
-                <!-- Versions AJAX loaded here -->
-                <div style="padding: 20px; text-align: center; color: var(--text-faint); font-size: 11px;">Loading report history...</div>
-            </div>
-        </div>
-      <?php endforeach; ?>
+<?php foreach ($companies as $c): ?>
+  <div class="company-group" data-name="<?php echo htmlspecialchars($c['client_name']); ?>" id="group-<?php echo $c['latest_uuid']; ?>">
+      <div class="company-row" onclick="toggleHistory('<?php echo $c['latest_uuid']; ?>', this, event)">
+          <div>
+              <div class="co-name"><?php echo htmlspecialchars($c['client_name']); ?></div>
+              <div class="co-meta"><?php echo htmlspecialchars($c['company_number'] ?: $c['sector']); ?></div>
+          </div>
+          <div class="co-value">£<?php echo number_format($c['latest_value'] / 1000, 0); ?>k</div>
+          <div class="co-date"><?php echo date('j M Y', strtotime($c['latest_date'])); ?></div>
+          <div style="display:flex; align-items:center; gap: 16px;">
+            <span class="co-count"><?php echo $c['version_count']; ?> Files</span>
+            <button class="btn btn-ghost" style="color: #ef4444; padding: 4px; font-size: 14px;" onclick="deleteCompany('<?php echo $c['latest_uuid']; ?>', '<?php echo htmlspecialchars(addslashes($c['client_name'])); ?>'); event.stopPropagation();" title="Delete Company & All History">🗑️</button>
+          </div>
+          <div style="text-align: right; color: var(--text-faint); transition: transform 0.3s ease;">▼</div>
+      </div>
+      <div class="history-panel" id="history-<?php echo $c['latest_uuid']; ?>">
+          <div style="text-align:center; padding:20px; font-size:12px; color:var(--text-faint);">
+              <span class="spinner"></span> Loading history...
+          </div>
+      </div>
+  </div>
+<?php endforeach; ?>
     </div>
   </main>
 </div>
@@ -204,12 +207,15 @@ async function toggleHistory(uuid, row) {
             
             data.versions.forEach(v => {
                 html += `
-                    <div class="version-row">
+                    <div class="version-row" id="ver-${v.id}">
                         <div class="v-label">Version ${v.version_number}</div>
                         <div class="co-value">£${(v.valuation_mid / 1000).toFixed(0)}k</div>
                         <div class="co-date">${v.date_fmt}</div>
                         <div><a href="export-pdf.php?uuid=${uuid}&v=${v.version_number}" target="_blank" class="v-link">Download PDF</a></div>
-                        <div style="text-align: right;"><a href="view-valuation.php?uuid=${uuid}" class="v-link" style="opacity: 0.5;">View</a></div>
+                        <div style="display:flex; justify-content:flex-end; gap:16px; align-items:center;">
+                          <a href="view-valuation.php?uuid=${uuid}" class="v-link" style="opacity: 0.5;">View</a>
+                          <button class="btn btn-ghost" style="color: #ef4444; padding: 2px; font-size: 12px;" onclick="deleteVersion(${v.id}, ${v.version_number})" title="Delete this version">🗑️</button>
+                        </div>
                     </div>
                 `;
             });
@@ -222,6 +228,47 @@ async function toggleHistory(uuid, row) {
         }
     } catch (err) {
         panel.innerHTML = '<div style="padding: 20px; color: var(--error);">Failed to load history.</div>';
+    }
+}
+
+async function deleteCompany(uuid, name) {
+    if (!confirm(`Are you sure you want to permanently delete the entire valuation history for "${name}"?\n\nThis cannot be undone.`)) return;
+    
+    try {
+        const res = await fetch('delete-action.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'delete_company', uuid })
+        });
+        const data = await res.json();
+        if (data.success) {
+            document.getElementById(`group-${uuid}`).remove();
+        } else {
+            alert('Error deleting company: ' + data.error);
+        }
+    } catch (err) {
+        alert('Failed to connect to server.');
+    }
+}
+
+async function deleteVersion(versionId, vNum) {
+    if (!confirm(`Are you sure you want to delete Version ${vNum}? This will permanently remove the PDF snapshot.`)) return;
+    
+    try {
+        const res = await fetch('delete-action.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'delete_version', version_id: versionId })
+        });
+        const data = await res.json();
+        if (data.success) {
+            document.getElementById(`ver-${versionId}`).remove();
+            // Optional: You could update the "X Files" counter here, but a reload is safer
+        } else {
+            alert('Error deleting version: ' + data.error);
+        }
+    } catch (err) {
+        alert('Failed to connect to server.');
     }
 }
 
