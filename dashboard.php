@@ -65,7 +65,7 @@ $secondary_color = $firm['secondary_color'] ?? '#050505';
 .co-date { font-size: 12px; color: var(--text-muted); }
 .co-count { font-size: 10px; background: var(--brand-accent-dim); color: var(--brand-accent-light); padding: 2px 8px; border-radius: 10px; text-align: center; }
 
-.history-panel { display: none; background: #000; padding: 0 24px; border-bottom: 1px solid var(--border-subtle); }
+.history-panel { display: none; background: var(--bg-dim); padding: 0 24px; border-bottom: 1px solid var(--border-subtle); }
 .history-panel.active { display: block; animation: slideDown 0.3s ease; }
 
 @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
