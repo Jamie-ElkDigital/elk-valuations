@@ -643,9 +643,12 @@ async function handleFileUpload(event) {
   statusText.textContent = 'Reading statutory accounts...';
 
   try {
-    // Fake progress phases while waiting
-    setTimeout(() => { if(progressFill.style.width !== '100%') { progressFill.style.width = '65%'; statusText.textContent = 'Extracting financial data...'; } }, 2000);
-    setTimeout(() => { if(progressFill.style.width !== '100%') { progressFill.style.width = '85%'; statusText.textContent = 'Analysing share structure...'; } }, 5000);
+    // Fake progress phases while waiting for Vertex AI (~30-40s)
+    setTimeout(() => { if(progressFill.style.width !== '100%') { progressFill.style.width = '50%'; statusText.textContent = 'Parsing document structure...'; } }, 3000);
+    setTimeout(() => { if(progressFill.style.width !== '100%') { progressFill.style.width = '65%'; statusText.textContent = 'Extracting financial data...'; } }, 8000);
+    setTimeout(() => { if(progressFill.style.width !== '100%') { progressFill.style.width = '75%'; statusText.textContent = 'Analysing share structure...'; } }, 15000);
+    setTimeout(() => { if(progressFill.style.width !== '100%') { progressFill.style.width = '85%'; statusText.textContent = 'Formatting final outputs...'; } }, 23000);
+    setTimeout(() => { if(progressFill.style.width !== '100%') { progressFill.style.width = '95%'; statusText.textContent = 'Almost done...'; } }, 30000);
 
     const response = await fetch('vertex-proxy.php', {
       method: 'POST',

@@ -37,6 +37,7 @@ steps:
       - '--platform'
       - 'managed'
       - '--allow-unauthenticated'
+      - '--session-affinity'
       - '--memory'
       - '1Gi'
       - '--cpu'
