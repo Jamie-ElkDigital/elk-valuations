@@ -100,9 +100,9 @@ ob_start();
         /* Ensure background colors render */
         * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
     </style>
-    <?php injectTheme($primary_color, $secondary_color); ?>
+    <?php injectTheme($primary_color, $secondary_color, true); ?>
 </head>
-<body style="background: var(--brand-surface);">
+<body style="background: var(--brand-surface) !important;">
     <div class="report-container">
         <div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-end;">
             <div>

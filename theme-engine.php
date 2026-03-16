@@ -30,23 +30,28 @@ function adjustBrightness($hex, $steps) {
     return '#' . str_pad(dechex($r), 2, '0', STR_PAD_LEFT) . str_pad(dechex($g), 2, '0', STR_PAD_LEFT) . str_pad(dechex($b), 2, '0', STR_PAD_LEFT);
 }
 
-function injectTheme($primary, $secondary) {
+function injectTheme($primary, $secondary, $isReport = false) {
+    // If it's a report, we force a light, print-friendly background regardless of firm setting
+    if ($isReport) {
+        $secondary = '#ffffff';
+    }
+
     $isLight = getLuminance($secondary) > 0.5;
     
     // Derived Surfaces
-    $surface_mid = $isLight ? adjustBrightness($secondary, -10) : adjustBrightness($secondary, 15);
-    $surface_light = $isLight ? adjustBrightness($secondary, -20) : adjustBrightness($secondary, 30);
+    $surface_mid = $isLight ? '#f8fafc' : adjustBrightness($secondary, 15);
+    $surface_light = $isLight ? '#f1f5f9' : adjustBrightness($secondary, 30);
     
     // Text Colors
-    $text_main = $isLight ? '#111827' : '#ffffff';
-    $text_muted = $isLight ? '#4b5563' : '#d1d1d6';
-    $text_faint = $isLight ? '#9ca3af' : '#71717a';
+    $text_main = $isLight ? '#0f172a' : '#ffffff';
+    $text_muted = $isLight ? '#475569' : '#d1d1d6';
+    $text_faint = $isLight ? '#94a3b8' : '#71717a';
     
     // Functional Neutrals
-    $bg_dim = $isLight ? 'rgba(0, 0, 0, 0.03)' : 'rgba(255, 255, 255, 0.05)';
-    $border_subtle = $isLight ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.08)';
+    $bg_dim = $isLight ? 'rgba(15, 23, 42, 0.03)' : 'rgba(255, 255, 255, 0.05)';
+    $border_subtle = $isLight ? 'rgba(15, 23, 42, 0.08)' : 'rgba(255, 255, 255, 0.08)';
     $input_bg = $isLight ? '#ffffff' : '#000000';
-    $input_border = $isLight ? '#e5e7eb' : '#27272a';
+    $input_border = $isLight ? '#e2e8f0' : '#27272a';
     
     // Accent Variations
     $accent_light = adjustBrightness($primary, 20);
