@@ -86,13 +86,40 @@ try {
     http_response_code(500); echo json_encode(['error' => 'Auth failed: ' . $e->getMessage()]); exit;
 }
 
+$is_stream = ($action === 'narrative');
+$endpoint = $is_stream ? 'streamGenerateContent?alt=sse' : 'generateContent';
+
 $vertex_url = sprintf(
-    'https://aiplatform.googleapis.com/v1/projects/%s/locations/%s/publishers/google/models/%s:generateContent',
-    GCP_PROJECT_ID, GCP_LOCATION, GEMINI_MODEL
+    'https://aiplatform.googleapis.com/v1/projects/%s/locations/%s/publishers/google/models/%s:%s',
+    GCP_PROJECT_ID, GCP_LOCATION, GEMINI_MODEL, $endpoint
 );
 
 // Get the payload (Now hydrated by the Logic Vault)
 $payload = get_proprietary_payload($action, $input);
+
+if ($is_stream) {
+    header('Content-Type: text/event-stream');
+    header('Cache-Control: no-cache');
+    header('Connection: keep-alive');
+
+    $ch = curl_init($vertex_url);
+    curl_setopt_array($ch, [
+        CURLOPT_POST           => true,
+        CURLOPT_POSTFIELDS     => json_encode($payload),
+        CURLOPT_HTTPHEADER     => ['Authorization: Bearer ' . $access_token, 'Content-Type: application/json'],
+        CURLOPT_TIMEOUT        => 120,
+        CURLOPT_WRITEFUNCTION  => function($curl, $data) {
+            echo $data;
+            ob_flush();
+            flush();
+            return strlen($data);
+        }
+    ]);
+    curl_exec($ch);
+    $curl_err = curl_error($ch);
+    curl_close($ch);
+    exit;
+}
 
 $ch = curl_init($vertex_url);
 curl_setopt_array($ch, [

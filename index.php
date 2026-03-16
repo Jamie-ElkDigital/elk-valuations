@@ -147,18 +147,19 @@ if (isset($_GET['edit'])) {
         <p class="page-desc">Upload statutory accounts to auto-fill the valuation setup, or enter the client company information manually.</p>
       </div>
 
-      <div class="info-box" id="uploadBox" style="background: var(--brand-surface-mid); border: 1px dashed var(--brand-accent); padding: 32px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 16px;">
-        <div style="font-size: 24px;">📄</div>
-        <div>
+      <div class="info-box" id="uploadBox" style="background: var(--brand-surface-mid); border: 1px dashed var(--brand-accent); padding: 32px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 16px; position: relative; overflow: hidden;">
+        <div id="uploadProgressFill" style="position: absolute; top: 0; left: 0; height: 100%; width: 0%; background: var(--brand-accent-dim); transition: width 0.5s ease; pointer-events: none; z-index: 0;"></div>
+        <div style="z-index: 1; font-size: 24px;">📄</div>
+        <div style="z-index: 1;">
           <strong style="color: var(--text-main); display: block; margin-bottom: 4px;">Smart PDF Upload</strong>
-          <span class="text" style="color: var(--text-muted);">Upload up to 3 years of Final Accounts. Gemini Pro will extract business details, financial figures, and share structure automatically.</span>
+          <span class="text" style="color: var(--text-muted);">Upload up to 3 years of Final Accounts. The system will extract business details, financial figures, and share structure automatically.</span>
         </div>
         <input type="file" id="pdfUpload" multiple accept=".pdf" style="display: none;" onchange="handleFileUpload(event)">
-        <button class="btn btn-outline" onclick="document.getElementById('pdfUpload').click()" id="uploadBtn">
+        <button class="btn btn-outline" style="z-index: 1;" onclick="document.getElementById('pdfUpload').click()" id="uploadBtn">
           <span>Choose PDF Files</span>
         </button>
-        <div id="uploadStatus" style="font-size: 11px; color: var(--brand-accent); margin-top: 8px; display: none;">
-          <span class="spinner"></span> Processing accounts please wait...
+        <div id="uploadStatus" style="font-size: 11px; color: var(--brand-accent); margin-top: 8px; display: none; z-index: 1;">
+          <span class="spinner"></span> <span id="uploadStatusText">Uploading documents...</span>
         </div>
       </div>
 
@@ -467,7 +468,7 @@ if (isset($_GET['edit'])) {
 
       <div class="section-title">
         Accountant's Commentary
-        <button id="aiMethodBtn" class="btn btn-outline" style="margin-left:auto; font-size:11px; padding:4px 10px; color:var(--brand-accent-light);" onclick="generateNarrative('accountantNotes')">✦ Generate with AI</button>
+        <button id="aiMethodBtn" class="btn btn-outline" style="margin-left:auto; font-size:11px; padding:4px 10px; color:var(--brand-accent-light);" onclick="generateNarrative('accountantNotes')">✦ Auto-Generate Notes</button>
       </div>
       <div class="form-group">
         <label>Detailed commentary for report</label>
@@ -577,9 +578,9 @@ if (isset($_GET['edit'])) {
 
       <div class="section-title" style="margin-top:28px">
         Accountant's Commentary
-        <button id="aiNarrativeBtn" class="btn btn-primary" style="margin-left:auto; font-size:12px; padding:7px 14px;" onclick="generateNarrative()">✦ Generate AI Narrative</button>
+        <button id="aiNarrativeBtn" class="btn btn-primary" style="margin-left:auto; font-size:12px; padding:7px 14px;" onclick="generateNarrative()">✦ Draft Professional Commentary</button>
       </div>
-      <textarea class="narrative-box" id="r_narrative" placeholder="Click 'Generate AI Narrative' for Gemini Pro commentary, or type your own…" style="min-height:140px;"></textarea>
+      <textarea class="narrative-box" id="r_narrative" placeholder="Click 'Draft Professional Commentary' to auto-generate a summary, or type your own…" style="min-height:140px;"></textarea>
 
       <div class="report-disclaimer" style="background: var(--bg-dim); border: 1px solid var(--border-subtle); color: var(--text-faint);">
         <strong>Important:</strong> This valuation report has been prepared for the purpose stated above and should not be relied upon for any other purpose. The valuation is based on information provided by the directors and has not been independently verified. This report constitutes an opinion, not a guarantee of the price achievable on any open market transaction. GTA Accounting accepts no liability to any third party in connection with this report.
@@ -616,13 +617,17 @@ async function handleFileUpload(event) {
   if (!files.length) return;
 
   const status = document.getElementById('uploadStatus');
+  const statusText = document.getElementById('uploadStatusText');
   const btn = document.getElementById('uploadBtn');
+  const progressFill = document.getElementById('uploadProgressFill');
   const debugModal = document.getElementById('debugModal');
   const debugContent = document.getElementById('debugContent');
   const debugOverlay = document.getElementById('debugOverlay');
 
   status.style.display = 'block';
   btn.disabled = true;
+  progressFill.style.width = '10%';
+  statusText.textContent = 'Uploading ' + files.length + ' document(s)...';
   debugContent.textContent = 'Uploading and processing ' + files.length + ' files...';
 
   const fileData = [];
@@ -633,8 +638,15 @@ async function handleFileUpload(event) {
       data: base64.split(',')[1]
     });
   }
+  
+  progressFill.style.width = '40%';
+  statusText.textContent = 'Reading statutory accounts...';
 
   try {
+    // Fake progress phases while waiting
+    setTimeout(() => { if(progressFill.style.width !== '100%') { progressFill.style.width = '65%'; statusText.textContent = 'Extracting financial data...'; } }, 2000);
+    setTimeout(() => { if(progressFill.style.width !== '100%') { progressFill.style.width = '85%'; statusText.textContent = 'Analysing share structure...'; } }, 5000);
+
     const response = await fetch('vertex-proxy.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -660,15 +672,22 @@ async function handleFileUpload(event) {
       return;
     }
 
+    progressFill.style.width = '100%';
+    statusText.textContent = 'Complete!';
+
     populateExtractedData(result.data);
     showStatus('Financial data extracted successfully ✓');
   } catch (err) {
     console.error(err);
     debugContent.textContent = 'ERROR: ' + err.message + '\n\n' + debugContent.textContent;
+    progressFill.style.width = '0%';
     showStatus('Extraction failed: ' + err.message);
   } finally {
-    status.style.display = 'none';
-    btn.disabled = false;
+    setTimeout(() => {
+        status.style.display = 'none';
+        btn.disabled = false;
+        progressFill.style.width = '0%';
+    }, 1500);
   }
 }
 
@@ -795,7 +814,42 @@ function updateHeader() {
   document.getElementById('clientNameDisplay').textContent = name;
 }
 
-function getNum(id) { return parseFloat(document.getElementById(id)?.value) || 0; }
+function getNum(id) { 
+  const val = document.getElementById(id)?.value;
+  if (!val) return 0;
+  return parseFloat(val.toString().replace(/[£,\s]/g, '')) || 0; 
+}
+
+function initFormatting() {
+  const inputs = document.querySelectorAll('.fin-table input, #b_netassets, #b_cash, #b_debtors, #b_loans, #deduction');
+  inputs.forEach(inp => {
+    inp.type = 'text';
+    inp.inputMode = 'numeric';
+    inp.addEventListener('focus', function() {
+      if (this.value) this.value = this.value.replace(/[£,\s]/g, '');
+    });
+    inp.addEventListener('blur', function() {
+      if (this.value) {
+        const num = parseFloat(this.value.replace(/[£,\s]/g, ''));
+        if (!isNaN(num)) {
+          this.value = new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 }).format(num);
+        }
+      }
+    });
+  });
+}
+
+function applyFormatting() {
+  const inputs = document.querySelectorAll('.fin-table input, #b_netassets, #b_cash, #b_debtors, #b_loans, #deduction');
+  inputs.forEach(inp => {
+    if (inp.value) {
+        const num = parseFloat(inp.value.toString().replace(/[£,\s]/g, ''));
+        if (!isNaN(num)) {
+          inp.value = new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 }).format(num);
+        }
+    }
+  });
+}
 
 function calcFinancials() {
   for (let y = 1; y <= 3; y++) {
@@ -1141,18 +1195,53 @@ async function generateNarrative(targetId = 'r_narrative') {
   btn.disabled = true;
   const originalHtml = btn.innerHTML;
   btn.innerHTML = '<span class="spinner"></span> Generating…';
-  textarea.value = 'Generating professional AI commentary...';
+  textarea.value = '';
 
   try {
     const response = await fetch('vertex-proxy.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt })
+      body: JSON.stringify({ action: 'narrative', prompt: prompt })
     });
-    const data = await response.json();
-    if (data.error) throw new Error(data.error);
-    textarea.value = data.narrative;
-    showStatus('AI commentary generated ✓');
+
+    if (!response.body) throw new Error("No response body");
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder("utf-8");
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      
+      buffer += decoder.decode(value, { stream: true });
+      
+      // Parse Vertex AI SSE payload (lines starting with 'data: ')
+      let lines = buffer.split('\n');
+      buffer = lines.pop(); // keep incomplete line in buffer
+
+      for (let line of lines) {
+        if (line.startsWith('data: ')) {
+          const jsonStr = line.substring(6).trim();
+          if (jsonStr) {
+            try {
+              const data = JSON.parse(jsonStr);
+              if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts) {
+                 const textPart = data.candidates[0].content.parts[0].text;
+                 if (textPart) {
+                    textarea.value += textPart;
+                    // Auto scroll to bottom
+                    textarea.scrollTop = textarea.scrollHeight;
+                 }
+              }
+            } catch (e) {
+              console.warn("SSE JSON Parse error", e);
+            }
+          }
+        }
+      }
+    }
+    showStatus('Professional commentary generated ✓');
   } catch (err) {
     textarea.value = 'Error: ' + err.message;
   } finally {
@@ -1234,6 +1323,9 @@ function init() {
     const now = new Date();
     document.getElementById('reportDate').value = now.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
   }
+
+  initFormatting();
+  applyFormatting();
 }
 init();
 </script>
