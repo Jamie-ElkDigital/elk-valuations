@@ -9,7 +9,7 @@ function sendMfaEmail($to, $code) {
     $smtp_host = 'smtp.zeptomail.eu';
     $smtp_port = 587;
     $smtp_user = 'emailapikey';
-    $smtp_pass = getenv('SMTP_PASS'); 
+    $smtp_pass = getenv('SMTP_PASS') ?: ($_ENV['SMTP_PASS'] ?? ($_SERVER['SMTP_PASS'] ?? '')); 
     $from_email = 'noreply@elkdigital.co.uk'; // Ensure this matches an authorized sender in ZeptoMail
     
     if (!$smtp_pass) {

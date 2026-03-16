@@ -17,9 +17,10 @@ $test_code = "123456";
 echo "Attempting to send test MFA code to: <strong>$test_email</strong>...<br><br>";
 
 // Check environment variable
-$pass = getenv('SMTP_PASS');
+$pass = getenv('SMTP_PASS') ?: ($_ENV['SMTP_PASS'] ?? ($_SERVER['SMTP_PASS'] ?? ''));
 if (!$pass) {
     echo "<div style='color:red;'>ERROR: SMTP_PASS environment variable is NOT SET in Cloud Run.</div>";
+    echo "Available keys: " . implode(', ', array_keys($_SERVER)) . "<br>";
 } else {
     echo "SMTP_PASS found (length: " . strlen($pass) . " chars).<br>";
 }
