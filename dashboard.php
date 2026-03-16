@@ -60,7 +60,7 @@ $secondary_color = $firm['secondary_color'] ?? '#050505';
 .company-row.header:hover { background: var(--brand-surface-light); }
 
 .co-name { font-family: 'Barlow', sans-serif; font-size: 16px; font-weight: 600; color: var(--text-main); }
-.co-meta { font-size: 11px; color: var(--text-faint); margin-top: 2px; }
+.co-meta { font-size: 11px; color: var(--text-faint); margin-top: 2px; display: block; transition: transform 0.3s ease; }
 .co-value { font-family: 'DM Mono', monospace; font-size: 15px; font-weight: 600; color: var(--brand-accent-light); }
 .co-date { font-size: 12px; color: var(--text-muted); }
 .co-count { font-size: 10px; background: var(--brand-accent-dim); color: var(--brand-accent-light); padding: 2px 8px; border-radius: 10px; text-align: center; }
@@ -77,6 +77,26 @@ $secondary_color = $firm['secondary_color'] ?? '#050505';
 .v-link:hover { text-decoration: underline; }
 
 .btn-new { background: var(--brand-accent); color: var(--brand-surface); padding: 10px 20px; border-radius: 4px; text-decoration: none; font-weight: 600; font-size: 13px; }
+
+/* Search Bar Styling */
+.search-input {
+    width: 100%;
+    background: var(--brand-surface-mid);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    color: var(--text-main);
+    font-family: inherit;
+    font-size: 14px;
+    transition: border-color 0.2s;
+}
+.search-input:focus {
+    border-color: var(--brand-accent);
+    outline: none;
+}
+.search-bar-container { position: relative; width: 100%; max-width: 400px; }
+.search-bar-container::before { content: '🔍'; position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 14px; opacity: 0.5; pointer-events: none; }
+.search-bar-container .search-input { padding-left: 40px; }
 </style>
 </head>
 <body>
@@ -156,7 +176,7 @@ $secondary_color = $firm['secondary_color'] ?? '#050505';
 <script>
 async function toggleHistory(uuid, row) {
     const panel = document.getElementById(`history-${uuid}`);
-    const arrow = row.querySelector('div:last-child');
+    const arrow = row.lastElementChild;
     
     if (panel.classList.contains('active')) {
         panel.classList.remove('active');
@@ -166,7 +186,7 @@ async function toggleHistory(uuid, row) {
 
     // Close others
     document.querySelectorAll('.history-panel').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.company-row div:last-child').forEach(a => a.style.transform = 'rotate(0deg)');
+    document.querySelectorAll('.company-row').forEach(r => r.lastElementChild.style.transform = 'rotate(0deg)');
 
     panel.classList.add('active');
     arrow.style.transform = 'rotate(180deg)';
