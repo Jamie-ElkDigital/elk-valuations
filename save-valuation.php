@@ -1,7 +1,7 @@
 <?php
 /**
  * ELK Valuations - Save API
- * Saves or Updates the valuation data.
+ * Saves or Updates the valuation data with strict multi-tenant isolation.
  */
 
 session_start();
@@ -16,6 +16,16 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+// Security Guard
+if (!isset($_SESSION['authenticated']) || !$_SESSION['authenticated']) {
+    http_response_code(401);
+    echo json_encode(['error' => 'Unauthorised access. Please log in.']);
+    exit;
+}
+
+$firm_id = $_SESSION['firm_id'];
+$user_id = $_SESSION['user_id'];
+
 // Get JSON input
 $input = json_decode(file_get_contents('php://input'), true);
 
@@ -28,9 +38,6 @@ if (!$input || empty($input['companyName'])) {
 try {
     $pdo = DB::getInstance();
     
-    $firm_id = $_SESSION['firm_id'] ?? 1;
-    $user_id = $_SESSION['user_id'] ?? 1;
-
     // Methodology JSON
     $meth_json = json_encode([
         'weighting' => $input['weighting'] ?? [],
@@ -61,6 +68,16 @@ try {
     ];
 
     if (!empty($input['id'])) {
+        // Security: Verify the firm owns this valuation before updating
+        $id = (int)$input['id'];
+        $check = $pdo->prepare("SELECT id FROM valuations WHERE id = ? AND firm_id = ?");
+        $check->execute([$id, $firm_id]);
+        if (!$check->fetch()) {
+            http_response_code(403);
+            echo json_encode(['error' => 'Access Denied: Valuation ownership mismatch.']);
+            exit;
+        }
+
         // UPDATE
         $sql = "UPDATE valuations SET 
                     client_name = :client,
@@ -81,13 +98,13 @@ try {
                     ai_narrative = :ai_nar
                 WHERE id = :id AND firm_id = :firm";
         
-        $data['id'] = (int)$input['id'];
+        $data['id'] = $id;
         $stmt = $pdo->prepare($sql);
         $stmt->execute($data);
         
         echo json_encode([
             'success' => true,
-            'id' => $data['id'],
+            'id' => $id,
             'message' => 'Valuation updated successfully'
         ]);
     } else {
