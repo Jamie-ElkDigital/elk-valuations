@@ -590,8 +590,8 @@ if (isset($_GET['edit'])) {
         <div class="spacer"></div>
         <div id="saveInfo" style="font-size:11px; color:var(--text-faint); margin-right:12px; display:none;">Last saved: <span id="saveTime"></span></div>
         <button id="saveBtn" class="btn btn-outline" style="color:var(--success); border-color:var(--success);" onclick="saveValuation()">💾 Save Valuation</button>
-        <button class="btn btn-outline" onclick="window.print()">🖨 Print View</button>
-        <button class="btn btn-primary btn-lg" onclick="if(window.EDIT_DATA && window.EDIT_DATA.uuid) { window.open('export-pdf.php?uuid=' + window.EDIT_DATA.uuid, '_blank'); } else { showStatus('Please save the valuation first to generate a PDF.'); }">Generate PDF Report</button>
+        <button class="btn btn-outline" onclick="generatePdfReport(this)">🖨 Print / PDF View</button>
+        <button class="btn btn-primary btn-lg" onclick="generatePdfReport(this)">Generate PDF Report</button>
       </div>
     </div>
 
@@ -1087,6 +1087,26 @@ function showStatus(msg) {
   bar.classList.add('show');
   clearTimeout(statusTimer);
   statusTimer = setTimeout(() => bar.classList.remove('show'), 4000);
+}
+
+function generatePdfReport(btn) {
+  if (window.EDIT_DATA && window.EDIT_DATA.uuid) {
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner"></span> Generating... (Takes ~10s)';
+    btn.disabled = true;
+    showStatus('Generating high-fidelity PDF report...');
+    
+    // Open in new tab
+    window.open('export-pdf.php?uuid=' + window.EDIT_DATA.uuid, '_blank');
+    
+    // Reset button after a delay assuming it opened
+    setTimeout(() => {
+      btn.innerHTML = originalText;
+      btn.disabled = false;
+    }, 5000);
+  } else {
+    showStatus('Please save the valuation first to generate a PDF.');
+  }
 }
 
 async function generateNarrative(targetId = 'r_narrative') {

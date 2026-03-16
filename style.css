@@ -518,10 +518,30 @@ header {
   margin-bottom: 32px;
 }
 
+.fin-table th {
+  text-align: center;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  font-weight: 600;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.fin-table th:first-child {
+  text-align: left;
+}
+
 .fin-table td {
   padding: 12px;
   border-bottom: 1px solid var(--border-subtle);
   vertical-align: middle;
+}
+
+.fin-table td:not(:first-child) {
+  text-align: center;
+  font-family: 'DM Mono', monospace;
 }
 
 .fin-table input {

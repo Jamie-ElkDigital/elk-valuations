@@ -92,11 +92,18 @@ function get_gcs_token(): string {
 }
 
 /**
- * Upload PDF to Google Cloud Storage
+ * Upload PDF to Google Cloud Storage (with local fallback)
  */
 function upload_to_gcs($local_path, $gcs_name) {
     $token = get_gcs_token();
-    if (!$token) return false;
+    if (!$token) {
+        // Fallback for local testing
+        $local_dir = __DIR__ . '/reports/' . dirname($gcs_name);
+        if (!is_dir($local_dir)) {
+            mkdir($local_dir, 0777, true);
+        }
+        return copy($local_path, __DIR__ . '/reports/' . $gcs_name);
+    }
 
     $url = "https://storage.googleapis.com/upload/storage/v1/b/" . GCS_BUCKET_NAME . "/o?uploadType=media&name=" . urlencode($gcs_name);
     
@@ -118,11 +125,18 @@ function upload_to_gcs($local_path, $gcs_name) {
 }
 
 /**
- * Download PDF from Google Cloud Storage
+ * Download PDF from Google Cloud Storage (with local fallback)
  */
 function download_from_gcs($gcs_name) {
     $token = get_gcs_token();
-    if (!$token) return false;
+    if (!$token) {
+        // Fallback for local testing
+        $local_file = __DIR__ . '/reports/' . $gcs_name;
+        if (file_exists($local_file)) {
+            return file_get_contents($local_file);
+        }
+        return false;
+    }
 
     $url = "https://storage.googleapis.com/download/storage/v1/b/" . GCS_BUCKET_NAME . "/o/" . urlencode($gcs_name) . "?alt=media";
     
