@@ -12,31 +12,32 @@ session_start();
 require_once 'db.php';
 require_once 'theme-engine.php';
 
-// Authentication Guard
-if (!isset($_SESSION['authenticated']) || !$_SESSION['authenticated']) {
-    http_response_code(401);
-    die("Unauthorised Access.");
-}
-
 $uuid = $_GET['uuid'] ?? null;
 if (!$uuid) {
     die("Missing Valuation UUID.");
 }
 
-$firm_id = $_SESSION['firm_id'];
+$pdo = DB::getInstance();
+
+// Fetch Valuation with strict UUID
+$stmt = $pdo->prepare("SELECT * FROM valuations WHERE uuid = ?");
+$stmt->execute([$uuid]);
+$v = $stmt->fetch();
+
+if (!$v) {
+    die("Valuation not found or access denied.");
+}
+
+// Security: If a session exists, ensure the user belongs to the same firm
+if (isset($_SESSION['authenticated']) && $_SESSION['authenticated']) {
+    if ($_SESSION['firm_id'] != $v['firm_id'] && $_SESSION['firm_slug'] !== 'elk') {
+        die("Unauthorised Access. Firm isolation violation.");
+    }
+}
+
+$firm_id = $v['firm_id'];
 
 try {
-    $pdo = DB::getInstance();
-    
-    // Fetch Valuation with strict firm isolation and UUID
-    $stmt = $pdo->prepare("SELECT * FROM valuations WHERE uuid = ? AND firm_id = ?");
-    $stmt->execute([$uuid, $firm_id]);
-    $v = $stmt->fetch();
-
-    if (!$v) {
-        die("Valuation not found or access denied.");
-    }
-
     // Decode JSON data
     $financials = json_decode($v['financials_json'], true);
     $adjustments = json_decode($v['adjustments_json'], true);

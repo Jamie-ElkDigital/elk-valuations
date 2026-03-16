@@ -119,10 +119,7 @@ $users = $stmt->fetchAll();
 <?php injectTheme($primary_color, $secondary_color); ?>
 <style>
 .settings-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 40px;
-    align-items: start;
+    display: block;
 }
 
 .settings-container {
@@ -130,6 +127,7 @@ $users = $stmt->fetchAll();
     border: 1px solid var(--border-subtle);
     padding: 32px;
     border-radius: var(--radius-lg);
+    margin-bottom: 40px;
 }
 
 .palette-grid {
