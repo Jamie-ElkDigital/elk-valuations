@@ -34,9 +34,9 @@ $logo_url = $firm['logo_url'] ?? '';
 // Fetch existing valuation if in Edit Mode
 $edit_data = null;
 if (isset($_GET['edit'])) {
-    $edit_id = (int)$_GET['edit'];
-    $stmt = $pdo->prepare("SELECT * FROM valuations WHERE id = ? AND firm_id = ?");
-    $stmt->execute([$edit_id, $firm_id]);
+    $edit_uuid = $_GET['edit'];
+    $stmt = $pdo->prepare("SELECT * FROM valuations WHERE uuid = ? AND firm_id = ?");
+    $stmt->execute([$edit_uuid, $firm_id]);
     $edit_data = $stmt->fetch();
 }
 ?>
@@ -591,7 +591,7 @@ if (isset($_GET['edit'])) {
         <div id="saveInfo" style="font-size:11px; color:var(--text-faint); margin-right:12px; display:none;">Last saved: <span id="saveTime"></span></div>
         <button id="saveBtn" class="btn btn-outline" style="color:var(--success); border-color:var(--success);" onclick="saveValuation()">💾 Save Valuation</button>
         <button class="btn btn-outline" onclick="window.print()">🖨 Print View</button>
-        <button class="btn btn-primary btn-lg" onclick="if(window.EDIT_DATA && window.EDIT_DATA.id) { window.open('export-pdf.php?id=' + window.EDIT_DATA.id, '_blank'); } else { showStatus('Please save the valuation first to generate a PDF.'); }">Generate PDF Report</button>
+        <button class="btn btn-primary btn-lg" onclick="if(window.EDIT_DATA && window.EDIT_DATA.uuid) { window.open('export-pdf.php?uuid=' + window.EDIT_DATA.uuid, '_blank'); } else { showStatus('Please save the valuation first to generate a PDF.'); }">Generate PDF Report</button>
       </div>
     </div>
 
@@ -983,7 +983,7 @@ function calcResults() {
 async function saveValuation() {
   const btn = document.getElementById('saveBtn');
   const data = {
-    id: window.EDIT_DATA ? window.EDIT_DATA.id : null,
+    uuid: window.EDIT_DATA ? window.EDIT_DATA.uuid : null,
     companyName: document.getElementById('companyName')?.value,
     companyNumber: document.getElementById('companyNumber')?.value,
     sector: document.getElementById('sector')?.value,
@@ -1052,8 +1052,8 @@ async function saveValuation() {
     btn.innerHTML = '💾 Saved';
     document.getElementById('saveInfo').style.display = 'block';
     document.getElementById('saveTime').textContent = new Date().toLocaleTimeString();
-    if (!data.id && result.id) {
-        window.EDIT_DATA = { id: result.id };
+    if (!data.uuid && result.uuid) {
+        window.EDIT_DATA = { uuid: result.uuid };
     }
     setTimeout(() => {
       btn.innerHTML = '💾 Save Valuation';

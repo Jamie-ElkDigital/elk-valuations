@@ -1,7 +1,7 @@
 <?php
 /**
  * ELK Valuations - Save API
- * Saves or Updates the valuation data with strict multi-tenant isolation.
+ * Saves or Updates the valuation data with secure UUID isolation.
  */
 
 session_start();
@@ -38,6 +38,19 @@ if (!$input || empty($input['companyName'])) {
 try {
     $pdo = DB::getInstance();
     
+    $uuid = $input['uuid'] ?? null;
+
+    // Security: If updating, verify the firm owns this valuation via UUID
+    if ($uuid) {
+        $check = $pdo->prepare("SELECT id FROM valuations WHERE uuid = ? AND firm_id = ?");
+        $check->execute([$uuid, $firm_id]);
+        if (!$check->fetch()) {
+            http_response_code(403);
+            echo json_encode(['error' => 'Access Denied: Valuation ownership mismatch.']);
+            exit;
+        }
+    }
+
     // Methodology JSON
     $meth_json = json_encode([
         'weighting' => $input['weighting'] ?? [],
@@ -67,17 +80,7 @@ try {
         'ai_nar'     => $input['aiNarrative'] ?? ''
     ];
 
-    if (!empty($input['id'])) {
-        // Security: Verify the firm owns this valuation before updating
-        $id = (int)$input['id'];
-        $check = $pdo->prepare("SELECT id FROM valuations WHERE id = ? AND firm_id = ?");
-        $check->execute([$id, $firm_id]);
-        if (!$check->fetch()) {
-            http_response_code(403);
-            echo json_encode(['error' => 'Access Denied: Valuation ownership mismatch.']);
-            exit;
-        }
-
+    if ($uuid) {
         // UPDATE
         $sql = "UPDATE valuations SET 
                     client_name = :client,
@@ -96,37 +99,45 @@ try {
                     valuation_mid = :val_mid,
                     accountant_notes = :notes,
                     ai_narrative = :ai_nar
-                WHERE id = :id AND firm_id = :firm";
+                WHERE uuid = :uuid AND firm_id = :firm";
         
-        $data['id'] = $id;
+        $data['uuid'] = $uuid;
         $stmt = $pdo->prepare($sql);
         $stmt->execute($data);
         
         echo json_encode([
             'success' => true,
-            'id' => $id,
+            'uuid' => $uuid,
             'message' => 'Valuation updated successfully'
         ]);
     } else {
         // INSERT
+        // Auto-generate UUID for new records
+        $new_uuid = bin2hex(random_bytes(4)) . '-' . 
+                    bin2hex(random_bytes(2)) . '-' . 
+                    '4' . substr(bin2hex(random_bytes(2)), 1) . '-' . 
+                    bin2hex(random_bytes(2)) . '-' . 
+                    bin2hex(random_bytes(6));
+
         $sql = "INSERT INTO valuations (
-                    firm_id, user_id, client_name, company_number, sector, 
+                    uuid, firm_id, user_id, client_name, company_number, sector, 
                     year_end, years_trading, employees, purpose, report_date, 
                     business_desc, financials_json, adjustments_json, shareholders_json, 
                     methodology_json, valuation_mid, accountant_notes, ai_narrative
                 ) VALUES (
-                    :firm, :user, :client, :co_num, :sector,
+                    :uuid, :firm, :user, :client, :co_num, :sector,
                     :year_end, :years_trad, :emp, :purpose, :rep_date,
                     :bus_desc, :fin_json, :adj_json, :sh_json,
                     :meth_json, :val_mid, :notes, :ai_nar
                 )";
         
+        $data['uuid'] = $new_uuid;
         $stmt = $pdo->prepare($sql);
         $stmt->execute($data);
 
         echo json_encode([
             'success' => true,
-            'id' => $pdo->lastInsertId(),
+            'uuid' => $new_uuid,
             'message' => 'Valuation saved successfully'
         ]);
     }

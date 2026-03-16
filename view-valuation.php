@@ -9,8 +9,8 @@ if (!isset($_SESSION['authenticated']) || !$_SESSION['authenticated']) {
     exit;
 }
 
-$id = $_GET['id'] ?? null;
-if (!$id) {
+$uuid = $_GET['uuid'] ?? null;
+if (!$uuid) {
     header('Location: dashboard.php');
     exit;
 }
@@ -20,9 +20,9 @@ $firm_id = $_SESSION['firm_id'];
 try {
     $pdo = DB::getInstance();
     
-    // Fetch Valuation - Security: Must match firm_id
-    $stmt = $pdo->prepare("SELECT * FROM valuations WHERE id = ? AND firm_id = ?");
-    $stmt->execute([$id, $firm_id]);
+    // Fetch Valuation - Security: Must match firm_id and use uuid
+    $stmt = $pdo->prepare("SELECT * FROM valuations WHERE uuid = ? AND firm_id = ?");
+    $stmt->execute([$uuid, $firm_id]);
     $v = $stmt->fetch();
 
     if (!$v) {
@@ -139,8 +139,8 @@ function fmtShort($n) {
     <span class="header-label">Viewing Report: <?php echo htmlspecialchars($v['client_name']); ?></span>
   </div>
   <div class="header-right" style="display: flex; align-items: center; gap: 16px;">
-    <a href="export-pdf.php?id=<?php echo $v['id']; ?>" target="_blank" class="btn btn-outline" style="font-size: 11px; padding: 6px 12px;">🖨 Download PDF</a>
-    <a href="index.php?edit=<?php echo $v['id']; ?>" class="btn btn-primary" style="font-size: 11px; padding: 6px 12px;">✏️ Edit Data</a>
+    <a href="export-pdf.php?uuid=<?php echo $v['uuid']; ?>" target="_blank" class="btn btn-outline" style="font-size: 11px; padding: 6px 12px;">🖨 Download PDF</a>
+    <a href="index.php?edit=<?php echo $v['uuid']; ?>" class="btn btn-primary" style="font-size: 11px; padding: 6px 12px;">✏️ Edit Data</a>
   </div>
 </header>
 

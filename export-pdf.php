@@ -18,9 +18,9 @@ if (!isset($_SESSION['authenticated']) || !$_SESSION['authenticated']) {
     die("Unauthorised Access.");
 }
 
-$id = $_GET['id'] ?? null;
-if (!$id) {
-    die("Missing Valuation ID.");
+$uuid = $_GET['uuid'] ?? null;
+if (!$uuid) {
+    die("Missing Valuation UUID.");
 }
 
 $firm_id = $_SESSION['firm_id'];
@@ -28,9 +28,9 @@ $firm_id = $_SESSION['firm_id'];
 try {
     $pdo = DB::getInstance();
     
-    // Fetch Valuation with strict firm isolation
-    $stmt = $pdo->prepare("SELECT * FROM valuations WHERE id = ? AND firm_id = ?");
-    $stmt->execute([$id, $firm_id]);
+    // Fetch Valuation with strict firm isolation and UUID
+    $stmt = $pdo->prepare("SELECT * FROM valuations WHERE uuid = ? AND firm_id = ?");
+    $stmt->execute([$uuid, $firm_id]);
     $v = $stmt->fetch();
 
     if (!$v) {

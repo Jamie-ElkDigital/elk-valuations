@@ -181,7 +181,7 @@ $logo_url = $firm['logo_url'] ?? '';
 
     <div class="dashboard-grid">
       <?php foreach ($valuations as $v): ?>
-        <a href="view-valuation.php?id=<?php echo $v['id']; ?>" class="valuation-card">
+        <a href="view-valuation.php?uuid=<?php echo $v['uuid']; ?>" class="valuation-card">
           <div class="card-title"><?php echo htmlspecialchars($v['client_name']); ?></div>
           <div class="card-meta">
             Sector: <?php echo htmlspecialchars($v['sector'] ?: 'General'); ?><br>
