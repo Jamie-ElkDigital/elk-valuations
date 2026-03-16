@@ -1,49 +1,63 @@
 <?php
 /**
- * ELK Valuations - Secure Gmail API Engine
- * Sends MFA codes using Google Service Account
+ * ELK Valuations - Transactional Email Engine (ZeptoMail)
+ * Sends MFA codes securely via ZeptoMail SMTP Relay.
  */
 
-require_once __DIR__ . '/vendor/autoload.php';
-
 function sendMfaEmail($to, $code) {
-    // You will need to place your service-account.json in the project root 
-    // OR set an environment variable GOOGLE_APPLICATION_CREDENTIALS
-    $auth_config = getenv('GOOGLE_APPLICATION_CREDENTIALS_JSON'); 
+    // ZeptoMail SMTP Configuration
+    $smtp_host = 'smtp.zeptomail.eu';
+    $smtp_port = 587;
+    $smtp_user = 'emailapikey';
+    $smtp_pass = getenv('SMTP_PASS'); 
+    $from_email = 'noreply@elkdigital.co.uk'; // Ensure this matches an authorized sender in ZeptoMail
     
-    if (!$auth_config) {
-        error_log("MFA Error: Gmail credentials missing.");
+    if (!$smtp_pass) {
+        error_log("ZeptoMail MFA Error: SMTP_PASS not set in Environment.");
         return false;
     }
 
+    $subject = "Your ELK Valuations Security Code";
+    $body = "Your security code is: $code\n\nThis code expires in 5 minutes.";
+
+    // Because Cloud Run doesn't always support the standard mail() function cleanly, 
+    // and since we want to avoid external libraries like PHPMailer, 
+    // we use a lightweight native SMTP socket implementation for maximum speed.
+    
     try {
-        $client = new Google\Client();
-        $client->setAuthConfig(json_decode($auth_config, true));
-        $client->addScope(Google\Service\Gmail::GMAIL_SEND);
+        $socket = fsockopen($smtp_host, $smtp_port, $errno, $errstr, 10);
+        if (!$socket) throw new Exception("Socket connection failed: $errstr");
+
+        $expected = ['220', '250', '250', '250', '334', '334', '235', '250', '250', '354', '250', '221'];
+        $steps = [
+            null,
+            "EHLO " . gethostname() . "\r\n",
+            "STARTTLS\r\n",
+            "EHLO " . gethostname() . "\r\n",
+            "AUTH LOGIN\r\n",
+            base64_encode($smtp_user) . "\r\n",
+            base64_encode($smtp_pass) . "\r\n",
+            "MAIL FROM:<$from_email>\r\n",
+            "RCPT TO:<$to>\r\n",
+            "DATA\r\n",
+            "To: $to\r\nFrom: ELK Valuations <$from_email>\r\nSubject: $subject\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\n$body\r\n.\r\n",
+            "QUIT\r\n"
+        ];
+
+        foreach ($steps as $i => $step) {
+            if ($step) fwrite($socket, $step);
+            $res = fgets($socket, 512);
+            
+            // Re-read after STARTTLS
+            if ($i === 2 && strpos($res, '220') !== false) {
+                stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT);
+            }
+        }
         
-        // Use a static sender from your domain
-        $client->setSubject('jamie@elkdigital.co.uk');
-
-        $service = new Google\Service\Gmail($client);
-
-        $subject = "Your ELK Valuations Security Code";
-        $body = "Your security code is: $code\n\nThis code expires in 5 minutes.";
-        
-        $strMailContent = "To: $to\r\n";
-        $strMailContent .= "Subject: $subject\r\n";
-        $strMailContent .= "MIME-Version: 1.0\r\n";
-        $strMailContent .= "Content-Type: text/plain; charset=utf-8\r\n";
-        $strMailContent .= "Content-Transfer-Encoding: quoted-printable\r\n\r\n";
-        $strMailContent .= $body;
-
-        $mime = rtrim(strtr(base64_encode($strMailContent), '+/', '-_'), '=');
-        $msg = new Google\Service\Gmail\Message();
-        $msg->setRaw($mime);
-
-        $service->users_messages->send('me', $msg);
+        fclose($socket);
         return true;
     } catch (Exception $e) {
-        error_log("Gmail API Error: " . $e->getMessage());
+        error_log("ZeptoMail SMTP Socket Error: " . $e->getMessage());
         return false;
     }
 }
