@@ -928,6 +928,17 @@ function getPreAdjEbitda(y) {
   return op + dep;
 }
 
+function getAdjEbitda(y) {
+  const container = document.getElementById('adjRows');
+  const rows = container.querySelectorAll('.adj-row');
+  let total = 0;
+  rows.forEach(row => {
+    const inputs = row.querySelectorAll('input[type="number"]');
+    if (inputs[y - 1]) total += parseFloat(inputs[y - 1].value) || 0;
+  });
+  return getPreAdjEbitda(y) + total;
+}
+
 function addAdjRow(label = '', v1 = '', v2 = '', v3 = '', notes = '') {
   const id = adjRowCount++;
   const row = document.createElement('div');
