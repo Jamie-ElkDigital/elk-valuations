@@ -28,7 +28,6 @@ function sendMfaEmail($to, $code) {
         $socket = fsockopen($smtp_host, $smtp_port, $errno, $errstr, 10);
         if (!$socket) throw new Exception("Socket connection failed: $errstr");
 
-        $expected = ['220', '250', '250', '250', '334', '334', '235', '250', '250', '354', '250', '221'];
         $steps = [
             null,
             "EHLO " . gethostname() . "\r\n",
@@ -45,8 +44,12 @@ function sendMfaEmail($to, $code) {
         ];
 
         foreach ($steps as $i => $step) {
-            if ($step) fwrite($socket, $step);
+            if ($step) {
+                if (basename($_SERVER['PHP_SELF']) === 'test-email.php') echo "C: $step";
+                fwrite($socket, $step);
+            }
             $res = fgets($socket, 512);
+            if (basename($_SERVER['PHP_SELF']) === 'test-email.php') echo "S: $res";
             
             // Re-read after STARTTLS
             if ($i === 2 && strpos($res, '220') !== false) {
