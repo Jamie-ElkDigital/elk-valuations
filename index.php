@@ -1524,7 +1524,7 @@ async function importCHAccounts() {
       body: JSON.stringify({ 
         action: 'extract_from_urls',
         files: fileData,
-        context: window.CH_INTEL ? window.CH_INTEL.intelligence : null
+        context: window.CH_INTEL ? window.CH_INTEL.profile : null
       })
     });
 
