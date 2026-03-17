@@ -28,6 +28,9 @@ try {
     if (!in_array('logo_url', $columns)) {
         $pdo->exec("ALTER TABLE firms ADD COLUMN logo_url VARCHAR(255) AFTER slug");
     }
+    if (!in_array('global_2fa_enabled', $columns)) {
+        $pdo->exec("ALTER TABLE firms ADD COLUMN global_2fa_enabled TINYINT(1) DEFAULT 1 AFTER created_at");
+    }
 
     // 2. Create users table
     $pdo->exec("CREATE TABLE IF NOT EXISTS users (
