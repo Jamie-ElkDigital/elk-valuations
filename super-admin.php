@@ -3,7 +3,11 @@ session_start();
 require_once 'db.php';
 
 // Super-Admin Guard (Must belong to firm 'elk')
-if (!isset($_SESSION['authenticated']) || !$_SESSION['authenticated'] || $_SESSION['firm_slug'] !== 'elk') {
+if (!isset($_SESSION['authenticated']) || !$_SESSION['authenticated']) {
+    header('Location: login.php');
+    exit;
+}
+if ($_SESSION['firm_slug'] !== 'elk') {
     die("Unauthorised Access. Super-Admin permissions required.");
 }
 
