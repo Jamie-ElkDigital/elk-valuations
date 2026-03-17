@@ -35,24 +35,45 @@ try {
         $uuid = $input['uuid'] ?? '';
         if (!$uuid) throw new Exception("UUID required");
 
-        // 1. Fetch valuation to verify ownership
-        $stmt = $pdo->prepare("SELECT id FROM valuations WHERE uuid = ? AND firm_id = ?");
+        // 1. Fetch valuation to identify the company group
+        $stmt = $pdo->prepare("SELECT client_name, company_number FROM valuations WHERE uuid = ? AND firm_id = ?");
         $stmt->execute([$uuid, $firm_id]);
-        $val_id = $stmt->fetchColumn();
+        $val = $stmt->fetch();
 
-        if (!$val_id) {
+        if (!$val) {
             throw new Exception("Valuation not found or access denied.");
         }
 
-        // 2. Fetch all versions to delete from GCS (Future enhancement: actual GCS deletion via API)
-        // For now we just delete the DB records, which cascades via foreign keys if set up, 
-        // but let's be explicit.
-        $stmt = $pdo->prepare("DELETE FROM valuation_versions WHERE valuation_id = ?");
-        $stmt->execute([$val_id]);
+        $client_name = $val['client_name'];
+        $company_number = $val['company_number'];
 
-        // 3. Delete the main valuation
-        $stmt = $pdo->prepare("DELETE FROM valuations WHERE id = ?");
-        $stmt->execute([$val_id]);
+        // 2. Identify all valuation IDs for this company group in this firm
+        if ($company_number) {
+            $stmt = $pdo->prepare("SELECT id FROM valuations WHERE company_number = ? AND firm_id = ?");
+            $stmt->execute([$company_number, $firm_id]);
+        } else {
+            $stmt = $pdo->prepare("SELECT id FROM valuations WHERE client_name = ? AND firm_id = ? AND company_number IS NULL");
+            $stmt->execute([$client_name, $firm_id]);
+        }
+        $val_ids = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+        if (count($val_ids) > 0) {
+            $placeholders = implode(',', array_fill(0, count($val_ids), '?'));
+            
+            // 3. Delete related versions (PDF records)
+            $stmt = $pdo->prepare("DELETE FROM valuation_versions WHERE valuation_id IN ($placeholders)");
+            $stmt->execute($val_ids);
+
+            // 4. Delete the main valuations
+            $stmt = $pdo->prepare("DELETE FROM valuations WHERE id IN ($placeholders)");
+            $stmt->execute($val_ids);
+        }
+
+        // 5. Clean up cached company profile if it exists
+        if ($company_number) {
+            $stmt = $pdo->prepare("DELETE FROM company_profiles WHERE company_number = ? AND firm_id = ?");
+            $stmt->execute([$company_number, $firm_id]);
+        }
 
         echo json_encode(['success' => true]);
         
