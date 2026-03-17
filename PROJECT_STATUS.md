@@ -44,6 +44,11 @@ The application has successfully transitioned to secure UUID-based URLs, feature
 *   [ ] **Cyber Essentials Mapping:** Document Google Cloud infrastructure for GTA's Cyber Essentials audit.
 *   [x] **Vulnerability Scanning:** Implement automated dependency and container scanning.
 
+### Phase 6.1: Intelligence Expansion (Next)
+*   [ ] **Companies House Integration:** Fetch statutory accounts and officer data directly via Company Number.
+*   [ ] **Hybrid Data Ingestion:** Allow both PDF upload and direct CH data extraction.
+*   [ ] **Automated "Years Trading":** Calculate trading history directly from incorporation dates.
+
 ### Phase 7: Scaling & Commercial Launch
 *   [ ] **Public API for Accounting Suites:** Integration with Xero/QuickBooks for automated data pull.
 *   [ ] **Industry Benchmarking:** Compare extracted client margins against sector-wide averages.

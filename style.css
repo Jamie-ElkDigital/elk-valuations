@@ -36,6 +36,11 @@
   --secondary-title-font: 'Barlow', sans-serif;
 }
 
+input::placeholder, textarea::placeholder {
+  color: #a1a1aa; /* Lighter grey for better legibility */
+  opacity: 1;
+}
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {

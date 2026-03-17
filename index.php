@@ -917,6 +917,28 @@ function calcFinancials() {
   calcAdjustments();
 }
 
+function calcAdjustments() {
+  const container = document.getElementById('adjRows');
+  const rows = container.querySelectorAll('.adj-row');
+  const totals = [0, 0, 0];
+  rows.forEach(row => {
+    const inputs = row.querySelectorAll('input[type="number"]');
+    inputs.forEach((inp, i) => {
+      totals[i] += parseFloat(inp.value) || 0;
+    });
+  });
+  for (let i = 0; i < 3; i++) {
+    const el = document.getElementById(`adj_tot${i+1}`);
+    if (el) {
+        el.textContent = fmt(totals[i]);
+        el.className = 'adj-value ' + (totals[i] >= 0 ? 'positive' : 'negative');
+    }
+    const adjEbitda = getPreAdjEbitda(i + 1) + totals[i];
+    const elEb = document.getElementById(`adj_ebitda${i+1}`);
+    if (elEb) elEb.textContent = fmt(adjEbitda);
+  }
+}
+
 function getPreAdjEbitda(y) {
   const turn = getNum(`f_turn${y}`);
   const cos = getNum(`f_cos${y}`);
