@@ -390,6 +390,7 @@ if (isset($_GET['edit'])) {
         <div style="text-align:right">Year 2 £</div>
         <div style="text-align:right">Year 3 £</div>
         <div style="text-align:right">Notes</div>
+        <div></div>
       </div>
 
       <div id="adjRows"></div>
@@ -996,6 +997,12 @@ function addAdjRow(label = '', v1 = '', v2 = '', v3 = '', notes = '') {
   row.appendChild(v2Inp);
   row.appendChild(v3Inp);
   row.appendChild(notesInp);
+
+  const btn = document.createElement('button');
+  btn.className = 'remove-btn';
+  btn.textContent = '×';
+  btn.onclick = () => { row.remove(); calcAdjustments(); };
+  row.appendChild(btn);
 
   document.getElementById('adjRows').appendChild(row);
   calcAdjustments();

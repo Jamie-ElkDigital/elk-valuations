@@ -255,7 +255,7 @@ header {
 }
 
 .input-prefix::before {
-  content: '£';
+  content: '\00A3';
   position: absolute;
   left: 12px;
   top: 50%;
@@ -565,7 +565,7 @@ header {
 /* ── ADJUSTMENT ROWS ── */
 .adj-row {
   display: grid;
-  grid-template-columns: 1fr 120px 120px 120px 1fr;
+  grid-template-columns: 1fr 120px 120px 120px 1fr 40px;
   gap: 12px;
   padding: 8px 0;
   align-items: center;
