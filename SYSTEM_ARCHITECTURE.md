@@ -27,6 +27,8 @@ The ELK Valuations Platform is a high-security, multi-tenant SaaS application de
 *   **Lookup**: Direct integration with the UK Companies House API via `ch-proxy.php`.
 *   **Intelligence**: Automatic retrieval of incorporation dates, share allotment history, and director/officer churn.
 *   **Extraction**: Direct ingestion of statutory accounts from the CH Document Vault, processed via the "Hybrid Data Ingestion" pipeline (CH URL + Gemini 3.1 Pro).
+*   **Verified-First Workflow**: To ensure professional integrity, the system hides the manual uploader by default, forcing a lookup of verified public records.
+*   **Gap Detection (Supplemental Truth)**: The system automatically detects "Filleted" or "Micro-Entity" account types. If public records omit the Profit & Loss statement, the system reveals a supplemental uploader to ingest the firm's internal "Full" accounts, amalgamating verified structure with supplemental financial data.
 
 ---
 

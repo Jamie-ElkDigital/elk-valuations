@@ -46,6 +46,7 @@ The application has successfully transitioned to secure UUID-based URLs, feature
 
 ### Phase 6.1: Intelligence Expansion - IN PROGRESS
 *   [x] **Companies House Integration:** Fetch statutory accounts and corporate intelligence via Company Number.
+*   [x] **Verified-First Workflow:** Forced CH lookup with conditional "Supplemental Truth" upload for filleted accounts.
 *   [x] **Hybrid Data Ingestion:** Combined PDF upload and direct CH data extraction (via Vertex AI).
 *   [x] **Automated "Years Trading":** Calculate trading history directly from incorporation dates.
 *   [x] **Director/Officer Intelligence:** Deep extraction of historical appointments and share allotments via CS01 cross-referencing.
