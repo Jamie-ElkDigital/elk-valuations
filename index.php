@@ -223,6 +223,7 @@ if (isset($_GET['edit'])) {
             <div id="chAccountsContainer"></div>
           </div>
         </div>
+      </div>
         <div class="form-group">
           <label>Sector / Industry</label>
           <select id="sector">
