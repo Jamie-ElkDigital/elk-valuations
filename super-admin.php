@@ -379,8 +379,10 @@ header {
                 <th>Timestamp</th>
                 <th>Firm Identity</th>
                 <th>Active User</th>
+                <th>Company</th>
                 <th>System Action</th>
                 <th>Token Load</th>
+                <th>Cost</th>
             </tr>
         </thead>
         <tbody>
@@ -389,8 +391,10 @@ header {
                 <td style="color: var(--text-faint);"><?php echo date('H:i:s d/m/Y', strtotime($l['created_at'])); ?></td>
                 <td style="font-weight: 600; color: var(--text-main);"><?php echo htmlspecialchars($l['firm_name']); ?></td>
                 <td><?php echo htmlspecialchars($l['user_name']); ?></td>
+                <td style="color: var(--brand-accent-light);"><?php echo htmlspecialchars($l['client_name'] ?: '—'); ?></td>
                 <td><span style="text-transform: uppercase; font-size: 9px; padding: 2px 8px; border: 1px solid var(--border-subtle); border-radius: 4px; color: var(--text-muted);"><?php echo $l['action']; ?></span></td>
                 <td style="font-family: 'DM Mono', monospace; font-weight: 600;"><?php echo number_format($l['total_tokens']); ?></td>
+                <td style="color: var(--text-muted);">£<?php echo number_format(($l['total_tokens'] / 1000000) * 12, 4); ?></td>
             </tr>
             <?php endforeach; ?>
         </tbody>

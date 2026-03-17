@@ -107,6 +107,7 @@ try {
         id INT AUTO_INCREMENT PRIMARY KEY,
         firm_id INT NOT NULL,
         user_id INT,
+        client_name VARCHAR(255),
         action VARCHAR(50),
         prompt_tokens INT DEFAULT 0,
         completion_tokens INT DEFAULT 0,
@@ -114,6 +115,12 @@ try {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (firm_id) REFERENCES firms(id) ON DELETE CASCADE
     ) ENGINE=InnoDB;");
+
+    // Migration for client_name in usage_log
+    $logCols = $pdo->query("SHOW COLUMNS FROM usage_log")->fetchAll(PDO::FETCH_COLUMN);
+    if (!in_array('client_name', $logCols)) {
+        $pdo->exec("ALTER TABLE usage_log ADD COLUMN client_name VARCHAR(255) AFTER user_id");
+    }
 
     // 6. Create company_profiles table (Corporate Intelligence)
     $pdo->exec("CREATE TABLE IF NOT EXISTS company_profiles (

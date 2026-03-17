@@ -190,15 +190,22 @@ $promptTokens = (int)($usage['promptTokenCount'] ?? 0);
 $compTokens   = (int)($usage['candidatesTokenCount'] ?? 0);
 $totalTokens  = (int)($usage['totalTokenCount'] ?? 0);
 
+// Extract client name for logging if available
+$clientName = null;
+if (!empty($input['context']['name'])) {
+    $clientName = $input['context']['name'];
+} elseif (!empty($input['prompt']) && preg_match('/valuation commentary for (.*?)\./', $input['prompt'], $m)) {
+    $clientName = $m[1];
+}
+
 try {
     $pdo = DB::getInstance();
-    $stmt = $pdo->prepare("INSERT INTO usage_log (firm_id, user_id, action, prompt_tokens, completion_tokens, total_tokens) 
-                           VALUES (?, ?, ?, ?, ?, ?)");
-    $stmt->execute([$firm_id, $user_id, $action, $promptTokens, $compTokens, $totalTokens]);
+    $stmt = $pdo->prepare("INSERT INTO usage_log (firm_id, user_id, client_name, action, prompt_tokens, completion_tokens, total_tokens)
+                           VALUES (?, ?, ?, ?, ?, ?, ?)");
+    $stmt->execute([$firm_id, $user_id, $clientName, $action, $promptTokens, $compTokens, $totalTokens]);
 } catch (Exception $e) {
     error_log("Usage logging failed: " . $e->getMessage());
 }
-
 if ($action === 'extract' || $action === 'extract_from_urls') {
     $clean_text = trim($text);
     if (preg_match('/^```(?:json)?\s*([\s\S]*?)\s*```$/', $clean_text, $matches)) { $clean_text = $matches[1]; }
