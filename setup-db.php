@@ -171,7 +171,10 @@ try {
 
         $password = password_hash('ELK_Super_2026!', PASSWORD_DEFAULT);
         $pdo->exec("INSERT INTO users (firm_id, email, password_hash, name, role) 
-                   VALUES ($elk_id, 'admin@elk.digital', '$password', 'ELK Super Admin', 'admin')");
+                   VALUES ($elk_id, 'admin@elkdigital.co.uk', '$password', 'ELK Super Admin', 'admin')");
+    } else {
+        // Fix for legacy admin email if it exists
+        $pdo->exec("UPDATE users SET email = 'admin@elkdigital.co.uk' WHERE email = 'admin@elk.digital'");
     }
 
     echo "Database setup/migration completed successfully.";
