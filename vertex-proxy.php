@@ -68,7 +68,7 @@ function get_proprietary_payload($action, $input) {
     }
 
     // Local Implementation (Legacy / Phase 5 Start)
-    if ($action === 'extract' || $action === 'extract_from_urls') {
+    if ($action === 'extract' || $action === 'extract_from_urls' || $action === 'hybrid_extract') {
         $prompt = ElkLogicVault::getExtractionPrompt();
         
         // Inject Corporate Intelligence context if provided (for cross-referencing)
@@ -80,15 +80,43 @@ function get_proprietary_payload($action, $input) {
         }
 
         $parts = [['text' => $prompt]];
+        $apiKey = getenv('CH_API_KEY');
         
-        if ($action === 'extract_from_urls') {
-            $apiKey = getenv('CH_API_KEY');
+        // 1. Process local file uploads (if any)
+        if (!empty($input['files'])) {
             foreach ($input['files'] as $file) {
-                $url = $file['url'];
-                $pdfData = null;
+                if (isset($file['mimeType']) && isset($file['data'])) {
+                    // Came from handleFileUpload (base64)
+                    $parts[] = ['inlineData' => ['mimeType' => $file['mimeType'], 'data' => $file['data']]];
+                } elseif (isset($file['url'])) {
+                    // Came from extract_from_urls (local path fallback)
+                    $url = $file['url'];
+                    if (strpos($url, 'http') === 0) {
+                        $ch = curl_init($url);
+                        curl_setopt_array($ch, [
+                            CURLOPT_RETURNTRANSFER => true,
+                            CURLOPT_USERPWD        => $apiKey . ":",
+                            CURLOPT_HTTPAUTH       => CURLAUTH_BASIC,
+                            CURLOPT_FOLLOWLOCATION => true,
+                            CURLOPT_HTTPHEADER     => ['Accept: application/pdf'],
+                            CURLOPT_TIMEOUT        => 30
+                        ]);
+                        $pdfData = curl_exec($ch);
+                        curl_close($ch);
+                        if ($pdfData) $parts[] = ['inlineData' => ['mimeType' => 'application/pdf', 'data' => base64_encode($pdfData)]];
+                    } elseif (file_exists($url)) {
+                        $pdfData = file_get_contents($url);
+                        if ($pdfData) $parts[] = ['inlineData' => ['mimeType' => 'application/pdf', 'data' => base64_encode($pdfData)]];
+                    }
+                }
+            }
+        }
 
+        // 2. Process Companies House URLs (if hybrid)
+        if (!empty($input['ch_urls'])) {
+            foreach ($input['ch_urls'] as $file) {
+                $url = $file['url'];
                 if (strpos($url, 'http') === 0) {
-                    // Fetch the PDF from CH Document API
                     $ch = curl_init($url);
                     curl_setopt_array($ch, [
                         CURLOPT_RETURNTRANSFER => true,
@@ -100,18 +128,8 @@ function get_proprietary_payload($action, $input) {
                     ]);
                     $pdfData = curl_exec($ch);
                     curl_close($ch);
-                } elseif (file_exists($url)) {
-                    // Read from local filesystem
-                    $pdfData = file_get_contents($url);
+                    if ($pdfData) $parts[] = ['inlineData' => ['mimeType' => 'application/pdf', 'data' => base64_encode($pdfData)]];
                 }
-                
-                if ($pdfData) {
-                    $parts[] = ['inlineData' => ['mimeType' => 'application/pdf', 'data' => base64_encode($pdfData)]];
-                }
-            }
-        } else {
-            foreach ($input['files'] as $file) {
-                $parts[] = ['inlineData' => ['mimeType' => $file['mimeType'], 'data' => $file['data']]];
             }
         }
 

@@ -689,6 +689,12 @@ async function handleFileUpload(event) {
       data: base64.split(',')[1]
     });
   }
+
+  // HYBRID INGESTION: Grab any checked Companies House documents as well
+  const chUrls = [];
+  document.querySelectorAll('.ch-acc-checkbox:checked').forEach(cb => {
+    chUrls.push({ url: cb.value });
+  });
   
   progressFill.style.width = '40%';
   statusText.textContent = 'Reading statutory accounts...';
@@ -708,8 +714,10 @@ async function handleFileUpload(event) {
         'X-CSRF-Token': window.CSRF_TOKEN
       },
       body: JSON.stringify({ 
-        action: 'extract',
-        files: fileData 
+        action: 'hybrid_extract',
+        files: fileData,
+        ch_urls: chUrls,
+        context: window.CH_INTEL ? window.CH_INTEL.profile : null
       })
     });
 
