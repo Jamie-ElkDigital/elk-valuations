@@ -155,16 +155,16 @@ if (isset($_GET['edit'])) {
         <p class="page-desc">Enter the Company Number to retrieve verified data from Companies House.</p>
       </div>
 
-      <div class="info-box" id="uploadBox" style="display: none; background: var(--brand-surface-mid); border: 1px dashed var(--brand-accent); padding: 32px; display: none; flex-direction: column; align-items: center; text-align: center; gap: 16px; position: relative; overflow: hidden; margin-bottom: 24px;">
+      <div class="info-box" id="uploadBox" style="background: var(--brand-surface-mid); border: 1px dashed var(--brand-accent-border); padding: 32px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 16px; position: relative; overflow: hidden; margin-bottom: 24px;">
         <div id="uploadProgressFill" style="position: absolute; top: 0; left: 0; height: 100%; width: 0%; background: var(--brand-accent-dim); transition: width 0.5s ease; pointer-events: none; z-index: 0;"></div>
-        <div style="z-index: 1; font-size: 24px;">⚠️</div>
+        <div style="z-index: 1; font-size: 24px;">📄</div>
         <div style="z-index: 1;">
-          <strong style="color: var(--text-main); display: block; margin-bottom: 4px;">Supplemental Financial Data Required</strong>
-          <span class="text" style="color: var(--text-muted);">Companies House only holds "Filleted" or "Micro" accounts for this period, which omit the Profit &amp; Loss. Please upload the internal <strong>Full Statutory Accounts</strong> to ensure an accurate valuation.</span>
+          <strong style="color: var(--text-main); display: block; margin-bottom: 4px;">Supplemental PDF Upload</strong>
+          <span class="text" style="color: var(--text-muted);">Upload internal Full Statutory Accounts to supplement the data retrieved from Companies House. Any uploaded documents will be cross-referenced for maximum financial precision.</span>
         </div>
         <input type="file" id="pdfUpload" multiple accept=".pdf" style="display: none;" onchange="handleFileUpload(event)">
         <button class="btn btn-outline" style="z-index: 1;" onclick="document.getElementById('pdfUpload').click()" id="uploadBtn">
-          <span>Upload Full Accounts</span>
+          <span>Choose PDF Files</span>
         </button>
         <div id="uploadStatus" style="font-size: 11px; color: var(--brand-accent); margin-top: 8px; display: none; z-index: 1;">
           <span class="spinner"></span> <span id="uploadStatusText">Uploading documents...</span>
@@ -1543,13 +1543,13 @@ async function searchCompaniesHouse() {
 
     panel.style.display = 'block';
     
-    // Show Supplemental Uploader ONLY if gaps detected in the last 3 accounts
+    // Maintain visibility of Supplemental Uploader
     const uploadBox = document.getElementById('uploadBox');
-    if (partialGapsInRecent > 0) {
-        uploadBox.style.display = 'flex';
-        showStatus('Verified lookup complete. Supplemental data requested due to filleted accounts.');
+    uploadBox.style.display = 'flex'; 
+
+    if (filletedCount > 0) {
+        showStatus('Verified lookup complete. Supplemental data recommended due to filleted accounts.');
     } else {
-        uploadBox.style.display = 'none';
         showStatus('Corporate Intelligence fetched from Companies House ✓');
     }
 
