@@ -48,7 +48,7 @@ The application has successfully transitioned to secure UUID-based URLs, feature
 *   [x] **Companies House Integration:** Fetch statutory accounts and corporate intelligence via Company Number.
 *   [x] **Hybrid Data Ingestion:** Combined PDF upload and direct CH data extraction (via Vertex AI).
 *   [x] **Automated "Years Trading":** Calculate trading history directly from incorporation dates.
-*   [ ] **Director/Officer Intelligence:** Deep extraction of historical appointments and share allotments.
+*   [x] **Director/Officer Intelligence:** Deep extraction of historical appointments and share allotments via CS01 cross-referencing.
 
 ### Phase 7: Scaling & Commercial Launch
 *   [ ] **Public API for Accounting Suites:** Integration with Xero/QuickBooks for automated data pull.
