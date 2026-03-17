@@ -8,8 +8,8 @@ ELK Valuations is a high-security, multi-tenant SaaS platform designed specifica
 
 ### 🛡️ Corporate Intelligence (Direct CH Integration)
 The platform doesn't just look at a spreadsheet; it performs a deep-dive forensic audit of the UK Companies House Document Vault.
-*   **Verified-First Workflow:** To maintain professional integrity, every valuation begins with a mandatory lookup of public records. Manual uploading is disabled until the system verifies the public filing status.
-*   **Gap Detection (Supplemental Truth):** The platform automatically identifies "Filleted" or "Micro-Entity" accounts which hide the P&L. If gaps are detected, the system requests the firm's internal "Full" accounts to ensure financial precision while maintaining the verified corporate structure from CH.
+*   **Verified-First Workflow:** To maintain professional integrity, every valuation begins with a mandatory lookup of public records to build the structural knowledge base.
+*   **Persistent Supplemental Truth:** A dedicated PDF uploader remains available at all times, allowing firms to upload internal "Full" accounts to supplement filleted public records, ensuring maximum financial precision while maintaining the verified corporate structure from CH.
 *   **Historical Knowledge Base:** Scans the last 40 statutory filings (Incorporation, Officer Changes, Confirmation Statements).
 *   **Shareholder Integrity:** Automatically reconciles **CS01 Confirmation Statements** against Statutory Accounts to identify exact share splits, bypassing the limitations of aggregated data in filleted accounts.
 

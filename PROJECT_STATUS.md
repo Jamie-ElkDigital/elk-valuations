@@ -12,6 +12,7 @@ The application has successfully transitioned to secure UUID-based URLs, feature
 *   **Secure Multi-Tenancy:** Strict firm isolation and unguessable 36-character UUIDs across all public endpoints.
 *   **Optimized Cloud Build:** Native Docker caching with `E2_HIGHCPU_8` machines and `--session-affinity` for seamless scaling.
 *   **High-Fidelity PDF Engine:** Pixel-perfect report generation via **Puppeteer & Headless Chrome**.
+*   **Methodology Alignment:** Supports legacy 50/30/20 weighting and configurable Net Debt/Depreciation toggles to match manual accounting models.
 *   **Universal PDF Parser:** Specialized UK Statutory Accounts extraction via **Gemini 3.1 Pro Preview**.
 *   **Security Audit & Hardening (16 March 2026):**
     *   **CSRF Protection:** Implemented token-based verification across all state-changing APIs.
@@ -44,9 +45,9 @@ The application has successfully transitioned to secure UUID-based URLs, feature
 *   [ ] **Cyber Essentials Mapping:** Document Google Cloud infrastructure for GTA's Cyber Essentials audit.
 *   [x] **Vulnerability Scanning:** Implement automated dependency and container scanning.
 
-### Phase 6.1: Intelligence Expansion - IN PROGRESS
+### Phase 6.1: Intelligence Expansion - FINALIZED (17 March 2026)
 *   [x] **Companies House Integration:** Fetch statutory accounts and corporate intelligence via Company Number.
-*   [x] **Verified-First Workflow:** Forced CH lookup with conditional "Supplemental Truth" upload for filleted accounts.
+*   [x] **Verified-First Workflow:** Forced CH lookup with persistent "Supplemental Truth" upload for internal accounts.
 *   [x] **Hybrid Data Ingestion:** Combined PDF upload and direct CH data extraction (via Vertex AI).
 *   [x] **Automated "Years Trading":** Calculate trading history directly from incorporation dates.
 *   [x] **Director/Officer Intelligence:** Deep extraction of historical appointments and share allotments via CS01 cross-referencing.
@@ -60,4 +61,4 @@ The application has successfully transitioned to secure UUID-based URLs, feature
 ### 🛠️ Project-Specific Rules for Agent
 *   **Note for Agent:** You do NOT need to perform a `git push` after updating this `PROJECT_STATUS.md` file.
 
-*Owner: ELK Digital Limited | Strategic Partner: GTA Accounting | Last Updated: 17 March 2026 (Phase 6.1 In Progress)*
+*Owner: ELK Digital Limited | Strategic Partner: GTA Accounting | Last Updated: 17 March 2026 (Phase 6.1 Finalized)*
