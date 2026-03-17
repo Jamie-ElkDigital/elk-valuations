@@ -152,19 +152,19 @@ if (isset($_GET['edit'])) {
       <div class="page-header">
         <div class="page-eyebrow">Step 1 of 6</div>
         <h1 class="page-title">Business Details</h1>
-        <p class="page-desc">Upload statutory accounts to auto-fill the valuation setup, or enter the client company information manually.</p>
+        <p class="page-desc">Enter the Company Number to retrieve verified data from Companies House.</p>
       </div>
 
-      <div class="info-box" id="uploadBox" style="background: var(--brand-surface-mid); border: 1px dashed var(--brand-accent); padding: 32px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 16px; position: relative; overflow: hidden;">
+      <div class="info-box" id="uploadBox" style="display: none; background: var(--brand-surface-mid); border: 1px dashed var(--brand-accent); padding: 32px; display: none; flex-direction: column; align-items: center; text-align: center; gap: 16px; position: relative; overflow: hidden; margin-bottom: 24px;">
         <div id="uploadProgressFill" style="position: absolute; top: 0; left: 0; height: 100%; width: 0%; background: var(--brand-accent-dim); transition: width 0.5s ease; pointer-events: none; z-index: 0;"></div>
-        <div style="z-index: 1; font-size: 24px;">📄</div>
+        <div style="z-index: 1; font-size: 24px;">⚠️</div>
         <div style="z-index: 1;">
-          <strong style="color: var(--text-main); display: block; margin-bottom: 4px;">Smart PDF Upload</strong>
-          <span class="text" style="color: var(--text-muted);">Upload up to 3 years of Final Accounts. The system will extract business details, financial figures, and share structure automatically.</span>
+          <strong style="color: var(--text-main); display: block; margin-bottom: 4px;">Supplemental Financial Data Required</strong>
+          <span class="text" style="color: var(--text-muted);">Companies House only holds "Filleted" or "Micro" accounts for this period, which omit the Profit &amp; Loss. Please upload the internal <strong>Full Statutory Accounts</strong> to ensure an accurate valuation.</span>
         </div>
         <input type="file" id="pdfUpload" multiple accept=".pdf" style="display: none;" onchange="handleFileUpload(event)">
         <button class="btn btn-outline" style="z-index: 1;" onclick="document.getElementById('pdfUpload').click()" id="uploadBtn">
-          <span>Choose PDF Files</span>
+          <span>Upload Full Accounts</span>
         </button>
         <div id="uploadStatus" style="font-size: 11px; color: var(--brand-accent); margin-top: 8px; display: none; z-index: 1;">
           <span class="spinner"></span> <span id="uploadStatusText">Uploading documents...</span>
@@ -1485,12 +1485,21 @@ async function searchCompaniesHouse() {
     // Populate Accounts
     const container = document.getElementById('chAccountsContainer');
     container.innerHTML = '';
+    let filletedCount = 0;
+    
     result.accounts.forEach(acc => {
       const item = document.createElement('div');
       item.className = 'ch-acc-item';
+      
+      const isPartial = acc.type.toLowerCase().includes('filleted') || acc.type.toLowerCase().includes('micro');
+      if (isPartial) filletedCount++;
+
       item.innerHTML = `
         <div class="ch-acc-info">
-          <div class="ch-acc-date">Accounts to ${new Date(acc.date).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}</div>
+          <div class="ch-acc-date">
+            ${new Date(acc.date).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}
+            ${isPartial ? '<span class="pill" style="background:#fef2f2; color:#991b1b; font-size:9px; margin-left:8px;">Partial Data (P&L Hidden)</span>' : ''}
+          </div>
           <div class="ch-acc-type">${acc.type.toUpperCase()}</div>
         </div>
         <input type="checkbox" class="ch-acc-checkbox" value="${acc.pdf_url}" checked>
@@ -1499,7 +1508,16 @@ async function searchCompaniesHouse() {
     });
 
     panel.style.display = 'block';
-    showStatus('Corporate Intelligence fetched from Companies House ✓');
+    
+    // Show Supplemental Uploader if gaps detected
+    const uploadBox = document.getElementById('uploadBox');
+    if (filletedCount > 0) {
+        uploadBox.style.display = 'flex';
+        showStatus('Verified lookup complete. Supplemental data requested due to filleted accounts.');
+    } else {
+        uploadBox.style.display = 'none';
+        showStatus('Corporate Intelligence fetched from Companies House ✓');
+    }
 
   } catch (err) {
     showStatus('Lookup failed: ' + err.message);
