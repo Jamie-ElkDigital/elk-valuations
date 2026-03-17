@@ -27,7 +27,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['role'] = $user['role'];
                 $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 
-                header('Location: dashboard.php');
+                $redirect = ($user['firm_slug'] === 'elk') ? 'super-admin.php' : 'dashboard.php';
+                header("Location: $redirect");
                 exit;
             }
 

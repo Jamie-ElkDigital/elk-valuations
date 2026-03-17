@@ -172,15 +172,16 @@ try {
     $elk = $stmt->fetch();
 
     if (!$elk) {
-        $pdo->exec("INSERT INTO firms (name, slug, primary_color, secondary_color) 
-                   VALUES ('ELK Digital', 'elk', '#00ffcc', '#0a0a0a')");
+        $pdo->exec("INSERT INTO firms (name, slug, primary_color, secondary_color, logo_url) 
+                   VALUES ('ELK Digital', 'elk', '#00ffcc', '#0a0a0a', 'elk-digital-port-white.png')");
         $elk_id = $pdo->lastInsertId();
 
         $password = password_hash('ELK_Super_2026!', PASSWORD_DEFAULT);
         $pdo->exec("INSERT INTO users (firm_id, email, password_hash, name, role) 
                    VALUES ($elk_id, 'admin@elkdigital.co.uk', '$password', 'ELK Super Admin', 'admin')");
     } else {
-        // Fix for legacy admin email if it exists
+        // Update existing ELK logo and email
+        $pdo->exec("UPDATE firms SET logo_url = 'elk-digital-port-white.png' WHERE slug = 'elk'");
         $pdo->exec("UPDATE users SET email = 'admin@elkdigital.co.uk' WHERE email = 'admin@elk.digital'");
     }
 
