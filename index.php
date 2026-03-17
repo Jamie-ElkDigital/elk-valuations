@@ -1510,14 +1510,23 @@ async function searchCompaniesHouse() {
     // Populate Accounts
     const container = document.getElementById('chAccountsContainer');
     container.innerHTML = '';
-    let filletedCount = 0;
+    
+    // We only care about "Accounts" for the gap detection, not Confirmation Statements etc.
+    const accountFilings = result.accounts.filter(acc => acc.is_account);
+    let partialGapsInRecent = 0;
+    
+    // Check the most recent 3 account filings for gaps
+    accountFilings.slice(0, 3).forEach(acc => {
+        if (acc.type.toLowerCase().includes('filleted') || acc.type.toLowerCase().includes('micro')) {
+            partialGapsInRecent++;
+        }
+    });
     
     result.accounts.forEach(acc => {
       const item = document.createElement('div');
       item.className = 'ch-acc-item';
       
       const isPartial = acc.type.toLowerCase().includes('filleted') || acc.type.toLowerCase().includes('micro');
-      if (isPartial) filletedCount++;
 
       item.innerHTML = `
         <div class="ch-acc-info">
@@ -1534,9 +1543,9 @@ async function searchCompaniesHouse() {
 
     panel.style.display = 'block';
     
-    // Show Supplemental Uploader if gaps detected
+    // Show Supplemental Uploader ONLY if gaps detected in the last 3 accounts
     const uploadBox = document.getElementById('uploadBox');
-    if (filletedCount > 0) {
+    if (partialGapsInRecent > 0) {
         uploadBox.style.display = 'flex';
         showStatus('Verified lookup complete. Supplemental data requested due to filleted accounts.');
     } else {
