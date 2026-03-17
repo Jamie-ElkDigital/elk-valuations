@@ -84,18 +84,26 @@ function get_proprietary_payload($action, $input) {
         if ($action === 'extract_from_urls') {
             $apiKey = getenv('CH_API_KEY');
             foreach ($input['files'] as $file) {
-                // Fetch the PDF from CH Document API
-                $ch = curl_init($file['url']);
-                curl_setopt_array($ch, [
-                    CURLOPT_RETURNTRANSFER => true,
-                    CURLOPT_USERPWD        => $apiKey . ":",
-                    CURLOPT_HTTPAUTH       => CURLAUTH_BASIC,
-                    CURLOPT_FOLLOWLOCATION => true,
-                    CURLOPT_HTTPHEADER     => ['Accept: application/pdf'],
-                    CURLOPT_TIMEOUT        => 30
-                ]);
-                $pdfData = curl_exec($ch);
-                curl_close($ch);
+                $url = $file['url'];
+                $pdfData = null;
+
+                if (strpos($url, 'http') === 0) {
+                    // Fetch the PDF from CH Document API
+                    $ch = curl_init($url);
+                    curl_setopt_array($ch, [
+                        CURLOPT_RETURNTRANSFER => true,
+                        CURLOPT_USERPWD        => $apiKey . ":",
+                        CURLOPT_HTTPAUTH       => CURLAUTH_BASIC,
+                        CURLOPT_FOLLOWLOCATION => true,
+                        CURLOPT_HTTPHEADER     => ['Accept: application/pdf'],
+                        CURLOPT_TIMEOUT        => 30
+                    ]);
+                    $pdfData = curl_exec($ch);
+                    curl_close($ch);
+                } elseif (file_exists($url)) {
+                    // Read from local filesystem
+                    $pdfData = file_get_contents($url);
+                }
                 
                 if ($pdfData) {
                     $parts[] = ['inlineData' => ['mimeType' => 'application/pdf', 'data' => base64_encode($pdfData)]];

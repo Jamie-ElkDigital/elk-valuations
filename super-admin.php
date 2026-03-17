@@ -66,6 +66,24 @@ try {
         $message = "Global 2FA updated successfully.";
     }
 
+    // Handle Firm Deletion
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete_firm') {
+        $fid = (int)$_POST['firm_id'];
+        
+        // Safety check: Cannot delete 'elk' firm
+        $stmt = $pdo->prepare("SELECT slug FROM firms WHERE id = ?");
+        $stmt->execute([$fid]);
+        $slug = $stmt->fetchColumn();
+        
+        if ($slug === 'elk') {
+            $message = "Error: Cannot delete the primary ELK Digital firm.";
+        } else {
+            $stmt = $pdo->prepare("DELETE FROM firms WHERE id = ?");
+            $stmt->execute([$fid]);
+            $message = "Firm and all associated data deleted successfully.";
+        }
+    }
+
     // 1. Overview Stats
     $stmt = $pdo->query("SELECT COUNT(*) FROM firms");
     $totalFirms = $stmt->fetchColumn();
@@ -319,14 +337,25 @@ header {
                     <?php endif; ?>
                 </td>
                 <td style="text-align: right;">
-                    <form method="POST" style="margin:0;">
-                        <input type="hidden" name="action" value="toggle_2fa">
-                        <input type="hidden" name="firm_id" value="<?php echo $f['id']; ?>">
-                        <input type="hidden" name="current_status" value="<?php echo $f['global_2fa_enabled']; ?>">
-                        <button type="submit" class="btn btn-outline" style="font-size: 9px; padding: 6px 12px; min-width: 80px;">
-                            <?php echo $f['global_2fa_enabled'] ? 'Turn Off' : 'Turn On'; ?>
-                        </button>
-                    </form>
+                    <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                        <form method="POST" style="margin:0;">
+                            <input type="hidden" name="action" value="toggle_2fa">
+                            <input type="hidden" name="firm_id" value="<?php echo $f['id']; ?>">
+                            <input type="hidden" name="current_status" value="<?php echo $f['global_2fa_enabled']; ?>">
+                            <button type="submit" class="btn btn-outline" style="font-size: 9px; padding: 6px 12px; min-width: 80px;">
+                                <?php echo $f['global_2fa_enabled'] ? 'Turn Off 2FA' : 'Turn On 2FA'; ?>
+                            </button>
+                        </form>
+                        <?php if ($f['slug'] !== 'elk'): ?>
+                        <form method="POST" style="margin:0;" onsubmit="return confirm('PERMANENTLY DELETE this firm and ALL its data? This cannot be undone.');">
+                            <input type="hidden" name="action" value="delete_firm">
+                            <input type="hidden" name="firm_id" value="<?php echo $f['id']; ?>">
+                            <button type="submit" class="btn btn-outline" style="font-size: 9px; padding: 6px 12px; color: #ef4444; border-color: #ef4444;">
+                                Delete Firm
+                            </button>
+                        </form>
+                        <?php endif; ?>
+                    </div>
                 </td>
             </tr>
             <?php endforeach; ?>
