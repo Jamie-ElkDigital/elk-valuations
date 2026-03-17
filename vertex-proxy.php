@@ -69,7 +69,17 @@ function get_proprietary_payload($action, $input) {
 
     // Local Implementation (Legacy / Phase 5 Start)
     if ($action === 'extract' || $action === 'extract_from_urls') {
-        $parts = [['text' => ElkLogicVault::getExtractionPrompt()]];
+        $prompt = ElkLogicVault::getExtractionPrompt();
+        
+        // Inject Corporate Intelligence context if provided (for cross-referencing)
+        if (!empty($input['context'])) {
+            $intelText = "\n\nCORPORATE INTELLIGENCE (Filing History & Officer Summary):\n";
+            $intelText .= json_encode($input['context'], JSON_PRETTY_PRINT);
+            $intelText .= "\n\nUse this intelligence to reconcile and verify the details found in the PDF documents.";
+            $prompt .= $intelText;
+        }
+
+        $parts = [['text' => $prompt]];
         
         if ($action === 'extract_from_urls') {
             $apiKey = getenv('CH_API_KEY');

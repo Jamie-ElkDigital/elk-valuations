@@ -1442,6 +1442,9 @@ async function searchCompaniesHouse() {
 
     if (result.error) throw new Error(result.error);
 
+    // Save Intelligence for cross-referencing
+    window.CH_INTEL = result;
+
     // Populate Intelligence
     document.getElementById('companyName').value = result.profile.name;
     updateHeader();
@@ -1520,7 +1523,8 @@ async function importCHAccounts() {
       },
       body: JSON.stringify({ 
         action: 'extract_from_urls',
-        files: fileData 
+        files: fileData,
+        context: window.CH_INTEL ? window.CH_INTEL.intelligence : null
       })
     });
 

@@ -19,29 +19,36 @@ class ElkLogicVault {
      * Returns the prompt and schema for the PDF Extraction AI.
      */
     public static function getExtractionPrompt() {
-        return "You are a professional business valuation analyst. Extract data from these Final Accounts. 
-        Identify the year for each document.
+        return "You are a Senior Chartered Accountant and Business Valuation Expert. Your task is to perform a deep-dive extraction and reconciliation of these Statutory Accounts.
+
+        CORE OBJECTIVES:
+        1. RECONCILIATION: Cross-reference the provided 'Corporate Intelligence' (filing history/officers) with the data found in the PDF accounts to build a definitive picture of the company.
+        2. FULL PICTURE: Use all documents provided to understand the company's trajectory since inception, but focus financial extraction on the most recent 3 years.
+        3. SHAREHOLDER INTEGRITY: Identify EXACT shareholdings by reconciling the 'Share Capital' notes with the listed Directors and any 'Statement of Capital' data mentioned.
+
         Return ONLY a JSON object with this exact structure:
         {
           'year1': { 'year': 2023, 'turnover': 100000, 'cos': 50000, 'admin': 30000, 'other': 0, 'depreciation': 5000, 'directorsSalaries': 40000 },
           'year2': { ... },
           'year3': {
-            'year': 2025, 'turnover': 120000, 'cos': 60000, 'admin': 35000, 'other': 0, 'depreciation': 6000, 'directorsSalaries': 45000,
+            'year': 2025, 'turnover': 120000, 'cos': 60000, 'admin': 35000, 'other': 0, 'depreciation': 45000,
             'netAssets': 150000, 'cash': 20000, 'debtors': 15000, 'loans': 10000,
-            'companyName': '...', 'companyNumber': '...', 'yearEnd': '30 April', 'employees': 8, 'sector': 'HR & Recruitment',
-            'description': 'A detailed 3-4 sentence professional summary of what the company does.',
-            'performanceCommentary': 'A detailed 2-paragraph analysis of the financial trends, growth, and margins seen in these 3 years of accounts.',
+            'companyName': '...', 'companyNumber': '...', 'yearEnd': '30 April', 'employees': 8, 'sector': '...',
+            'description': 'A high-level 4-sentence executive summary of the company\'s business model, market position, and operational history since inception.',
+            'performanceCommentary': 'A 3-paragraph professional financial analysis. Paragraph 1: Revenue & Gross Margin trends. Paragraph 2: Operational efficiency and EBITDA performance. Paragraph 3: Balance sheet strength and liquidity.',
             'yearsTrading': 10,
             'directors': ['Name 1', 'Name 2'], 
             'shareholders': [
-              { 'name': 'Name 1', 'shares': 50 },
-              { 'name': 'Name 2', 'shares': 50 }
+              { 'name': 'Name 1', 'shares': 50, 'class': 'Ordinary' }
             ],
             'shareCapital': 100
           }
         }
-        Ensure 'year1' is oldest and 'year3' is newest. If a figure is missing, use 0. If a string is missing, use ''.
-        Sectors: [Professional Services, HR & Recruitment, IT & Technology, Construction & Trades, Retail, Hospitality & Leisure, Manufacturing, Healthcare, Financial Services, Property, Other].
-        IMPORTANT: For 'shareholders', look specifically at the 'Share Capital' and 'Directors' sections of the notes to identify EXACT holdings for each person. If not explicitly listed, list all active directors with an equal share of the 'shareCapital' figure. Return ONLY the complete JSON object.";
+
+        CONSTRAINTS:
+        - Financial Data: Provide 'year1' (oldest), 'year2', and 'year3' (most recent). If fewer than 3 years exist, use 0 for missing years.
+        - Precision: Do not guess. If a figure is not found, use 0.
+        - Sector: Choose from [Professional Services, HR & Recruitment, IT & Technology, Construction & Trades, Retail, Hospitality & Leisure, Manufacturing, Healthcare, Financial Services, Property, Other].
+        - Return ONLY the raw JSON object.";
     }
 }
