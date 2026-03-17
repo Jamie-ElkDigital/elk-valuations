@@ -772,11 +772,12 @@ function toBase64(file) {
 
 function populateExtractedData(data) {
   if (!data) {
-    showStatus('Gemini returned an empty result. Please try again.');
+    showStatus('Data extraction returned empty. Please try again.');
     return;
   }
   const years = ['year1', 'year2', 'year3'];
   const latest = data.year3 || data.year2 || data.year1;
+  
   if (latest) {
     if (latest.companyName) {
       document.getElementById('companyName').value = latest.companyName;
@@ -798,8 +799,12 @@ function populateExtractedData(data) {
       if (!sectorSelect.value && latest.sector) sectorSelect.value = 'Other';
     }
     
-    if (latest.description) document.getElementById('businessDesc').value = latest.description;
-    if (latest.performanceCommentary) document.getElementById('accountantNotes').value = latest.performanceCommentary;
+    // Robust Extraction for Narrative Blocks
+    const businessDesc = latest.description || data.description || '';
+    const perfCommentary = latest.performanceCommentary || data.performanceCommentary || '';
+    
+    if (businessDesc) document.getElementById('businessDesc').value = businessDesc;
+    if (perfCommentary) document.getElementById('accountantNotes').value = perfCommentary;
   }
 
   years.forEach((yKey, idx) => {
@@ -1183,9 +1188,12 @@ async function saveAndGeneratePdf(btn) {
   // 1. Force a save first
   btn.innerHTML = '<span class="spinner"></span> Saving Valuation...';
   try {
-    await saveValuation();
+    const savedUuid = await saveValuation();
+    // Ensure window.EDIT_DATA is updated with the new UUID if it was a new record
+    if (savedUuid && (!window.EDIT_DATA || !window.EDIT_DATA.uuid)) {
+      window.EDIT_DATA = { uuid: savedUuid };
+    }
   } catch (e) {
-    // saveValuation already handles showing the error, so we just stop
     btn.innerHTML = originalText;
     btn.disabled = false;
     return;
@@ -1290,6 +1298,7 @@ async function saveValuation() {
       btn.innerHTML = '💾 Save Valuation';
       btn.disabled = false;
     }, 3000);
+    return result.uuid;
   } catch (err) {
     showStatus('Save failed: ' + err.message);
     btn.disabled = false;
