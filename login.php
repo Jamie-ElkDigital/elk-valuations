@@ -10,11 +10,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     try {
         $pdo = DB::getInstance();
-        $stmt = $pdo->prepare("SELECT u.*, f.name as firm_name, f.slug as firm_slug FROM users u JOIN firms f ON u.firm_id = f.id WHERE u.email = ?");
+        $stmt = $pdo->prepare("SELECT u.*, f.name as firm_name, f.slug as firm_slug, f.global_2fa_enabled FROM users u JOIN firms f ON u.firm_id = f.id WHERE u.email = ?");
         $stmt->execute([$email]);
         $user = $stmt->fetch();
 
         if ($user && password_verify($password, $user['password_hash'])) {
+            
+            // Check if Global 2FA is DISABLED for this firm
+            if (!$user['global_2fa_enabled']) {
+                $_SESSION['authenticated'] = true;
+                $_SESSION['user_id'] = $user['id'];
+                $_SESSION['firm_id'] = $user['firm_id'];
+                $_SESSION['user_name'] = $user['name'];
+                $_SESSION['firm_name'] = $user['firm_name'];
+                $_SESSION['firm_slug'] = $user['firm_slug'];
+                $_SESSION['role'] = $user['role'];
+                $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+
+                header('Location: dashboard.php');
+                exit;
+            }
+
             // Step 1: Generate MFA Code
             $mfa_code = sprintf("%06d", mt_rand(100000, 999999));
             $mfa_expires = date('Y-m-d H:i:s', strtotime('+5 minutes'));

@@ -57,6 +57,15 @@ try {
         $message = "User deleted successfully.";
     }
 
+    // Handle 2FA Toggle
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'toggle_2fa') {
+        $fid = (int)$_POST['firm_id'];
+        $new_val = $_POST['current_status'] ? 0 : 1;
+        $stmt = $pdo->prepare("UPDATE firms SET global_2fa_enabled = ? WHERE id = ?");
+        $stmt->execute([$new_val, $fid]);
+        $message = "Global 2FA updated successfully.";
+    }
+
     // 1. Overview Stats
     $stmt = $pdo->query("SELECT COUNT(*) FROM firms");
     $totalFirms = $stmt->fetchColumn();
@@ -71,7 +80,7 @@ try {
     $estCost = ($totalTokens / 1000000) * 12;
 
     // 2. Usage by Firm
-    $sql = "SELECT f.name, f.slug, COUNT(u.id) as total_requests, SUM(u.total_tokens) as firm_tokens
+    $sql = "SELECT f.id, f.name, f.slug, f.global_2fa_enabled, COUNT(u.id) as total_requests, SUM(u.total_tokens) as firm_tokens
             FROM firms f
             LEFT JOIN usage_log u ON f.id = u.firm_id
             GROUP BY f.id
@@ -291,17 +300,34 @@ header {
                 <th>Requests</th>
                 <th>Total Tokens</th>
                 <th>Estimated Cost</th>
-                <th>Status</th>
+                <th>2FA Status</th>
+                <th style="text-align: right;">Action</th>
             </tr>
         </thead>
         <tbody>
             <?php foreach ($firmStats as $f): ?>
             <tr class="firm-row">
                 <td style="font-weight: 700; color: var(--text-main);"><?php echo htmlspecialchars($f['name']); ?></td>
-                <td><?php echo $f['total_requests']; ?></td>
+                <td><?php echo number_format($f['total_requests']); ?></td>
                 <td style="font-family: 'DM Mono', monospace;"><?php echo number_format($f['firm_tokens'] ?: 0); ?></td>
                 <td style="color: var(--brand-accent); font-weight: 600;">£<?php echo number_format(($f['firm_tokens'] / 1000000) * 12, 2); ?></td>
-                <td><span class="pill" style="background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0;">Active</span></td>
+                <td>
+                    <?php if ($f['global_2fa_enabled']): ?>
+                        <span class="pill" style="background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0;">Enabled</span>
+                    <?php else: ?>
+                        <span class="pill" style="background: #fef2f2; color: #991b1b; border: 1px solid #fecaca;">Disabled</span>
+                    <?php endif; ?>
+                </td>
+                <td style="text-align: right;">
+                    <form method="POST" style="margin:0;">
+                        <input type="hidden" name="action" value="toggle_2fa">
+                        <input type="hidden" name="firm_id" value="<?php echo $f['id']; ?>">
+                        <input type="hidden" name="current_status" value="<?php echo $f['global_2fa_enabled']; ?>">
+                        <button type="submit" class="btn btn-outline" style="font-size: 9px; padding: 6px 12px; min-width: 80px;">
+                            <?php echo $f['global_2fa_enabled'] ? 'Turn Off' : 'Turn On'; ?>
+                        </button>
+                    </form>
+                </td>
             </tr>
             <?php endforeach; ?>
         </tbody>
