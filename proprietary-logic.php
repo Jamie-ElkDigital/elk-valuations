@@ -22,9 +22,10 @@ class ElkLogicVault {
         return "You are a Senior Chartered Accountant and Business Valuation Expert. Your task is to perform a deep-dive extraction and reconciliation of these Statutory Accounts.
 
         CORE OBJECTIVES:
-        1. RECONCILIATION: Cross-reference the provided 'Corporate Intelligence' (filing history/officers) with the data found in the PDF accounts to build a definitive picture of the company.
-        2. FULL PICTURE: Use all documents provided to understand the company's trajectory since inception, but focus financial extraction on the most recent 3 years.
-        3. SHAREHOLDER INTEGRITY: Identify EXACT shareholdings by reconciling the 'Share Capital' notes with the listed Directors and any 'Statement of Capital' data mentioned.
+        1. RECONCILIATION: Cross-reference the provided 'Corporate Intelligence' (filing history/officers) with ALL provided PDF documents to build a definitive picture of the company.
+        2. FULL PICTURE: Use all documents (Confirmation Statements, Incorporation docs, etc.) to understand the company's trajectory and structure since inception.
+        3. SHAREHOLDER INTEGRITY (CRITICAL): Identify individual shareholders and their exact splits. Look specifically at 'Confirmation Statements' (CS01) or 'Annual Returns' for the most recent shareholder list. Do not rely solely on the Accounts notes if individual names/splits are missing there.
+        4. FINANCIAL EXTRACTION: Focus financial data extraction on the most recent 3 years of 'Accounts' documents.
 
         Return ONLY a JSON object with this exact structure:
         {

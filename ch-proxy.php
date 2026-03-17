@@ -85,7 +85,7 @@ try {
 
             // Extract Any Document with a PDF
             $metadataUrl = $item['links']['document_metadata'] ?? '';
-            if ($metadataUrl && count($accounts) < 15) { // Grab up to 15 recent docs
+            if ($metadataUrl && count($accounts) < 40) { // Grab up to 40 docs for full knowledge
                 $label = ucwords(str_replace('-', ' ', $category)) . ' (' . $type . ')';
                 
                 // Enhance labels for clarity
@@ -100,6 +100,8 @@ try {
                     $label = 'Incorporation Document';
                 } elseif ($category === 'confirmation-statement') {
                     $label = 'Confirmation Statement';
+                } elseif ($category === 'officers') {
+                    $label = 'Officer Change';
                 }
 
                 $pdfUrl = str_replace('https://frontend-sdk.companieshouse.gov.uk', 'https://document-api.companieshouse.gov.uk', $metadataUrl);
@@ -109,7 +111,8 @@ try {
                     'date' => $date,
                     'type' => $label,
                     'pdf_url' => $pdfUrl,
-                    'is_account' => ($category === 'accounts')
+                    'is_account' => ($category === 'accounts'),
+                    'category' => $category
                 ];
             }
 
