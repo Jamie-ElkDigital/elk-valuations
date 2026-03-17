@@ -185,11 +185,17 @@ if (isset($_GET['edit'])) {
         </div>
 
         <!-- Corporate Intelligence Panel (Full Width Row) -->
-        <div id="intelPanel" class="intel-panel full" style="grid-column: 1 / -1;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h3 style="margin: 0; font-size: 16px; color: var(--text-main);">Corporate Intelligence Summary</h3>
-            <span class="pill" style="background: var(--brand-accent-dim); color: var(--brand-accent-light);">Companies House Verified</span>
-          </div>
+        <div id="intelPanel" class="intel-panel full" style="grid-column: 1 / -1; position: relative; overflow: hidden;">
+          <div id="intelProgressFill" style="position: absolute; top: 0; left: 0; height: 100%; width: 0%; background: var(--brand-accent-dim); transition: width 0.5s ease; pointer-events: none; z-index: 0;"></div>
+          
+          <div style="position: relative; z-index: 1;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+              <h3 style="margin: 0; font-size: 16px; color: var(--text-main);">Corporate Intelligence Summary</h3>
+              <div id="intelStatus" style="font-size: 11px; color: var(--brand-accent); display: none;">
+                <span class="spinner"></span> <span id="intelStatusText">Importing...</span>
+              </div>
+              <span class="pill" style="background: var(--brand-accent-dim); color: var(--brand-accent-light);">Companies House Verified</span>
+            </div>
           
           <div class="intel-grid">
             <div class="intel-stat">
@@ -1471,19 +1477,28 @@ async function importCHAccounts() {
 
   const btn = document.getElementById('chImportBtn');
   const originalText = btn.innerText;
+  const progressFill = document.getElementById('intelProgressFill');
+  const status = document.getElementById('intelStatus');
+  const statusText = document.getElementById('intelStatusText');
   
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span> Importing Data...';
-  showStatus('Connecting to Companies House Document Vault...');
+  
+  status.style.display = 'block';
+  progressFill.style.width = '10%';
+  statusText.textContent = 'Connecting to Companies House Vault...';
 
   try {
     const fileData = [];
     for (const cb of checkboxes) {
-      // Because CH Document API is CORS restricted, we proxy the fetch through vertex-proxy.php or a new fetch-pdf.php
-      // For now, we'll extend vertex-proxy to handle URL-based extraction
       const pdfUrl = cb.value;
       fileData.push({ url: pdfUrl });
     }
+
+    // Progress Simulation
+    setTimeout(() => { if(progressFill.style.width !== '100%') { progressFill.style.width = '40%'; statusText.textContent = 'Fetching PDF documents...'; } }, 2000);
+    setTimeout(() => { if(progressFill.style.width !== '100%') { progressFill.style.width = '65%'; statusText.textContent = 'Gemini analyzing accounts...'; } }, 6000);
+    setTimeout(() => { if(progressFill.style.width !== '100%') { progressFill.style.width = '85%'; statusText.textContent = 'Extracting line items...'; } }, 15000);
 
     const response = await fetch('vertex-proxy.php', {
       method: 'POST',
@@ -1500,6 +1515,9 @@ async function importCHAccounts() {
     const result = await response.json();
     if (result.error) throw new Error(result.error);
 
+    progressFill.style.width = '100%';
+    statusText.textContent = 'Analysis Complete!';
+
     populateExtractedData(result.data);
     showStatus('Accounts data imported & analyzed by Gemini ✓');
     
@@ -1508,9 +1526,14 @@ async function importCHAccounts() {
 
   } catch (err) {
     showStatus('Import failed: ' + err.message);
+    progressFill.style.width = '0%';
   } finally {
-    btn.disabled = false;
-    btn.innerText = originalText;
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.innerText = originalText;
+      status.style.display = 'none';
+      progressFill.style.width = '0%';
+    }, 2000);
   }
 }
 
