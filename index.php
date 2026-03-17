@@ -466,6 +466,24 @@ if (isset($_GET['edit'])) {
         <p class="page-desc">Set the EBITDA weighting and multiple range for this valuation.</p>
       </div>
 
+      <div class="section-title">Valuation Toggles</div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 32px;">
+        <div class="info-box" style="margin:0; background: var(--brand-surface-mid); display: flex; justify-content: space-between; align-items: center;">
+          <div style="text-align: left;">
+            <strong style="color: var(--text-main); font-size: 13px;">Include Net Debt Bridge</strong>
+            <div style="font-size: 11px; color: var(--text-faint);">Add surplus cash and subtract loans from Enterprise Value.</div>
+          </div>
+          <input type="checkbox" id="useNetDebt" onchange="calcResults()">
+        </div>
+        <div class="info-box" style="margin:0; background: var(--brand-surface-mid); display: flex; justify-content: space-between; align-items: center;">
+          <div style="text-align: left;">
+            <strong style="color: var(--text-main); font-size: 13px;">Add-back Depreciation</strong>
+            <div style="font-size: 11px; color: var(--text-faint);">Use EBITDA (ON) or EBIT (OFF) as the valuation basis.</div>
+          </div>
+          <input type="checkbox" id="useDepreciation" checked onchange="calcFinancials(); calcResults()">
+        </div>
+      </div>
+
       <div class="section-title">Year Weighting</div>
       <p style="font-size:13px; color: var(--text-muted); margin-bottom:16px;">Most recent year carries more weight. Standard is 1×, 2×, 3× (oldest to most recent).</p>
 
@@ -484,6 +502,11 @@ if (isset($_GET['edit'])) {
           <div class="year">Equal</div>
           <div class="weight">1:1:1</div>
           <div class="label">Simple average</div>
+        </div>
+        <div class="multiple-card" onclick="setWeighting('50-30-20')" id="w503020">
+          <div class="year">Excel Legacy</div>
+          <div class="weight">50:30:20</div>
+          <div class="label">Historical Priority</div>
         </div>
       </div>
 
@@ -1106,7 +1129,8 @@ function setWeighting(key) {
   document.querySelectorAll('.multiple-card').forEach(c => c.classList.remove('selected'));
   if (key === '1-2-3') { weighting = [1,2,3]; document.getElementById('w123').classList.add('selected'); }
   else if (key === '1-1-3') { weighting = [1,1,3]; document.getElementById('w113').classList.add('selected'); }
-  else { weighting = [1,1,1]; document.getElementById('w111').classList.add('selected'); }
+  else if (key === '1-1-1') { weighting = [1,1,1]; document.getElementById('w111').classList.add('selected'); }
+  else if (key === '50-30-20') { weighting = [20,30,50]; document.getElementById('w503020').classList.add('selected'); } // Reversed for [y1,y2,y3]
   calcResults();
 }
 
@@ -1123,9 +1147,10 @@ function calcResults() {
   const multMid = getNum('multMid') || 3.5;
   const multHigh = getNum('multHigh') || 5;
 
+  const useNetDebt = document.getElementById('useNetDebt').checked;
   const cash = getNum('b_cash');
   const loans = getNum('b_loans');
-  const netDebt = loans - cash; 
+  const netDebt = useNetDebt ? (loans - cash) : 0; 
 
   const valLow = (wAvg * multLow) - netDebt - deduction;
   const valMid = (wAvg * multMid) - netDebt - deduction;
