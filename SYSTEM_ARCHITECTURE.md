@@ -23,6 +23,11 @@ The ELK Valuations Platform is a high-security, multi-tenant SaaS application de
 *   **Quality**: Vector-based, print-ready PDFs with dynamic branding.
 *   **Customization**: Injects firm-specific logos, primary/secondary colors, and signatures in real-time.
 
+### 2.4 Companies House Intelligence (Direct Ingestion)
+*   **Lookup**: Direct integration with the UK Companies House API via `ch-proxy.php`.
+*   **Intelligence**: Automatic retrieval of incorporation dates, share allotment history, and director/officer churn.
+*   **Extraction**: Direct ingestion of statutory accounts from the CH Document Vault, processed via the "Hybrid Data Ingestion" pipeline (CH URL + Gemini 3.1 Pro).
+
 ---
 
 ## 3. Technical Architecture
@@ -77,5 +82,5 @@ To protect ELK Digital's Intellectual Property (IP), the system uses a **Hydrati
 *   **Git Integrity**: Versioning is baked into the UI footer via Git Short SHAs, ensuring traceability of every deployment.
 
 ---
-*Document Version: 1.2 (Phase 5 Finalized)*  
-*Last Updated: 16 March 2026*
+*Document Version: 1.3 (Phase 6.1 In Progress)*  
+*Last Updated: 17 March 2026*

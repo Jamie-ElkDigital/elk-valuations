@@ -1177,7 +1177,7 @@ async function saveAndGeneratePdf(btn) {
 }
 
 async function saveValuation() {
-  const btn = document.getElementById('saveBtn');
+  const btn = document.getElementById('saveAndGenerateBtn');
   const data = {
     uuid: window.EDIT_DATA ? window.EDIT_DATA.uuid : null,
     companyName: document.getElementById('companyName')?.value,
@@ -1427,6 +1427,7 @@ async function searchCompaniesHouse() {
     
     document.getElementById('intel_inc').textContent = incDate.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
     document.getElementById('intel_stability').textContent = `${yearsAgo} years of trading history.`;
+    document.getElementById('yearsTrading').value = yearsAgo;
     document.getElementById('intel_sh').textContent = result.profile.share_changes;
     document.getElementById('intel_dir').textContent = result.profile.director_changes;
 

@@ -44,10 +44,11 @@ The application has successfully transitioned to secure UUID-based URLs, feature
 *   [ ] **Cyber Essentials Mapping:** Document Google Cloud infrastructure for GTA's Cyber Essentials audit.
 *   [x] **Vulnerability Scanning:** Implement automated dependency and container scanning.
 
-### Phase 6.1: Intelligence Expansion (Next)
-*   [ ] **Companies House Integration:** Fetch statutory accounts and officer data directly via Company Number.
-*   [ ] **Hybrid Data Ingestion:** Allow both PDF upload and direct CH data extraction.
-*   [ ] **Automated "Years Trading":** Calculate trading history directly from incorporation dates.
+### Phase 6.1: Intelligence Expansion - IN PROGRESS
+*   [x] **Companies House Integration:** Fetch statutory accounts and corporate intelligence via Company Number.
+*   [x] **Hybrid Data Ingestion:** Combined PDF upload and direct CH data extraction (via Vertex AI).
+*   [x] **Automated "Years Trading":** Calculate trading history directly from incorporation dates.
+*   [ ] **Director/Officer Intelligence:** Deep extraction of historical appointments and share allotments.
 
 ### Phase 7: Scaling & Commercial Launch
 *   [ ] **Public API for Accounting Suites:** Integration with Xero/QuickBooks for automated data pull.
@@ -58,4 +59,4 @@ The application has successfully transitioned to secure UUID-based URLs, feature
 ### 🛠️ Project-Specific Rules for Agent
 *   **Note for Agent:** You do NOT need to perform a `git push` after updating this `PROJECT_STATUS.md` file.
 
-*Owner: ELK Digital Limited | Strategic Partner: GTA Accounting | Last Updated: 16 March 2026 (Phase 5 Finalized)*
+*Owner: ELK Digital Limited | Strategic Partner: GTA Accounting | Last Updated: 17 March 2026 (Phase 6.1 In Progress)*
