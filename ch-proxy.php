@@ -81,41 +81,36 @@ try {
             $type = $item['type'] ?? '';
             $desc = $item['description'] ?? '';
             $date = $item['date'] ?? '';
+            $category = $item['category'] ?? '';
 
-            // Extract Accounts
-            if ($item['category'] === 'accounts' && count($accounts) < 5) {
-                // We want to prioritise Full/Group accounts but include all available statutory returns
-                $label = 'Statutory Accounts';
-                $isFull = false;
+            // Extract Any Document with a PDF
+            $metadataUrl = $item['links']['document_metadata'] ?? '';
+            if ($metadataUrl && count($accounts) < 15) { // Grab up to 15 recent docs
+                $label = ucwords(str_replace('-', ' ', $category)) . ' (' . $type . ')';
+                
+                // Enhance labels for clarity
+                if ($category === 'accounts') {
+                    $label = 'Accounts';
+                    if (stripos($desc, 'micro-entity') !== false) $label = 'Micro-Entity Accounts';
+                    elseif (stripos($desc, 'total exemption') !== false) $label = 'Total Exemption Accounts';
+                    elseif (stripos($desc, 'group') !== false) $label = 'Group Accounts';
+                    elseif (stripos($desc, 'full') !== false) $label = 'Full Accounts';
+                    elseif (stripos($desc, 'filleted') !== false) $label = 'Filleted Accounts';
+                } elseif ($category === 'incorporation') {
+                    $label = 'Incorporation Document';
+                } elseif ($category === 'confirmation-statement') {
+                    $label = 'Confirmation Statement';
+                }
 
-                if (stripos($desc, 'micro-entity') !== false) $label = 'Micro-Entity Accounts';
-                elseif (stripos($desc, 'total exemption') !== false) {
-                    $label = 'Total Exemption Accounts';
-                    $isFull = true; 
-                }
-                elseif (stripos($desc, 'group') !== false) {
-                    $label = 'Group Accounts';
-                    $isFull = true;
-                }
-                elseif (stripos($desc, 'full') !== false) {
-                    $label = 'Full Accounts';
-                    $isFull = true;
-                }
-                elseif (stripos($desc, 'filleted') !== false) $label = 'Filleted Accounts';
-
-                $metadataUrl = $item['links']['document_metadata'] ?? '';
-                if ($metadataUrl) {
-                    // Normalize the URL to the Document API content endpoint
-                    $pdfUrl = str_replace('https://frontend-sdk.companieshouse.gov.uk', 'https://document-api.companieshouse.gov.uk', $metadataUrl);
-                    if (substr($pdfUrl, -8) !== '/content') $pdfUrl .= '/content';
-                    
-                    $accounts[] = [
-                        'date' => $date,
-                        'type' => $label,
-                        'pdf_url' => $pdfUrl,
-                        'priority' => $isFull ? 1 : 2
-                    ];
-                }
+                $pdfUrl = str_replace('https://frontend-sdk.companieshouse.gov.uk', 'https://document-api.companieshouse.gov.uk', $metadataUrl);
+                if (substr($pdfUrl, -8) !== '/content') $pdfUrl .= '/content';
+                
+                $accounts[] = [
+                    'date' => $date,
+                    'type' => $label,
+                    'pdf_url' => $pdfUrl,
+                    'is_account' => ($category === 'accounts')
+                ];
             }
 
             // Extract Share Allotments (SH01)
