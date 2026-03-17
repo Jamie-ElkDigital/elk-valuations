@@ -81,7 +81,7 @@ if (isset($_GET['edit'])) {
 <div id="debugOverlay" onclick="closeDebug()"></div>
 <div id="debugModal">
   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-    <h3 style="color:var(--brand-accent-light); margin:0;">AI Extraction Debug</h3>
+    <h3 style="color:var(--brand-accent-light); margin:0;">Data Extraction Debug</h3>
     <button class="btn btn-outline" style="padding:4px 10px;" onclick="closeDebug()">Close</button>
   </div>
   <pre id="debugContent">Waiting for extraction...</pre>
@@ -693,7 +693,7 @@ async function handleFileUpload(event) {
   statusText.textContent = 'Reading statutory accounts...';
 
   try {
-    // Fake progress phases while waiting for Vertex AI (~30-40s)
+    // Progress Simulation while waiting for server response
     setTimeout(() => { if(progressFill.style.width !== '100%') { progressFill.style.width = '50%'; statusText.textContent = 'Parsing document structure...'; } }, 3000);
     setTimeout(() => { if(progressFill.style.width !== '100%') { progressFill.style.width = '65%'; statusText.textContent = 'Extracting financial data...'; } }, 8000);
     setTimeout(() => { if(progressFill.style.width !== '100%') { progressFill.style.width = '75%'; statusText.textContent = 'Analysing share structure...'; } }, 15000);
@@ -1496,9 +1496,10 @@ async function importCHAccounts() {
     }
 
     // Progress Simulation
-    setTimeout(() => { if(progressFill.style.width !== '100%') { progressFill.style.width = '40%'; statusText.textContent = 'Fetching PDF documents...'; } }, 2000);
-    setTimeout(() => { if(progressFill.style.width !== '100%') { progressFill.style.width = '65%'; statusText.textContent = 'Gemini analyzing accounts...'; } }, 6000);
-    setTimeout(() => { if(progressFill.style.width !== '100%') { progressFill.style.width = '85%'; statusText.textContent = 'Extracting line items...'; } }, 15000);
+    setTimeout(() => { if(progressFill.style.width !== '100%') { progressFill.style.width = '20%'; statusText.textContent = 'Scanning available documents...'; } }, 1500);
+    setTimeout(() => { if(progressFill.style.width !== '100%') { progressFill.style.width = '40%'; statusText.textContent = 'Fetching PDF documents...'; } }, 3500);
+    setTimeout(() => { if(progressFill.style.width !== '100%') { progressFill.style.width = '60%'; statusText.textContent = 'Analyzing accounts...'; } }, 8000);
+    setTimeout(() => { if(progressFill.style.width !== '100%') { progressFill.style.width = '80%'; statusText.textContent = 'Extracting line items...'; } }, 16000);
 
     const response = await fetch('vertex-proxy.php', {
       method: 'POST',
@@ -1516,10 +1517,10 @@ async function importCHAccounts() {
     if (result.error) throw new Error(result.error);
 
     progressFill.style.width = '100%';
-    statusText.textContent = 'Analysis Complete!';
+    statusText.textContent = 'Import Complete';
 
     populateExtractedData(result.data);
-    showStatus('Accounts data imported & analyzed by Gemini ✓');
+    showStatus('Accounts data imported successfully ✓');
     
     // Smooth scroll to results
     setTimeout(() => goTo(1), 1000);
