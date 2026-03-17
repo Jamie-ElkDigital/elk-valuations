@@ -833,24 +833,34 @@ function populateExtractedData(data) {
   addAdjRow('Director pension addback', '', '', '');
   addAdjRow('Non-recurring / one-off costs', '', '', '');
 
-  if (latest && latest.directors && Array.isArray(latest.directors) && latest.directors.length > 0) {
+  if (latest) {
     const shContainer = document.getElementById('shareholderRows');
     shContainer.innerHTML = ''; 
     shareRowCount = 0;
-    
-    let totalShares = 100; 
-    if (latest.shareCapital && !isNaN(parseInt(latest.shareCapital))) {
-       totalShares = parseInt(latest.shareCapital);
-    }
-    
-    const numDirectors = latest.directors.length;
-    const sharesPerDirector = Math.floor(totalShares / numDirectors);
-    const remainder = totalShares % numDirectors;
 
-    latest.directors.forEach((directorName, idx) => {
-       const shares = sharesPerDirector + (idx === 0 ? remainder : 0);
-       addShareholderRow(directorName, shares, 'Ordinary');
-    });
+    if (latest.shareholders && Array.isArray(latest.shareholders) && latest.shareholders.length > 0) {
+      // Use the explicitly extracted shareholder list
+      latest.shareholders.forEach(sh => {
+        addShareholderRow(sh.name, sh.shares, sh.class || 'Ordinary');
+      });
+    } else if (latest.directors && Array.isArray(latest.directors) && latest.directors.length > 0) {
+      // Fallback to equal split among directors
+      let totalShares = 100; 
+      if (latest.shareCapital && !isNaN(parseInt(latest.shareCapital))) {
+        totalShares = parseInt(latest.shareCapital);
+      }
+      
+      const numDirectors = latest.directors.length;
+      const sharesPerDirector = Math.floor(totalShares / numDirectors);
+      const remainder = totalShares % numDirectors;
+
+      latest.directors.forEach((directorName, idx) => {
+        const shares = sharesPerDirector + (idx === 0 ? remainder : 0);
+        addShareholderRow(directorName, shares, 'Ordinary');
+      });
+    } else {
+      addShareholderRow('', '', 'Ordinary');
+    }
   }
 
   calcFinancials();

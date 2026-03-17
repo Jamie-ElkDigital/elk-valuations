@@ -32,11 +32,16 @@ class ElkLogicVault {
             'description': 'A detailed 3-4 sentence professional summary of what the company does.',
             'performanceCommentary': 'A detailed 2-paragraph analysis of the financial trends, growth, and margins seen in these 3 years of accounts.',
             'yearsTrading': 10,
-            'directors': ['Name 1', 'Name 2'], 'shareCapital': 100
+            'directors': ['Name 1', 'Name 2'], 
+            'shareholders': [
+              { 'name': 'Name 1', 'shares': 50 },
+              { 'name': 'Name 2', 'shares': 50 }
+            ],
+            'shareCapital': 100
           }
         }
         Ensure 'year1' is oldest and 'year3' is newest. If a figure is missing, use 0. If a string is missing, use ''.
         Sectors: [Professional Services, HR & Recruitment, IT & Technology, Construction & Trades, Retail, Hospitality & Leisure, Manufacturing, Healthcare, Financial Services, Property, Other].
-        IMPORTANT: The 'description' and 'performanceCommentary' MUST be professional and detailed. Infer 'yearsTrading' accurately. Return ONLY the complete JSON object.";
+        IMPORTANT: For 'shareholders', look specifically at the 'Share Capital' and 'Directors' sections of the notes to identify EXACT holdings for each person. If not explicitly listed, list all active directors with an equal share of the 'shareCapital' figure. Return ONLY the complete JSON object.";
     }
 }
