@@ -702,10 +702,10 @@ async function handleFileUpload(event) {
   try {
     // Progress Simulation while waiting for server response
     setTimeout(() => { if(progressFill.style.width !== '100%') { progressFill.style.width = '50%'; statusText.textContent = 'Parsing document structure...'; } }, 3000);
-    setTimeout(() => { if(progressFill.style.width !== '100%') { progressFill.style.width = '65%'; statusText.textContent = 'Extracting financial data...'; } }, 8000);
+    setTimeout(() => { if(progressFill.style.width !== '100%') { progressFill.style.width = '65%'; statusText.textContent = 'Extracting financial data, please do not navigate away...'; } }, 8000);
     setTimeout(() => { if(progressFill.style.width !== '100%') { progressFill.style.width = '75%'; statusText.textContent = 'Analysing share structure...'; } }, 15000);
     setTimeout(() => { if(progressFill.style.width !== '100%') { progressFill.style.width = '85%'; statusText.textContent = 'Formatting final outputs...'; } }, 23000);
-    setTimeout(() => { if(progressFill.style.width !== '100%') { progressFill.style.width = '95%'; statusText.textContent = 'Almost done...'; } }, 30000);
+    setTimeout(() => { if(progressFill.style.width !== '100%') { progressFill.style.width = '95%'; statusText.textContent = 'Finalising knowledge base...'; } }, 30000);
 
     const response = await fetch('vertex-proxy.php', {
       method: 'POST',
@@ -1181,7 +1181,11 @@ function calcResults() {
   });
 }
 
+let isGenerating = false;
 async function saveAndGeneratePdf(btn) {
+  if (isGenerating) return;
+  isGenerating = true;
+  
   const originalText = btn.innerHTML;
   btn.disabled = true;
   
@@ -1196,6 +1200,7 @@ async function saveAndGeneratePdf(btn) {
   } catch (e) {
     btn.innerHTML = originalText;
     btn.disabled = false;
+    isGenerating = false;
     return;
   }
 
@@ -1208,11 +1213,13 @@ async function saveAndGeneratePdf(btn) {
     setTimeout(() => {
       btn.innerHTML = originalText;
       btn.disabled = false;
-    }, 5000);
+      isGenerating = false;
+    }, 8000);
   } else {
     showStatus('Error: Could not retrieve UUID after saving.');
     btn.innerHTML = originalText;
     btn.disabled = false;
+    isGenerating = false;
   }
 }
 
@@ -1530,7 +1537,7 @@ async function importCHAccounts() {
     setTimeout(() => { if(progressFill.style.width !== '100%') { progressFill.style.width = '20%'; statusText.textContent = 'Scanning available documents...'; } }, 1500);
     setTimeout(() => { if(progressFill.style.width !== '100%') { progressFill.style.width = '40%'; statusText.textContent = 'Fetching PDF documents...'; } }, 3500);
     setTimeout(() => { if(progressFill.style.width !== '100%') { progressFill.style.width = '60%'; statusText.textContent = 'Analyzing accounts...'; } }, 8000);
-    setTimeout(() => { if(progressFill.style.width !== '100%') { progressFill.style.width = '80%'; statusText.textContent = 'Extracting line items...'; } }, 16000);
+    setTimeout(() => { if(progressFill.style.width !== '100%') { progressFill.style.width = '80%'; statusText.textContent = 'Extracting line items, please do not navigate away...'; } }, 16000);
 
     const response = await fetch('vertex-proxy.php', {
       method: 'POST',
