@@ -24,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['user_name'] = $user['name'];
                 $_SESSION['firm_name'] = $user['firm_name'];
                 $_SESSION['firm_slug'] = $user['firm_slug'];
-                $_SESSION['role'] = $user['role'];
+                $_SESSION['user_role'] = $user['role'];
                 $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 
                 $redirect = ($user['firm_slug'] === 'elk') ? 'super-admin.php' : 'dashboard.php';

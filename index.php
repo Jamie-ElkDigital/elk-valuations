@@ -542,6 +542,24 @@ if (isset($_GET['edit'])) {
         </div>
       </div>
 
+      <div class="section-title">Key Person Sensitivity (Revenue Leakage)</div>
+      <p style="font-size:13px; color: var(--text-muted); margin-bottom:16px;">Calculate the impact of losing a key fee-earner. This reduces the weighted EBITDA before applying the multiple.</p>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Key Person Revenue (£)</label>
+          <div class="input-prefix"><input type="number" id="kpRevenue" placeholder="0" oninput="calcResults()"></div>
+        </div>
+        <div class="form-group">
+          <label>Leakage Assumption (%)</label>
+          <input type="number" id="kpLeakage" value="25" min="0" max="100" oninput="calcResults()">
+        </div>
+        <div class="form-group full" style="background: var(--brand-surface-mid); padding: 12px; border-radius: var(--radius); border: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center;">
+          <div style="font-size: 13px; color: var(--text-muted);">Calculated EBITDA Leakage Impact:</div>
+          <div id="ebitdaLeakageDisplay" style="font-weight: 600; color: var(--brand-accent-light);">£0</div>
+        </div>
+      </div>
+
       <div class="section-title">
         Accountant's Commentary
         <button id="aiMethodBtn" class="btn btn-outline" style="margin-left:auto; font-size:11px; padding:4px 10px; color:var(--brand-accent-light);" onclick="generateNarrative('accountantNotes')">✦ Auto-Generate Notes</button>
@@ -1140,7 +1158,20 @@ function calcResults() {
   const e3 = getAdjEbitda(3);
   const [w1, w2, w3] = weighting;
   const totalWeight = w1 + w2 + w3;
-  const wAvg = (e1 * w1 + e2 * w2 + e3 * w3) / totalWeight;
+  let wAvg = (e1 * w1 + e2 * w2 + e3 * w3) / totalWeight;
+
+  // Key Person Leakage Logic
+  const kpRev = getNum('kpRevenue');
+  const kpLeak = getNum('kpLeakage') / 100;
+  const turn3 = getNum('f_turn3');
+  const eb3 = getAdjEbitda(3);
+  const margin = turn3 > 0 ? (eb3 / turn3) : 0;
+  const ebLeakage = (kpRev * kpLeak) * margin;
+  
+  document.getElementById('ebitdaLeakageDisplay').textContent = fmt(ebLeakage);
+  
+  // Subtract leakage from weighted average EBITDA
+  const adjWAvg = wAvg - ebLeakage;
 
   const deduction = getNum('deduction');
   const multLow = getNum('multLow') || 2.5;
@@ -1152,9 +1183,9 @@ function calcResults() {
   const loans = getNum('b_loans');
   const netDebt = useNetDebt ? (loans - cash) : 0; 
 
-  const valLow = (wAvg * multLow) - netDebt - deduction;
-  const valMid = (wAvg * multMid) - netDebt - deduction;
-  const valHigh = (wAvg * multHigh) - netDebt - deduction;
+  const valLow = (adjWAvg * multLow) - netDebt - deduction;
+  const valMid = (adjWAvg * multMid) - netDebt - deduction;
+  const valHigh = (adjWAvg * multHigh) - netDebt - deduction;
 
   document.getElementById('r_company').textContent = document.getElementById('companyName')?.value || '—';
   document.getElementById('r_purpose').textContent = document.getElementById('purpose')?.value || '—';
@@ -1166,13 +1197,13 @@ function calcResults() {
   document.getElementById('r_mid_mult').textContent = `${multMid}× EBITDA (Adj for Net Debt)`;
   document.getElementById('r_high_mult').textContent = `${multHigh}× EBITDA (Adj for Net Debt)`;
 
-  document.getElementById('r_ebitda').textContent = fmt(wAvg);
-  document.getElementById('r_weighting').textContent = `Weighting: ${w1}:${w2}:${w3}`;
-  const turn3 = getNum('f_turn3');
+  document.getElementById('r_ebitda').textContent = fmt(adjWAvg);
+  document.getElementById('r_weighting').textContent = `Weighting: ${w1}:${w2}:${w3} (Less Key Person Risk)`;
+  
   document.getElementById('r_turnover').textContent = fmt(turn3);
   if (turn3) {
-    const margin = ((getPreAdjEbitda(3) / turn3) * 100).toFixed(1);
-    document.getElementById('r_margin').textContent = `EBITDA margin ${margin}%`;
+    const marginPct = (margin * 100).toFixed(1);
+    document.getElementById('r_margin').textContent = `EBITDA margin ${marginPct}%`;
   }
   document.getElementById('r_netassets').textContent = fmt(getNum('b_netassets'));
   document.getElementById('r_cash').textContent = fmt(getNum('b_cash'));
@@ -1298,6 +1329,8 @@ async function saveValuation() {
       mid: getNum('multMid'),
       high: getNum('multHigh')
     },
+    kpRevenue: getNum('kpRevenue'),
+    kpLeakage: getNum('kpLeakage'),
     deduction: getNum('deduction'),
     deductionDesc: document.getElementById('deductionDesc').value,
     accountantNotes: document.getElementById('accountantNotes').value,
@@ -1687,6 +1720,9 @@ function init() {
       document.getElementById('multMid').value = meth.multiples.mid || 3.5;
       document.getElementById('multHigh').value = meth.multiples.high || 5;
     }
+    if (meth.kpRevenue) document.getElementById('kpRevenue').value = meth.kpRevenue;
+    if (meth.kpLeakage) document.getElementById('kpLeakage').value = meth.kpLeakage;
+
     document.getElementById('deduction').value = meth.deduction || 0;
     document.getElementById('deductionDesc').value = meth.deductionDesc || '';
     document.getElementById('accountantNotes').value = d.accountant_notes || '';
