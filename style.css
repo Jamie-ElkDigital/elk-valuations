@@ -434,11 +434,36 @@ header {
 
 .info-box .icon { color: var(--brand-accent); }
 
-/* ── STATUS BAR ── */
+/* ── STATUS BAR (TOAST) ── */
 .status-bar {
-  background: var(--brand-surface-mid);
+  position: fixed;
+  top: 80px;
+  right: 48px;
+  background: var(--brand-surface-light);
   border: 1px solid var(--brand-accent-border);
-  color: var(--brand-accent);
+  color: var(--brand-accent-light);
+  padding: 16px 24px;
+  border-radius: var(--radius-lg);
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  opacity: 0;
+  transform: translateX(50px);
+  pointer-events: none;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.status-bar::before {
+  content: '✦';
+}
+
+.status-bar.show {
+  opacity: 1;
+  transform: translateX(0);
 }
 
 /* ── SIDEBAR LOGO ── */
