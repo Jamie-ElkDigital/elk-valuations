@@ -572,19 +572,25 @@ header {
 .fin-table td:not(:first-child) {
   text-align: center;
   font-family: 'DM Mono', monospace;
+}
+
 .fin-table input {
   width: 100%;
-  background: transparent;
-  border: none;
-  border-bottom: 1px dashed var(--border-subtle);
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius);
   color: var(--text-main);
-  padding: 4px;
-}
-  text-align: center;
+  text-align: right;
   font-family: 'DM Mono', monospace;
   font-size: 14px;
-  padding: 4px;
+  padding: 8px 12px;
   outline: none;
+  transition: all 0.2s;
+}
+
+.fin-table input:focus {
+  border-color: var(--brand-accent);
+  box-shadow: 0 0 0 3px var(--brand-accent-dim);
 }
 
 /* ── ADJUSTMENT ROWS ── */
