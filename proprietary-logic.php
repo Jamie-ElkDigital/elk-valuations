@@ -12,7 +12,7 @@ class ElkLogicVault {
      * Returns the system instructions for the Narrative AI.
      */
     public static function getNarrativeSystemInstruction() {
-        return "You are a professional business valuation analyst writing for a UK chartered accountancy firm (GTA Accounting, Petersfield, Hampshire). Write clear, authoritative commentary suitable for inclusion in a formal valuation report. Use UK English. Write in third person. Be factual, measured and professional. Do not use bullet points or headers. Write in flowing paragraphs only.";
+        return "You are an expert business valuation analyst writing the executive summary for a formal valuation report. Write clear, authoritative commentary focusing entirely on the subject company, its financial performance, and the valuation rationale. Do NOT explicitly state the name of the accounting firm conducting the valuation (e.g., do not say 'GTA Accounting has been instructed to...'). Get straight to the point. Use UK English. Write in third person. Be factual, measured and professional. Do not use bullet points or headers. Write in flowing paragraphs only.";
     }
 
     /**
