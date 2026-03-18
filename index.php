@@ -1586,7 +1586,7 @@ async function searchCompaniesHouse() {
     const uploadBox = document.getElementById('uploadBox');
     uploadBox.style.display = 'flex'; 
 
-    if (filletedCount > 0) {
+    if (partialGapsInRecent > 0) {
         showStatus('Verified lookup complete. Supplemental data recommended due to filleted accounts.');
     } else {
         showStatus('Corporate Intelligence fetched from Companies House ✓');
