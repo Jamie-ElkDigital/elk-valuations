@@ -327,7 +327,7 @@ if (isset($_GET['edit'])) {
             <td><input type="number" id="f_cos2" placeholder="0" oninput="calcFinancials()"></td>
             <td><input type="number" id="f_cos3" placeholder="0" oninput="calcFinancials()"></td>
           </tr>
-          <tr class="subtotal">
+          <tr class="total">
             <td>Gross Profit</td>
             <td id="f_gp1">—</td><td id="f_gp2">—</td><td id="f_gp3">—</td>
           </tr>
