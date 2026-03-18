@@ -547,14 +547,14 @@ header {
 .fin-table td:not(:first-child) {
   text-align: center;
   font-family: 'DM Mono', monospace;
-}
-
 .fin-table input {
   width: 100%;
   background: transparent;
   border: none;
-  border-bottom: 1px solid transparent;
+  border-bottom: 1px dashed var(--border-subtle);
   color: var(--text-main);
+  padding: 4px;
+}
   text-align: center;
   font-family: 'DM Mono', monospace;
   font-size: 14px;
