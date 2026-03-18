@@ -1486,7 +1486,10 @@ async function generateNarrative(targetId = 'r_narrative') {
           if (jsonStr) {
             try {
               const data = JSON.parse(jsonStr);
-              if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts) {
+              if (data.error) {
+                console.error("Vertex AI Error:", data.error);
+                textarea.value += "\n[Error: " + data.error.message + "]";
+              } else if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts) {
                  const textPart = data.candidates[0].content.parts[0].text;
                  if (textPart) {
                     textarea.value += textPart;
@@ -1495,9 +1498,11 @@ async function generateNarrative(targetId = 'r_narrative') {
                  }
               }
             } catch (e) {
-              console.warn("SSE JSON Parse error", e);
+              console.warn("SSE JSON Parse error on string:", jsonStr, e);
             }
           }
+        } else if (line.trim() !== '') {
+           console.log("Ignored stream line:", line);
         }
       }
     }
