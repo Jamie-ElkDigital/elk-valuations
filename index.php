@@ -155,6 +155,59 @@ if (isset($_GET['edit'])) {
         <p class="page-desc">Enter the Company Number to retrieve verified data from Companies House.</p>
       </div>
 
+      <!-- ROW 1: Companies House Lookup (Verified-First) -->
+      <div class="form-grid" style="margin-bottom: 24px;">
+        <div class="form-group full">
+          <label>Company Number (Companies House Lookup)</label>
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="companyNumber" placeholder="e.g. 12345678" style="flex: 1;">
+            <button class="btn btn-outline" onclick="searchCompaniesHouse()" id="chSearchBtn" style="padding: 0 16px;">🔍 Lookup</button>
+          </div>
+        </div>
+
+        <!-- Corporate Intelligence Panel (Full Width Row) -->
+        <div id="intelPanel" class="intel-panel full" style="grid-column: 1 / -1; position: relative; overflow: hidden; margin-top: 0;">
+          <div id="intelProgressFill" style="position: absolute; top: 0; left: 0; height: 100%; width: 0%; background: var(--brand-accent-dim); transition: width 0.5s ease; pointer-events: none; z-index: 0;"></div>
+          
+          <div style="position: relative; z-index: 1;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+              <h3 style="margin: 0; font-size: 16px; color: var(--text-main);">Corporate Intelligence Summary</h3>
+              <div id="intelStatus" style="font-size: 11px; color: var(--brand-accent); display: none;">
+                <span class="spinner"></span> <span id="intelStatusText">Importing...</span>
+              </div>
+              <span class="pill" style="background: var(--brand-accent-dim); color: var(--brand-accent-light);">Companies House Verified</span>
+            </div>
+          
+            <div class="intel-grid">
+              <div class="intel-stat">
+                <span class="label">Incorporated</span>
+                <div class="value" id="intel_inc">—</div>
+                <div class="sub" id="intel_stability">Checking stability...</div>
+              </div>
+              <div class="intel-stat">
+                <span class="label">Share Changes</span>
+                <div class="value" id="intel_sh">—</div>
+                <div class="sub">Allotments since formation</div>
+              </div>
+              <div class="intel-stat">
+                <span class="label">Director Churn</span>
+                <div class="value" id="intel_dir">—</div>
+                <div class="sub">Appointments/Terminations</div>
+              </div>
+            </div>
+
+            <div class="ch-accounts-list">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <span style="font-size: 12px; font-weight: 600; color: var(--text-muted);">Available Statutory Accounts</span>
+                <button class="btn btn-primary" style="font-size: 11px; padding: 6px 12px;" onclick="importCHAccounts()" id="chImportBtn">Import & Extract Last 3 Years</button>
+              </div>
+              <div id="chAccountsContainer"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ROW 2: Supplemental PDF Upload -->
       <div class="info-box" id="uploadBox" style="background: var(--brand-surface-mid); border: 1px dashed var(--brand-accent-border); padding: 32px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 16px; position: relative; overflow: hidden; margin-bottom: 24px;">
         <div id="uploadProgressFill" style="position: absolute; top: 0; left: 0; height: 100%; width: 0%; background: var(--brand-accent-dim); transition: width 0.5s ease; pointer-events: none; z-index: 0;"></div>
         <div style="z-index: 1; font-size: 24px;">📄</div>
@@ -171,59 +224,12 @@ if (isset($_GET['edit'])) {
         </div>
       </div>
 
+      <!-- ROW 3+: General Business Details -->
       <div class="form-grid">
-        <div class="form-group full">
+        <div class="form-group">
           <label>Company Name</label>
           <input type="text" id="companyName" placeholder="e.g. Acme Trading Limited" oninput="updateHeader()">
         </div>
-        <div class="form-group">
-          <label>Company Number</label>
-          <div style="display: flex; gap: 8px;">
-            <input type="text" id="companyNumber" placeholder="e.g. 12345678" style="flex: 1;">
-            <button class="btn btn-outline" onclick="searchCompaniesHouse()" id="chSearchBtn" style="padding: 0 16px;">🔍 Lookup</button>
-          </div>
-        </div>
-
-        <!-- Corporate Intelligence Panel (Full Width Row) -->
-        <div id="intelPanel" class="intel-panel full" style="grid-column: 1 / -1; position: relative; overflow: hidden;">
-          <div id="intelProgressFill" style="position: absolute; top: 0; left: 0; height: 100%; width: 0%; background: var(--brand-accent-dim); transition: width 0.5s ease; pointer-events: none; z-index: 0;"></div>
-          
-          <div style="position: relative; z-index: 1;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-              <h3 style="margin: 0; font-size: 16px; color: var(--text-main);">Corporate Intelligence Summary</h3>
-              <div id="intelStatus" style="font-size: 11px; color: var(--brand-accent); display: none;">
-                <span class="spinner"></span> <span id="intelStatusText">Importing...</span>
-              </div>
-              <span class="pill" style="background: var(--brand-accent-dim); color: var(--brand-accent-light);">Companies House Verified</span>
-            </div>
-          
-          <div class="intel-grid">
-            <div class="intel-stat">
-              <span class="label">Incorporated</span>
-              <div class="value" id="intel_inc">—</div>
-              <div class="sub" id="intel_stability">Checking stability...</div>
-            </div>
-            <div class="intel-stat">
-              <span class="label">Share Changes</span>
-              <div class="value" id="intel_sh">—</div>
-              <div class="sub">Allotments since formation</div>
-            </div>
-            <div class="intel-stat">
-              <span class="label">Director Churn</span>
-              <div class="value" id="intel_dir">—</div>
-              <div class="sub">Appointments/Terminations</div>
-            </div>
-          </div>
-
-          <div class="ch-accounts-list">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-              <span style="font-size: 12px; font-weight: 600; color: var(--text-muted);">Available Statutory Accounts</span>
-              <button class="btn btn-primary" style="font-size: 11px; padding: 6px 12px;" onclick="importCHAccounts()" id="chImportBtn">Import & Extract Last 3 Years</button>
-            </div>
-            <div id="chAccountsContainer"></div>
-          </div>
-        </div>
-      </div>
         <div class="form-group">
           <label>Sector / Industry</label>
           <select id="sector">
