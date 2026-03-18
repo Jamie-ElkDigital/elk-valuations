@@ -179,7 +179,9 @@ if ($is_stream) {
         CURLOPT_TIMEOUT        => 120,
         CURLOPT_WRITEFUNCTION  => function($curl, $data) {
             echo $data;
-            ob_flush();
+            if (ob_get_level() > 0) {
+                ob_flush();
+            }
             flush();
             return strlen($data);
         }
