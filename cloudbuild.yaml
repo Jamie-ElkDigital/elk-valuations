@@ -45,7 +45,7 @@ steps:
       - '--concurrency'
       - '1'
       - '--max-instances'
-      - '10'
+      - '5'
       - '--timeout'
       - '300'
       - '--update-env-vars'
