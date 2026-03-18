@@ -110,10 +110,12 @@ $secondary_color = $firm['secondary_color'] ?? '#050505';
       <a href="dashboard.php" class="nav-item active">📊 Dashboard</a>
       <a href="index.php" class="nav-item">➕ New Valuation</a>
     </div>
+    <?php if ($_SESSION['user_role'] === 'admin'): ?>
     <div class="sidebar-section">
       <div class="sidebar-section-label">Admin</div>
       <a href="settings.php" class="nav-item">⚙️ Firm Settings</a>
     </div>
+    <?php endif; ?>
     <div class="sidebar-logo-container">
       <img src="<?php echo $firm['logo_url'] ?: 'elk-design-logo.png'; ?>" class="sidebar-logo">
     </div>

@@ -2,9 +2,13 @@
 require_once 'auth-guard.php';
 require_once 'theme-engine.php';
 
-// Firm Admin Guard (Only 'admin' role can modify settings/users)
-$is_admin = (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin');
+// Strict Firm Admin Guard - Redirect non-admins immediately
+if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
+    header('Location: dashboard.php');
+    exit;
+}
 
+$is_admin = true;
 $firm_id = $_SESSION['firm_id'];
 $pdo = DB::getInstance();
 $message = '';
