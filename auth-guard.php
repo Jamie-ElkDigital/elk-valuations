@@ -4,6 +4,16 @@
  * Handles session validation and persistent 'Remember Me' logic (12h).
  */
 
+// 1. Set Session Parameters (Must be before session_start)
+ini_set('session.gc_maxlifetime', 43200); // 12 hours server-side
+session_set_cookie_params([
+    'lifetime' => 43200, // 12 hours client-side
+    'path' => '/',
+    'secure' => true,
+    'httponly' => true,
+    'samesite' => 'Strict'
+]);
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }

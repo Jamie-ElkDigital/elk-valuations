@@ -45,6 +45,12 @@ if (isset($_GET['edit'])) {
 <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css?v=3.2.1">
 <style>
+.validation-banner { display: none; background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; border-radius: 8px; padding: 16px; margin-bottom: 24px; animation: slideDown 0.4s ease; }
+.validation-banner.show { display: block; }
+.validation-title { color: #ef4444; font-weight: 600; font-size: 14px; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+.validation-list { display: flex; flex-wrap: wrap; gap: 12px; }
+.validation-item { background: rgba(255, 255, 255, 0.05); padding: 4px 10px; border-radius: 4px; font-size: 11px; color: var(--text-muted); border: 1px solid var(--border-subtle); }
+
 .intel-panel { display: none; margin-top: 24px; padding: 24px; background: var(--brand-surface-light); border: 1px solid var(--brand-accent-border); border-radius: 8px; animation: slideDown 0.4s ease; }
 .intel-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; margin-bottom: 24px; }
 .intel-stat { padding: 16px; background: var(--brand-surface-mid); border-radius: 6px; border: 1px solid var(--border-subtle); }
@@ -146,6 +152,17 @@ if (isset($_GET['edit'])) {
   </nav>
 
   <main class="main">
+
+    <!-- Persistent Validation Banner -->
+    <div id="validationBanner" class="validation-banner">
+      <div class="validation-title">
+        <span>⚠️</span> 
+        <span>Incomplete Valuation Data</span>
+      </div>
+      <div id="validationList" class="validation-list">
+        <!-- Items populated via JS -->
+      </div>
+    </div>
 
     <!-- PAGE 1: Business Details -->
     <div class="page active" id="page0">
@@ -764,7 +781,7 @@ async function handleFileUpload(event) {
         action: 'hybrid_extract',
         files: fileData,
         ch_urls: chUrls,
-        context: window.CH_INTEL ? window.CH_INTEL.profile : null
+        context: window.CH_INTEL ? { profile: window.CH_INTEL.profile, pscs: window.CH_INTEL.pscs } : null
       })
     });
 
@@ -1654,10 +1671,16 @@ async function importCHAccounts() {
       fileData.push({ url: pdfUrl });
     }
 
-    // Only add the MOST RECENT background intelligence doc (usually the latest CS01)
-    // Sending the last 10 docs causes massive AI latency and timeouts.
-    if (window.CH_INTEL && window.CH_INTEL.intel_docs && window.CH_INTEL.intel_docs.length > 0) {
-        fileData.push({ url: window.CH_INTEL.intel_docs[0].pdf_url });
+    // SMART SELECTION: Include the latest 2 Confirmation Statements + Incorporation + Last 3 Share/Capital Docs
+    // This captures the share structure (A/B/C classes) without overloading the AI.
+    if (window.CH_INTEL && window.CH_INTEL.intel_docs) {
+        const csDocs = window.CH_INTEL.intel_docs.filter(d => d.type === 'CS01' || d.category === 'confirmation-statement').slice(0, 2);
+        const incDocs = window.CH_INTEL.intel_docs.filter(d => d.type === 'NEWINC' || d.category === 'incorporation').slice(0, 1);
+        const shareDocs = window.CH_INTEL.intel_docs.filter(d => d.type === 'SH01' || d.category === 'shares' || d.category === 'capital').slice(0, 3);
+        
+        [...csDocs, ...incDocs, ...shareDocs].forEach(doc => {
+            fileData.push({ url: doc.pdf_url });
+        });
     }
 
     // Progress Simulation
@@ -1675,7 +1698,7 @@ async function importCHAccounts() {
       body: JSON.stringify({ 
         action: 'extract_from_urls',
         files: fileData,
-        context: window.CH_INTEL ? window.CH_INTEL.profile : null
+        context: window.CH_INTEL ? { profile: window.CH_INTEL.profile, pscs: window.CH_INTEL.pscs } : null
       })
     });
 
@@ -1688,8 +1711,8 @@ async function importCHAccounts() {
     populateExtractedData(result.data);
     showStatus('Accounts data imported successfully ✓');
     
-    // Smooth scroll to results
-    setTimeout(() => goTo(1), 1000);
+    // Smooth scroll to top of current page instead of switching
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 
   } catch (err) {
     showStatus('Import failed: ' + err.message);
@@ -1704,7 +1727,49 @@ async function importCHAccounts() {
   }
 }
 
+function validateRequiredFields() {
+  const fields = [
+    { id: 'companyName', label: 'Company Name' },
+    { id: 'companyNumber', label: 'Company Number' },
+    { id: 'sector', label: 'Sector' },
+    { id: 'yearEnd', label: 'Year End' },
+    { id: 'f_turn3', label: 'Turnover (Year 3)' },
+    { id: 'b_netassets', label: 'Net Assets' },
+    { id: 'b_cash', label: 'Cash at Bank' }
+  ];
+
+  const missing = [];
+  fields.forEach(f => {
+    const el = document.getElementById(f.id);
+    const val = el ? (el.value || '').toString().trim() : '';
+    // Check if value is empty or exactly "£0" / "0" for financial fields
+    const isFinancial = ['f_turn3', 'b_netassets', 'b_cash'].includes(f.id);
+    const isEmpty = val === '' || (isFinancial && (val === '0' || val === '£0'));
+    
+    if (isEmpty) {
+      missing.push(f.label);
+    }
+  });
+
+  const banner = document.getElementById('validationBanner');
+  const list = document.getElementById('validationList');
+
+  if (missing.length > 0) {
+    list.innerHTML = missing.map(m => `<div class="validation-item">${m}</div>`).join('');
+    banner.classList.add('show');
+  } else {
+    banner.classList.remove('show');
+  }
+}
+
 function init() {
+  // Attach validation listeners
+  const watchFields = ['companyName', 'companyNumber', 'sector', 'yearEnd', 'f_turn3', 'b_netassets', 'b_cash'];
+  watchFields.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', validateRequiredFields);
+  });
+
   if (window.EDIT_DATA) {
     const d = window.EDIT_DATA;
     document.getElementById('companyName').value = d.client_name || '';
@@ -1783,6 +1848,7 @@ function init() {
 
   initFormatting();
   applyFormatting();
+  validateRequiredFields();
 }
 init();
 </script>

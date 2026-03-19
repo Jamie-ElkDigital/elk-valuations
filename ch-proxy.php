@@ -67,7 +67,11 @@ try {
         exit;
     }
 
-    // 2. Get Filing History
+    // 2. Get Persons with Significant Control (PSC) - CRITICAL for share structure
+    $pscUrl = "https://api.companieshouse.gov.uk/company/{$companyNumber}/persons-with-significant-control";
+    $pscs = chRequest($pscUrl, $apiKey);
+
+    // 3. Get Filing History
     $historyUrl = "https://api.companieshouse.gov.uk/company/{$companyNumber}/filing-history?items_per_page=100";
     $history = chRequest($historyUrl, $apiKey);
 
@@ -108,14 +112,14 @@ try {
                     elseif (stripos($desc, 'group') !== false) $label = 'Group Accounts';
                     elseif (stripos($desc, 'full') !== false) $label = 'Full Accounts';
                     elseif (stripos($desc, 'filleted') !== false) $label = 'Filleted Accounts';
-                    
+
                     $doc['label'] = $label;
                     if (count($accounts) < 10) $accounts[] = $doc;
-                } elseif (in_array($category, ['confirmation-statement', 'incorporation', 'officers'])) {
+                } elseif (in_array($category, ['confirmation-statement', 'incorporation', 'officers', 'shares', 'capital'])) {
                     // Keep for background intelligence (don't show in selection list)
-                    if (count($intelDocs) < 10) $intelDocs[] = $doc;
-                }
-            }
+                    // We increase this to 20 to ensure we catch historical SH01s and CS01s
+                    if (count($intelDocs) < 20) $intelDocs[] = $doc;
+                }            }
 
             // Extract Share Allotments (SH01)
             if ($type === 'SH01') {
@@ -176,7 +180,8 @@ try {
             'history_summary' => $intelligence['events']
         ],
         'accounts' => $accounts,
-        'intel_docs' => $intelDocs
+        'intel_docs' => $intelDocs,
+        'pscs' => $pscs['items'] ?? []
     ]);
 
 } catch (Exception $e) {

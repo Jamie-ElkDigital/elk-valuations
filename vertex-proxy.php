@@ -161,9 +161,15 @@ try {
 $is_stream = ($action === 'narrative');
 $endpoint = $is_stream ? 'streamGenerateContent?alt=sse' : 'generateContent';
 
+// 1.5 Pro is the "Accountant" (Precision Logic)
+// 1.5 Flash is the "Writer" (Speed & Narrative)
+$current_model = ($action === 'extract' || $action === 'extract_from_urls' || $action === 'hybrid_extract') 
+         ? 'gemini-1.5-pro' 
+         : 'gemini-1.5-flash';
+
 $vertex_url = sprintf(
     'https://aiplatform.googleapis.com/v1/projects/%s/locations/%s/publishers/google/models/%s:%s',
-    GCP_PROJECT_ID, GCP_LOCATION, GEMINI_MODEL, $endpoint
+    GCP_PROJECT_ID, GCP_LOCATION, $current_model, $endpoint
 );
 
 // Get the payload (Now hydrated by the Logic Vault)

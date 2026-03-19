@@ -23,8 +23,11 @@ class ElkLogicVault {
 
         CORE OBJECTIVES:
         1. FINANCIAL EXTRACTION (PRIORITY): Extract exactly 3 years of P&L and the most recent Balance Sheet.
-        2. SHAREHOLDER INTEGRITY: Identify the current shareholders and their exact splits. Use the 'Confirmation Statement' (CS01) if provided, otherwise look at the Accounts notes.
-        3. CONFLICTING DOCUMENTS: If you see both 'Filleted' and 'Full' accounts for the same year, ALWAYS use the 'Full' version for extraction.
+        2. SHAREHOLDER INTEGRITY: Identify current shareholders and exact splits. 
+           - PRIMARY SOURCE: Use the 'pscs' data provided in the context if available. 
+           - SECONDARY SOURCE: Use 'Confirmation Statement' (CS01) or Accounts notes if PSC data is missing.
+           - RECONCILIATION: If PSC data exists, it OVERRIDES anything found in the PDFs for the CURRENT share structure.
+        3. CONFLICTING DOCUMENTS: If you see both 'Filleted' and 'Full' accounts for the same year, ALWAYS use the 'Full' version.
 
         Return ONLY a JSON object with this exact structure:
         {
