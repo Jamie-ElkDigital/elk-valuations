@@ -23,7 +23,7 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 'europe-west2-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/elk-valuations:latest']
 
-  # 4. Deploy to Cloud Run with SaaS scaling configuration and VPC Connector
+  # 4. Deploy to Cloud Run with SaaS scaling configuration
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
     args:
@@ -39,7 +39,7 @@ steps:
       - '--allow-unauthenticated'
       - '--session-affinity'
       - '--vpc-connector'
-      - 'elk-vpc'
+      - 'elk-connector'
       - '--memory'
       - '4Gi'
       - '--cpu'
