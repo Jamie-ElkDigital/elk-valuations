@@ -845,13 +845,6 @@ function populateExtractedData(data) {
       });
       if (!sectorSelect.value && latest.sector) sectorSelect.value = 'Other';
     }
-    
-    // Robust Extraction for Narrative Blocks
-    const businessDesc = latest.description || data.description || '';
-    const perfCommentary = latest.performanceCommentary || data.performanceCommentary || '';
-    
-    if (businessDesc) document.getElementById('businessDesc').value = businessDesc;
-    if (perfCommentary) document.getElementById('accountantNotes').value = perfCommentary;
   }
 
   years.forEach((yKey, idx) => {
