@@ -9,6 +9,7 @@ ini_set('memory_limit', '1024M');
 set_time_limit(300);
 
 session_start();
+ini_set('display_errors', '0'); // Prevent HTML errors from corrupting JSON
 header("X-Vertex-Proxy: Active"); // Diagnostic Header
 require_once 'db.php';
 require_once 'proprietary-logic.php'; // Local fallback (to be replaced by ELK API call)
@@ -33,7 +34,7 @@ $firm_id = $_SESSION['firm_id'];
 $user_id = $_SESSION['user_id'];
 
 define('GCP_PROJECT_ID',    'gta-valuations');
-define('GCP_LOCATION',      'us-central1');
+define('GCP_LOCATION',      'europe-west2');
 define('GEMINI_MODEL',      'gemini-3.1-pro-preview'); 
 
 // Set this to true to switch from local prompts to ELK Internal API
@@ -276,7 +277,7 @@ $totalTokens  = (int)($usage['totalTokenCount'] ?? 0);
 
 // Extract client name for logging if available
 $clientName = null;
-if (!empty($input['context']['name'])) {
+if (isset($input['context']) && is_array($input['context']) && !empty($input['context']['name'])) {
     $clientName = $input['context']['name'];
 } elseif (!empty($input['prompt']) && preg_match('/valuation commentary for (.*?)\./', $input['prompt'], $m)) {
     $clientName = $m[1];
