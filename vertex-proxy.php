@@ -2,6 +2,7 @@
 /**
  * GTA Accounting - Vertex AI Proxy
  * Handles OAuth2 token refresh and proxies requests to Vertex AI (Gemini Pro)
+ * Last Build Refresh: 2026-03-19 15:10
  */
 
 ini_set('memory_limit', '1024M');
@@ -32,7 +33,7 @@ $user_id = $_SESSION['user_id'];
 
 define('GCP_PROJECT_ID',    'gta-valuations');
 define('GCP_LOCATION',      'europe-west2');
-define('GEMINI_MODEL',      'gemini-1.5-pro'); 
+define('GEMINI_MODEL',      'gemini-1.5-pro-002'); 
 
 // Set this to true to switch from local prompts to ELK Internal API
 define('USE_EXTERNAL_LOGIC', false);
@@ -244,8 +245,22 @@ $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 $curl_err  = curl_error($ch);
 curl_close($ch);
 
-if ($curl_err) { http_response_code(500); echo json_encode(['error' => 'cURL error: ' . $curl_err]); exit; }
-if ($http_code !== 200) { http_response_code($http_code); echo json_encode(['error' => 'Vertex AI error', 'detail' => $response]); exit; }
+if ($curl_err || $http_code !== 200) { 
+    $error_detail = [
+        'error' => 'Vertex AI API Failure',
+        'http_code' => $http_code,
+        'curl_error' => $curl_err,
+        'raw_response' => $response,
+        'target_url' => $vertex_url,
+        'model' => $current_model
+    ];
+    error_log("CRITICAL VERTEX FAILURE: " . json_encode($error_detail));
+    
+    // Return 200 so the browser can actually READ the error instead of a generic 404/500
+    http_response_code(200); 
+    echo json_encode(['error' => 'Vertex AI Debug Info', 'debug' => $error_detail]); 
+    exit; 
+}
 
 $data = json_decode($response, true);
 $text = $data['candidates'][0]['content']['parts'][0]['text'] ?? '';
