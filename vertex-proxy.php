@@ -121,10 +121,15 @@ function get_proprietary_payload($action, $input) {
             }
 
             foreach ($handles as $ch) {
+                $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
                 $pdfData = curl_multi_getcontent($ch);
-                if ($pdfData) {
+                
+                if ($httpCode === 200 && $pdfData) {
                     $parts[] = ['inlineData' => ['mimeType' => 'application/pdf', 'data' => base64_encode($pdfData)]];
+                } else {
+                    error_log("Failed to download PDF. HTTP Code: $httpCode");
                 }
+                
                 curl_multi_remove_handle($mh, $ch);
                 curl_close($ch);
             }
@@ -187,8 +192,8 @@ $is_stream = ($action === 'narrative');
 $endpoint = $is_stream ? 'streamGenerateContent?alt=sse' : 'generateContent';
 
 // 1.5 Flash is now used for BOTH extraction and narrative to ensure maximum speed.
-// Our refined 'Smart Selection' and prompts handle the accuracy.
-$current_model = 'gemini-1.5-flash';
+// Using specific stable version for Vertex AI reliability.
+$current_model = 'gemini-1.5-flash-002';
 
 $vertex_url = sprintf(
     'https://aiplatform.googleapis.com/v1/projects/%s/locations/%s/publishers/google/models/%s:%s',
