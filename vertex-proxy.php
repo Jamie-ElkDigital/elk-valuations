@@ -196,8 +196,8 @@ $endpoint = $is_stream ? 'streamGenerateContent?alt=sse' : 'generateContent';
 $current_model = 'gemini-1.5-flash-002';
 
 $vertex_url = sprintf(
-    'https://aiplatform.googleapis.com/v1/projects/%s/locations/%s/publishers/google/models/%s:%s',
-    GCP_PROJECT_ID, GCP_LOCATION, $current_model, $endpoint
+    'https://%s-aiplatform.googleapis.com/v1/projects/%s/locations/%s/publishers/google/models/%s:%s',
+    GCP_LOCATION, GCP_PROJECT_ID, GCP_LOCATION, $current_model, $endpoint
 );
 
 // Get the payload (Now hydrated by the Logic Vault)
