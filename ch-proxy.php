@@ -72,6 +72,7 @@ try {
     $history = chRequest($historyUrl, $apiKey);
 
     $accounts = [];
+    $intelDocs = [];
     $shareChanges = [];
     $directorChanges = [];
     $events = [];
@@ -85,35 +86,32 @@ try {
 
             // Extract Any Document with a PDF
             $metadataUrl = $item['links']['document_metadata'] ?? '';
-            if ($metadataUrl && count($accounts) < 40) { // Grab up to 40 docs for full knowledge
-                $label = ucwords(str_replace('-', ' ', $category)) . ' (' . $type . ')';
-                
-                // Enhance labels for clarity
+            if ($metadataUrl) {
+                $pdfUrl = str_replace('https://frontend-sdk.companieshouse.gov.uk', 'https://document-api.companieshouse.gov.uk', $metadataUrl);
+                if (substr($pdfUrl, -8) !== '/content') $pdfUrl .= '/content';
+
+                $doc = [
+                    'date' => $date,
+                    'pdf_url' => $pdfUrl,
+                    'category' => $category,
+                    'type' => $type
+                ];
+
                 if ($category === 'accounts') {
+                    // Friendly labels for UI
                     $label = 'Accounts';
                     if (stripos($desc, 'micro-entity') !== false) $label = 'Micro-Entity Accounts';
                     elseif (stripos($desc, 'total exemption') !== false) $label = 'Total Exemption Accounts';
                     elseif (stripos($desc, 'group') !== false) $label = 'Group Accounts';
                     elseif (stripos($desc, 'full') !== false) $label = 'Full Accounts';
                     elseif (stripos($desc, 'filleted') !== false) $label = 'Filleted Accounts';
-                } elseif ($category === 'incorporation') {
-                    $label = 'Incorporation Document';
-                } elseif ($category === 'confirmation-statement') {
-                    $label = 'Confirmation Statement';
-                } elseif ($category === 'officers') {
-                    $label = 'Officer Change';
+                    
+                    $doc['label'] = $label;
+                    if (count($accounts) < 10) $accounts[] = $doc;
+                } elseif (in_array($category, ['confirmation-statement', 'incorporation', 'officers'])) {
+                    // Keep for background intelligence (don't show in selection list)
+                    if (count($intelDocs) < 10) $intelDocs[] = $doc;
                 }
-
-                $pdfUrl = str_replace('https://frontend-sdk.companieshouse.gov.uk', 'https://document-api.companieshouse.gov.uk', $metadataUrl);
-                if (substr($pdfUrl, -8) !== '/content') $pdfUrl .= '/content';
-                
-                $accounts[] = [
-                    'date' => $date,
-                    'type' => $label,
-                    'pdf_url' => $pdfUrl,
-                    'is_account' => ($category === 'accounts'),
-                    'category' => $category
-                ];
             }
 
             // Extract Share Allotments (SH01)
@@ -174,7 +172,8 @@ try {
             'director_changes' => count($directorChanges),
             'history_summary' => $intelligence['events']
         ],
-        'accounts' => $accounts
+        'accounts' => $accounts,
+        'intel_docs' => $intelDocs
     ]);
 
 } catch (Exception $e) {

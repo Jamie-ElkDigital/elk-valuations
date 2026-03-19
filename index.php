@@ -1580,37 +1580,21 @@ async function searchCompaniesHouse() {
     document.getElementById('intel_sh').textContent = result.profile.share_changes;
     document.getElementById('intel_dir').textContent = result.profile.director_changes;
 
-    // Populate Accounts
+    // Populate Accounts (UI only shows Accounts category)
     const container = document.getElementById('chAccountsContainer');
     container.innerHTML = '';
     
-    // We only care about "Accounts" for the gap detection, not Confirmation Statements etc.
-    const accountFilings = result.accounts.filter(acc => acc.is_account);
-    let partialGapsInRecent = 0;
-    
-    // Check the most recent 3 account filings for gaps
-    accountFilings.slice(0, 3).forEach(acc => {
-        if (acc.type.toLowerCase().includes('filleted') || acc.type.toLowerCase().includes('micro')) {
-            partialGapsInRecent++;
-        }
-    });
-    
     let checkedAccounts = 0;
-    let checkedCS01 = 0;
-
     result.accounts.forEach(acc => {
       const item = document.createElement('div');
       item.className = 'ch-acc-item';
       
-      const isPartial = acc.type.toLowerCase().includes('filleted') || acc.type.toLowerCase().includes('micro');
+      const isPartial = acc.label.toLowerCase().includes('filleted') || acc.label.toLowerCase().includes('micro');
       
       let isChecked = false;
-      if (acc.is_account && checkedAccounts < 3) {
+      if (checkedAccounts < 3) {
           isChecked = true;
           checkedAccounts++;
-      } else if (acc.category === 'confirmation-statement' && checkedCS01 < 1) {
-          isChecked = true;
-          checkedCS01++;
       }
 
       item.innerHTML = `
@@ -1619,7 +1603,7 @@ async function searchCompaniesHouse() {
             ${new Date(acc.date).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}
             ${isPartial ? '<span class="pill" style="background:#fef2f2; color:#991b1b; font-size:9px; margin-left:8px;">Partial Data (P&L Hidden)</span>' : ''}
           </div>
-          <div class="ch-acc-type">${acc.type.toUpperCase()}</div>
+          <div class="ch-acc-type">${acc.label.toUpperCase()}</div>
         </div>
         <input type="checkbox" class="ch-acc-checkbox" value="${acc.pdf_url}" ${isChecked ? 'checked' : ''}>
       `;
@@ -1668,6 +1652,13 @@ async function importCHAccounts() {
     for (const cb of checkboxes) {
       const pdfUrl = cb.value;
       fileData.push({ url: pdfUrl });
+    }
+
+    // Automatically add background intelligence docs (CS01, Incorporation) to the payload
+    if (window.CH_INTEL && window.CH_INTEL.intel_docs) {
+        window.CH_INTEL.intel_docs.forEach(doc => {
+            fileData.push({ url: doc.pdf_url });
+        });
     }
 
     // Progress Simulation
