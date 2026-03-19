@@ -1654,11 +1654,10 @@ async function importCHAccounts() {
       fileData.push({ url: pdfUrl });
     }
 
-    // Automatically add background intelligence docs (CS01, Incorporation) to the payload
-    if (window.CH_INTEL && window.CH_INTEL.intel_docs) {
-        window.CH_INTEL.intel_docs.forEach(doc => {
-            fileData.push({ url: doc.pdf_url });
-        });
+    // Only add the MOST RECENT background intelligence doc (usually the latest CS01)
+    // Sending the last 10 docs causes massive AI latency and timeouts.
+    if (window.CH_INTEL && window.CH_INTEL.intel_docs && window.CH_INTEL.intel_docs.length > 0) {
+        fileData.push({ url: window.CH_INTEL.intel_docs[0].pdf_url });
     }
 
     // Progress Simulation

@@ -87,7 +87,10 @@ try {
             // Extract Any Document with a PDF
             $metadataUrl = $item['links']['document_metadata'] ?? '';
             if ($metadataUrl) {
-                $pdfUrl = str_replace('https://frontend-sdk.companieshouse.gov.uk', 'https://document-api.companieshouse.gov.uk', $metadataUrl);
+                // Ensure we are pointing to the document-api host, not the main api host
+                $pdfUrl = str_replace('https://api.companieshouse.gov.uk', 'https://document-api.companieshouse.gov.uk', $metadataUrl);
+                $pdfUrl = str_replace('https://frontend-sdk.companieshouse.gov.uk', 'https://document-api.companieshouse.gov.uk', $pdfUrl);
+                
                 if (substr($pdfUrl, -8) !== '/content') $pdfUrl .= '/content';
 
                 $doc = [

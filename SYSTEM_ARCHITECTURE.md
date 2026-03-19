@@ -26,7 +26,7 @@ The ELK Valuations Platform is a high-security, multi-tenant SaaS application de
 ### 2.4 Companies House Intelligence (Direct Ingestion)
 *   **Lookup**: Direct integration with the UK Companies House API via `ch-proxy.php`.
 *   **Intelligence**: Automatic retrieval of incorporation dates, share allotment history, and director/officer churn.
-*   **Extraction**: Direct ingestion of statutory accounts from the CH Document Vault, processed via the "Hybrid Data Ingestion" pipeline (CH URL + Gemini 3.1 Pro).
+*   **Extraction**: Direct ingestion of statutory accounts from the CH Document Vault, processed via an optimized "Hybrid Data Ingestion" pipeline (CH URL + Gemini 3.1 Pro). To ensure system stability and low latency, the system prioritizes the most recent accounts and a single confirmation statement for shareholder reconciliation.
 *   **Verified-First Workflow**: To ensure professional integrity, the system prioritizes public record lookups as the primary data source.
 *   **Persistent Supplemental Truth**: A dedicated PDF uploader remains available at all times, allowing firms to upload internal "Full" accounts to supplement filleted public records, ensuring maximum financial precision while maintaining the verified corporate structure from CH.
 

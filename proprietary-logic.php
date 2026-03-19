@@ -19,24 +19,22 @@ class ElkLogicVault {
      * Returns the prompt and schema for the PDF Extraction AI.
      */
     public static function getExtractionPrompt() {
-        return "You are a Senior Chartered Accountant and Business Valuation Expert. Your task is to perform a deep-dive extraction and reconciliation of these Statutory Accounts.
+        return "You are a Senior Chartered Accountant and Business Valuation Expert. Your task is to extract structured financial data from these Statutory Accounts.
 
         CORE OBJECTIVES:
-        1. RECONCILIATION: Cross-reference the provided 'Corporate Intelligence' (filing history/officers) with ALL provided PDF documents to build a definitive picture of the company.
-        2. FULL PICTURE: Use all documents (Confirmation Statements, Incorporation docs, etc.) to understand the company's trajectory and structure since inception.
-        3. SHAREHOLDER INTEGRITY (CRITICAL): Identify individual shareholders and their exact splits. Look specifically at 'Confirmation Statements' (CS01) or 'Annual Returns' for the most recent shareholder list. Do not rely solely on the Accounts notes if individual names/splits are missing there.
-        4. FINANCIAL EXTRACTION: Focus financial data extraction on the most recent 3 years of 'Accounts' documents.
-        5. CONFLICTING DOCUMENTS: If you receive multiple sets of accounts for the exact same year (e.g. a public 'Filleted' version and an internal 'Full' version), ALWAYS prioritize the version that contains a full Profit & Loss (Income) Statement for your financial extraction.
+        1. FINANCIAL EXTRACTION (PRIORITY): Extract exactly 3 years of P&L and the most recent Balance Sheet.
+        2. SHAREHOLDER INTEGRITY: Identify the current shareholders and their exact splits. Use the 'Confirmation Statement' (CS01) if provided, otherwise look at the Accounts notes.
+        3. CONFLICTING DOCUMENTS: If you see both 'Filleted' and 'Full' accounts for the same year, ALWAYS use the 'Full' version for extraction.
 
         Return ONLY a JSON object with this exact structure:
         {
-          'year1': { 'year': 2023, 'turnover': 100000, 'cos': 50000, 'admin': 30000, 'other': 0, 'depreciation': 5000, 'directorsSalaries': 40000 },
+          'year1': { 'year': 2023, 'turnover': 0, 'cos': 0, 'admin': 0, 'other': 0, 'depreciation': 0, 'directorsSalaries': 0 },
           'year2': { ... },
           'year3': {
-            'year': 2025, 'turnover': 120000, 'cos': 60000, 'admin': 35000, 'other': 0, 'depreciation': 45000,
-            'netAssets': 150000, 'cash': 20000, 'debtors': 15000, 'loans': 10000,
-            'companyName': '...', 'companyNumber': '...', 'yearEnd': '30 April', 'employees': 8, 'sector': '...',
-            'yearsTrading': 10,
+            'year': 2025, 'turnover': 0, 'cos': 0, 'admin': 0, 'other': 0, 'depreciation': 0,
+            'netAssets': 0, 'cash': 0, 'debtors': 0, 'loans': 0,
+            'companyName': '...', 'companyNumber': '...', 'yearEnd': '...', 'employees': 0, 'sector': '...',
+            'yearsTrading': 0,
             'directors': ['Name 1', 'Name 2'], 
             'shareholders': [
               { 'name': 'Name 1', 'shares': 50, 'class': 'Ordinary' }
@@ -46,9 +44,9 @@ class ElkLogicVault {
         }
 
         CONSTRAINTS:
-        - Financial Data: Provide 'year1' (oldest), 'year2', and 'year3' (most recent). If fewer than 3 years exist, use 0 for missing years.
-        - Precision: Do not guess. If a figure is not found, use 0.
+        - Provide 'year1' (oldest), 'year2', and 'year3' (most recent). 
+        - If a figure is missing or obscured (e.g. filleted accounts), use 0.
         - Sector: Choose from [Professional Services, HR & Recruitment, IT & Technology, Construction & Trades, Retail, Hospitality & Leisure, Manufacturing, Healthcare, Financial Services, Property, Other].
-        - Return ONLY the raw JSON object.";
+        - Return ONLY raw JSON.";
     }
 }

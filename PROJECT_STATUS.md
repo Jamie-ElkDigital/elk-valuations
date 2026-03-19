@@ -19,6 +19,10 @@ The application has successfully transitioned to secure UUID-based URLs, feature
     *   **Credential Security:** Migrated DB credentials to environment variables.
     *   **XSS Mitigation:** Sanitized dynamic DOM generation in the frontend.
     *   **Vulnerability Scanning:** Enabled automated container scanning for production.
+    *   **Companies House Pipeline Optimization (19 March 2026):**
+        *   **Fixed PDF Retrieval:** Repaired broken document-api URL construction for Companies House.
+        *   **Reduced Latency:** Limited background intelligence docs to the most recent CS01, reducing AI processing time from minutes to seconds.
+        *   **Refined Extraction Prompt:** Optimized Gemini prompt to prioritize 3-year P&L and Balance Sheet data.
 
 ---
 
