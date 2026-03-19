@@ -179,7 +179,7 @@ if ($is_stream) {
         CURLOPT_POST           => true,
         CURLOPT_POSTFIELDS     => json_encode($payload),
         CURLOPT_HTTPHEADER     => ['Authorization: Bearer ' . $access_token, 'Content-Type: application/json'],
-        CURLOPT_TIMEOUT        => 120,
+        CURLOPT_TIMEOUT        => 300,
         CURLOPT_WRITEFUNCTION  => function($curl, $data) {
             echo $data;
             if (ob_get_level() > 0) {
