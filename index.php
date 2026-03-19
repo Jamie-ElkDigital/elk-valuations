@@ -1609,7 +1609,8 @@ async function searchCompaniesHouse() {
       const isPartial = acc.label.toLowerCase().includes('filleted') || acc.label.toLowerCase().includes('micro');
       
       let isChecked = false;
-      if (checkedAccounts < 3) {
+      // Do not auto-select micro-entity accounts as they lack detailed P&L and share structure
+      if (checkedAccounts < 3 && !acc.label.toLowerCase().includes('micro')) {
           isChecked = true;
           checkedAccounts++;
       }
