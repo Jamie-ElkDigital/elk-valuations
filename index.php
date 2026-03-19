@@ -1590,10 +1590,6 @@ async function searchCompaniesHouse() {
     document.getElementById('intel_sh').textContent = result.profile.share_changes;
     document.getElementById('intel_dir').textContent = result.profile.director_changes;
 
-    // Populate Accounts (UI only shows Accounts category)
-    const container = document.getElementById('chAccountsContainer');
-    container.innerHTML = '';
-    
     // Populate Accounts and Intelligence Docs in the UI list
     const container = document.getElementById('chAccountsContainer');
     container.innerHTML = '';
