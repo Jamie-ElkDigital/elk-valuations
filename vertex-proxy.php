@@ -85,7 +85,28 @@ function get_proprietary_payload($action, $input) {
         $parts = [['text' => $prompt]];
         $apiKey = getenv('CH_API_KEY');
         
-        // 1. Process local file uploads (if any)
+        // 1. Process Companies House URLs (if hybrid)
+        if (!empty($input['ch_urls'])) {
+            foreach ($input['ch_urls'] as $file) {
+                $url = $file['url'];
+                if (strpos($url, 'http') === 0) {
+                    $ch = curl_init($url);
+                    curl_setopt_array($ch, [
+                        CURLOPT_RETURNTRANSFER => true,
+                        CURLOPT_USERPWD        => $apiKey . ":",
+                        CURLOPT_HTTPAUTH       => CURLAUTH_BASIC,
+                        CURLOPT_FOLLOWLOCATION => true,
+                        CURLOPT_HTTPHEADER     => ['Accept: application/pdf'],
+                        CURLOPT_TIMEOUT        => 30
+                    ]);
+                    $pdfData = curl_exec($ch);
+                    curl_close($ch);
+                    if ($pdfData) $parts[] = ['inlineData' => ['mimeType' => 'application/pdf', 'data' => base64_encode($pdfData)]];
+                }
+            }
+        }
+
+        // 2. Process local file uploads (if any - placed last so AI prioritizes them)
         if (!empty($input['files'])) {
             foreach ($input['files'] as $file) {
                 if (isset($file['mimeType']) && isset($file['data'])) {
@@ -111,27 +132,6 @@ function get_proprietary_payload($action, $input) {
                         $pdfData = file_get_contents($url);
                         if ($pdfData) $parts[] = ['inlineData' => ['mimeType' => 'application/pdf', 'data' => base64_encode($pdfData)]];
                     }
-                }
-            }
-        }
-
-        // 2. Process Companies House URLs (if hybrid)
-        if (!empty($input['ch_urls'])) {
-            foreach ($input['ch_urls'] as $file) {
-                $url = $file['url'];
-                if (strpos($url, 'http') === 0) {
-                    $ch = curl_init($url);
-                    curl_setopt_array($ch, [
-                        CURLOPT_RETURNTRANSFER => true,
-                        CURLOPT_USERPWD        => $apiKey . ":",
-                        CURLOPT_HTTPAUTH       => CURLAUTH_BASIC,
-                        CURLOPT_FOLLOWLOCATION => true,
-                        CURLOPT_HTTPHEADER     => ['Accept: application/pdf'],
-                        CURLOPT_TIMEOUT        => 30
-                    ]);
-                    $pdfData = curl_exec($ch);
-                    curl_close($ch);
-                    if ($pdfData) $parts[] = ['inlineData' => ['mimeType' => 'application/pdf', 'data' => base64_encode($pdfData)]];
                 }
             }
         }

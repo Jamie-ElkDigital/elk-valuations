@@ -26,6 +26,7 @@ class ElkLogicVault {
         2. FULL PICTURE: Use all documents (Confirmation Statements, Incorporation docs, etc.) to understand the company's trajectory and structure since inception.
         3. SHAREHOLDER INTEGRITY (CRITICAL): Identify individual shareholders and their exact splits. Look specifically at 'Confirmation Statements' (CS01) or 'Annual Returns' for the most recent shareholder list. Do not rely solely on the Accounts notes if individual names/splits are missing there.
         4. FINANCIAL EXTRACTION: Focus financial data extraction on the most recent 3 years of 'Accounts' documents.
+        5. CONFLICTING DOCUMENTS: If you receive multiple sets of accounts for the exact same year (e.g. a public 'Filleted' version and an internal 'Full' version), ALWAYS prioritize the version that contains a full Profit & Loss (Income) Statement for your financial extraction.
 
         Return ONLY a JSON object with this exact structure:
         {

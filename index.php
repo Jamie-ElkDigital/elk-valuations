@@ -1584,6 +1584,13 @@ async function searchCompaniesHouse() {
     const container = document.getElementById('chAccountsContainer');
     container.innerHTML = '';
     
+    let partialGapsInRecent = 0;
+    result.accounts.slice(0, 3).forEach(acc => {
+        if (acc.label.toLowerCase().includes('filleted') || acc.label.toLowerCase().includes('micro')) {
+            partialGapsInRecent++;
+        }
+    });
+
     let checkedAccounts = 0;
     result.accounts.forEach(acc => {
       const item = document.createElement('div');
