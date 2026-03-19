@@ -118,10 +118,22 @@ try {
                     elseif (stripos($desc, 'filleted') !== false) $label = 'Filleted Accounts';
 
                     $doc['label'] = $label;
-                    if (count($accounts) < 10) $accounts[] = $doc;
+                    $doc['is_account'] = true;
+                    if (count($accounts) < 15) $accounts[] = $doc;
                 } elseif (in_array($category, ['confirmation-statement', 'incorporation', 'officers', 'shares', 'capital'])) {
-                    // Keep for background intelligence (don't show in selection list)
-                    // We increase this to 20 to ensure we catch historical SH01s and CS01s
+                    // Give friendly labels to intelligence docs and ADD them to the UI list
+                    $label = 'Company Document';
+                    if ($category === 'confirmation-statement' || $type === 'CS01') $label = 'Confirmation Statement';
+                    elseif ($category === 'incorporation' || $type === 'NEWINC') $label = 'Incorporation Document';
+                    elseif ($category === 'shares' || $type === 'SH01') $label = 'Share Allotment';
+                    elseif ($category === 'capital') $label = 'Statement of Capital';
+                    elseif ($category === 'officers') $label = 'Officer Change';
+
+                    $doc['label'] = $label;
+                    $doc['is_account'] = false; // Flag to differentiate for auto-checking logic
+                    
+                    // Add to both arrays so UI sees them, and legacy logic still works if needed
+                    if (count($accounts) < 15) $accounts[] = $doc;
                     if (count($intelDocs) < 20) $intelDocs[] = $doc;
                 }            }
 

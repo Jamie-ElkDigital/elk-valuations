@@ -1594,25 +1594,48 @@ async function searchCompaniesHouse() {
     const container = document.getElementById('chAccountsContainer');
     container.innerHTML = '';
     
+    // Populate Accounts and Intelligence Docs in the UI list
+    const container = document.getElementById('chAccountsContainer');
+    container.innerHTML = '';
+    
     let partialGapsInRecent = 0;
-    result.accounts.slice(0, 3).forEach(acc => {
-        if (acc.label.toLowerCase().includes('filleted') || acc.label.toLowerCase().includes('micro')) {
-            partialGapsInRecent++;
-        }
-    });
-
+    
     let checkedAccounts = 0;
+    let checkedCS01 = 0;
+    let checkedInc = 0;
+    let checkedShares = 0;
+
     result.accounts.forEach(acc => {
       const item = document.createElement('div');
       item.className = 'ch-acc-item';
       
-      const isPartial = acc.label.toLowerCase().includes('filleted') || acc.label.toLowerCase().includes('micro');
+      const label = acc.label ? acc.label.toLowerCase() : '';
+      const isPartial = label.includes('filleted') || label.includes('micro');
+      
+      if (acc.is_account && isPartial && checkedAccounts < 3) {
+          partialGapsInRecent++;
+      }
       
       let isChecked = false;
-      // Do not auto-select micro-entity accounts as they lack detailed P&L and share structure
-      if (checkedAccounts < 3 && !acc.label.toLowerCase().includes('micro')) {
-          isChecked = true;
-          checkedAccounts++;
+      
+      if (acc.is_account) {
+          // Do not auto-select micro-entity accounts as they lack detailed P&L and share structure
+          if (checkedAccounts < 3 && !label.includes('micro')) {
+              isChecked = true;
+              checkedAccounts++;
+          }
+      } else {
+          // Auto-select intelligence docs
+          if (label.includes('confirmation') && checkedCS01 < 2) {
+              isChecked = true;
+              checkedCS01++;
+          } else if (label.includes('incorporation') && checkedInc < 1) {
+              isChecked = true;
+              checkedInc++;
+          } else if ((label.includes('share') || label.includes('capital')) && checkedShares < 2) {
+              isChecked = true;
+              checkedShares++;
+          }
       }
 
       item.innerHTML = `
@@ -1620,6 +1643,7 @@ async function searchCompaniesHouse() {
           <div class="ch-acc-date">
             ${new Date(acc.date).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}
             ${isPartial ? '<span class="pill" style="background:#fef2f2; color:#991b1b; font-size:9px; margin-left:8px;">Partial Data (P&L Hidden)</span>' : ''}
+            ${!acc.is_account ? '<span class="pill" style="background:var(--brand-accent-dim); color:var(--brand-accent-light); font-size:9px; margin-left:8px;">Corporate Intelligence</span>' : ''}
           </div>
           <div class="ch-acc-type">${acc.label.toUpperCase()}</div>
         </div>
@@ -1666,26 +1690,16 @@ async function importCHAccounts() {
   statusText.textContent = 'Connecting to Companies House Vault...';
 
   try {
-    const fileData = [];
-    for (const cb of checkboxes) {
-      const pdfUrl = cb.value;
-      fileData.push({ url: pdfUrl });
-    }
+  const fileData = [];
+  for (const cb of checkboxes) {
+    const pdfUrl = cb.value;
+    fileData.push({ url: pdfUrl });
+  }
 
-    // SMART SELECTION: Include the latest 2 Confirmation Statements + Incorporation + Last 3 Share/Capital Docs
-    // This captures the share structure (A/B/C classes) without overloading the AI.
-    if (window.CH_INTEL && window.CH_INTEL.intel_docs && Array.isArray(window.CH_INTEL.intel_docs)) {
-        const csDocs = window.CH_INTEL.intel_docs.filter(d => d.type === 'CS01' || d.category === 'confirmation-statement').slice(0, 2);
-        const incDocs = window.CH_INTEL.intel_docs.filter(d => d.type === 'NEWINC' || d.category === 'incorporation').slice(0, 1);
-        const shareDocs = window.CH_INTEL.intel_docs.filter(d => d.type === 'SH01' || d.category === 'shares' || d.category === 'capital').slice(0, 3);
-        
-        [...csDocs, ...incDocs, ...shareDocs].forEach(doc => {
-            fileData.push({ url: doc.pdf_url });
-        });
-    }
+  // Intelligence docs are now managed entirely by UI checkboxes, so we no longer
+  // silently append them here. This prevents double-fetching PDFs.
 
-    // Progress Simulation
-    setTimeout(() => { if(progressFill.style.width !== '100%') { progressFill.style.width = '20%'; statusText.textContent = 'Scanning available documents...'; } }, 1500);
+  // Progress Simulation    setTimeout(() => { if(progressFill.style.width !== '100%') { progressFill.style.width = '20%'; statusText.textContent = 'Scanning available documents...'; } }, 1500);
     setTimeout(() => { if(progressFill.style.width !== '100%') { progressFill.style.width = '40%'; statusText.textContent = 'Fetching PDF documents...'; } }, 3500);
     setTimeout(() => { if(progressFill.style.width !== '100%') { progressFill.style.width = '60%'; statusText.textContent = 'Analyzing accounts...'; } }, 8000);
     setTimeout(() => { if(progressFill.style.width !== '100%') { progressFill.style.width = '80%'; statusText.textContent = 'Extracting line items, please do not navigate away...'; } }, 16000);
