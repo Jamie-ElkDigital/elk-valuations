@@ -38,8 +38,6 @@ steps:
       - 'managed'
       - '--allow-unauthenticated'
       - '--session-affinity'
-      - '--vpc-connector'
-      - 'elk-connector'
       - '--memory'
       - '4Gi'
       - '--cpu'
@@ -51,7 +49,7 @@ steps:
       - '--timeout'
       - '300'
       - '--update-env-vars'
-      - 'APP_COMMIT_SHA=$SHORT_SHA,SMTP_USER=emailapikey,SMTP_PASS=yA6KbHtS4gyjwWtVRxU5hpmPots3+vhsiiu15y/ldMQnfNfniaE3hhI6doezJDaJj4CC5vlZa9wWc9rs6NxcK8NmN4NTfJTGTuv4P2uV48xh8ciEYNYmgJ6hBbYZF6ZMdhktAis2QPggWA==,CH_API_KEY=b7e44409-8523-49d6-a375-1bbebdc8026d,DB_HOST=10.141.0.3,DB_NAME=valuations_platform,DB_USER=elk_admin,DB_PASS=ELK_Admin_Password_2026!'
+      - 'APP_COMMIT_SHA=$SHORT_SHA,SMTP_USER=emailapikey,SMTP_PASS=yA6KbHtS4gyjwWtVRxU5hpmPots3+vhsiiu15y/ldMQnfNfniaE3hhI6doezJDaJj4CC5vlZa9wWc9rs6NxcK8NmN4NTfJTGTuv4P2uV48xh8ciEYNYmgJ6hBbYZF6ZMdhktAis2QPggWA==,CH_API_KEY=b7e44409-8523-49d6-a375-1bbebdc8026d'
 
 options:
   machineType: 'E2_HIGHCPU_8'  # Use a much faster build machine
