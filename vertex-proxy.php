@@ -85,8 +85,10 @@ function get_proprietary_payload($action, $input) {
         $parts = [['text' => $prompt]];
         $apiKey = getenv('CH_API_KEY');
         
-        // 1. Process Companies House URLs (if hybrid)
+        // 1. Process Companies House URLs (Parallel Ingestion via curl_multi)
         if (!empty($input['ch_urls'])) {
+            $mh = curl_multi_init();
+            $handles = [];
             foreach ($input['ch_urls'] as $file) {
                 $url = $file['url'];
                 if (strpos($url, 'http') === 0) {
@@ -97,13 +99,36 @@ function get_proprietary_payload($action, $input) {
                         CURLOPT_HTTPAUTH       => CURLAUTH_BASIC,
                         CURLOPT_FOLLOWLOCATION => true,
                         CURLOPT_HTTPHEADER     => ['Accept: application/pdf'],
-                        CURLOPT_TIMEOUT        => 30
+                        CURLOPT_TIMEOUT        => 20
                     ]);
-                    $pdfData = curl_exec($ch);
-                    curl_close($ch);
-                    if ($pdfData) $parts[] = ['inlineData' => ['mimeType' => 'application/pdf', 'data' => base64_encode($pdfData)]];
+                    curl_multi_add_handle($mh, $ch);
+                    $handles[] = $ch;
                 }
             }
+
+            // Execute all downloads simultaneously
+            $active = null;
+            do {
+                $mrc = curl_multi_exec($mh, $active);
+            } while ($mrc == CURL_MULTI_CALL_MULTI_PERFORM);
+
+            while ($active && $mrc == CURL_MULTI_OK) {
+                if (curl_multi_select($mh) != -1) {
+                    do {
+                        $mrc = curl_multi_exec($mh, $active);
+                    } while ($mrc == CURL_MULTI_CALL_MULTI_PERFORM);
+                }
+            }
+
+            foreach ($handles as $ch) {
+                $pdfData = curl_multi_getcontent($ch);
+                if ($pdfData) {
+                    $parts[] = ['inlineData' => ['mimeType' => 'application/pdf', 'data' => base64_encode($pdfData)]];
+                }
+                curl_multi_remove_handle($mh, $ch);
+                curl_close($ch);
+            }
+            curl_multi_close($mh);
         }
 
         // 2. Process local file uploads (if any - placed last so AI prioritizes them)
@@ -161,11 +186,9 @@ try {
 $is_stream = ($action === 'narrative');
 $endpoint = $is_stream ? 'streamGenerateContent?alt=sse' : 'generateContent';
 
-// 1.5 Pro is the "Accountant" (Precision Logic)
-// 1.5 Flash is the "Writer" (Speed & Narrative)
-$current_model = ($action === 'extract' || $action === 'extract_from_urls' || $action === 'hybrid_extract') 
-         ? 'gemini-1.5-pro' 
-         : 'gemini-1.5-flash';
+// 1.5 Flash is now used for BOTH extraction and narrative to ensure maximum speed.
+// Our refined 'Smart Selection' and prompts handle the accuracy.
+$current_model = 'gemini-1.5-flash';
 
 $vertex_url = sprintf(
     'https://aiplatform.googleapis.com/v1/projects/%s/locations/%s/publishers/google/models/%s:%s',
@@ -207,7 +230,7 @@ curl_setopt_array($ch, [
     CURLOPT_POST           => true,
     CURLOPT_POSTFIELDS     => json_encode($payload),
     CURLOPT_HTTPHEADER     => ['Authorization: Bearer ' . $access_token, 'Content-Type: application/json'],
-    CURLOPT_TIMEOUT        => 120,
+    CURLOPT_TIMEOUT        => 300,
 ]);
 $response  = curl_exec($ch);
 $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);

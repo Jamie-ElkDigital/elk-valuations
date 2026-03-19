@@ -1673,7 +1673,7 @@ async function importCHAccounts() {
 
     // SMART SELECTION: Include the latest 2 Confirmation Statements + Incorporation + Last 3 Share/Capital Docs
     // This captures the share structure (A/B/C classes) without overloading the AI.
-    if (window.CH_INTEL && window.CH_INTEL.intel_docs) {
+    if (window.CH_INTEL && window.CH_INTEL.intel_docs && Array.isArray(window.CH_INTEL.intel_docs)) {
         const csDocs = window.CH_INTEL.intel_docs.filter(d => d.type === 'CS01' || d.category === 'confirmation-statement').slice(0, 2);
         const incDocs = window.CH_INTEL.intel_docs.filter(d => d.type === 'NEWINC' || d.category === 'incorporation').slice(0, 1);
         const shareDocs = window.CH_INTEL.intel_docs.filter(d => d.type === 'SH01' || d.category === 'shares' || d.category === 'capital').slice(0, 3);
