@@ -4,6 +4,9 @@
  * Handles OAuth2 token refresh and proxies requests to Vertex AI (Gemini Pro)
  */
 
+ini_set('memory_limit', '1024M');
+set_time_limit(300);
+
 session_start();
 require_once 'db.php';
 require_once 'proprietary-logic.php'; // Local fallback (to be replaced by ELK API call)
@@ -234,7 +237,7 @@ try {
 } catch (Exception $e) {
     error_log("Usage logging failed: " . $e->getMessage());
 }
-if ($action === 'extract' || $action === 'extract_from_urls') {
+if ($action === 'extract' || $action === 'extract_from_urls' || $action === 'hybrid_extract') {
     $clean_text = trim($text);
     if (preg_match('/^```(?:json)?\s*([\s\S]*?)\s*```$/', $clean_text, $matches)) { $clean_text = $matches[1]; }
     $json = json_decode($clean_text, true);

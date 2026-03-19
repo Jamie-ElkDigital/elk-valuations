@@ -924,6 +924,35 @@ function populateExtractedData(data) {
   }
 
   calcFinancials();
+
+  // Gap Diagnostic: Check if critical financial data is missing from the extraction
+  const y3 = data.year3 || {};
+  const missingData = !y3.turnover || y3.turnover === 0 || !y3.netAssets || y3.netAssets === 0;
+  
+  const uploadBox = document.getElementById('uploadBox');
+  let warningDiv = document.getElementById('missingDataWarning');
+  
+  if (missingData) {
+    if (uploadBox) uploadBox.style.display = 'flex';
+    showStatus('⚠️ Incomplete Financial Data Detected. Please upload Full Accounts.');
+    
+    if (!warningDiv && uploadBox) {
+      warningDiv = document.createElement('div');
+      warningDiv.id = 'missingDataWarning';
+      warningDiv.style = 'background: rgba(239,68,68,0.1); border: 1px solid #ef4444; padding: 16px; margin-bottom: 16px; border-radius: var(--radius); text-align: left;';
+      uploadBox.parentNode.insertBefore(warningDiv, uploadBox);
+    }
+    if (warningDiv) {
+      warningDiv.innerHTML = `
+        <strong style="color: #ef4444; display: block; margin-bottom: 8px;">⚠️ Incomplete Financial Data Detected</strong>
+        <span style="color: var(--text-main); font-size: 13px;">The public accounts retrieved from Companies House did not contain all necessary figures (e.g., Turnover or Net Assets are missing).</span>
+        <br><span style="color: var(--text-muted); font-size: 12px; margin-top: 4px; display: inline-block;">Please upload the internal Full Statutory Accounts below to fill these gaps and ensure an accurate valuation.</span>
+      `;
+      warningDiv.style.display = 'block';
+    }
+  } else {
+    if (warningDiv) warningDiv.style.display = 'none';
+  }
 }
 
 function goTo(idx) {
