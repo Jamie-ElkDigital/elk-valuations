@@ -24,10 +24,12 @@ class DB {
 
         try {
             $this->pdo = new PDO($dsn, $user, $pass, $options);
-        } catch (\PDOException $e) {
-            throw new \PDOException($e->getMessage(), (int)$e->getCode());
-        }
-    }
+        } catch (PDOException $e) {
+            // Log the detailed error for internal debugging
+            error_log("Database Connection Failed: " . $e->getMessage());
+            // Throw a generic exception to avoid leaking DSN/Credentials to the frontend
+            throw new Exception("Database connection error. Please check server logs.");
+        }    }
 
     public static function getInstance() {
         if (self::$instance === null) {
