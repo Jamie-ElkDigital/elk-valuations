@@ -170,12 +170,12 @@ function get_proprietary_payload($action, $input) {
 
         return [
             'contents' => [['role' => 'user', 'parts' => $parts]],
-            'generationConfig' => ['temperature' => 0.1, 'maxOutputTokens' => 8192]
+            'generationConfig' => ['temperature' => 0.1]
         ];
     } else {
         return [
             'contents' => [['role' => 'user', 'parts' => [['text' => trim($input['prompt'])]]]],
-            'generationConfig' => ['temperature' => 0.4, 'maxOutputTokens' => 8192, 'topP' => 0.8],
+            'generationConfig' => ['temperature' => 0.4, 'topP' => 0.8],
             'systemInstruction' => ['parts' => [['text' => ElkLogicVault::getNarrativeSystemInstruction()]]]
         ];
     }
