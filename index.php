@@ -934,6 +934,7 @@ function populateExtractedData(data) {
   }
 
   calcFinancials();
+  validateRequiredFields();
 
   // Gap Diagnostic: Check if critical financial data is missing from the extraction
   const y3 = data.year3 || {};
@@ -1615,22 +1616,24 @@ async function searchCompaniesHouse() {
       let isChecked = false;
       
       if (acc.is_account) {
-          // Do not auto-select micro-entity accounts as they lack detailed P&L and share structure
+          // Auto-select up to 3 non-micro accounts
           if (checkedAccounts < 3 && !label.includes('micro')) {
               isChecked = true;
               checkedAccounts++;
           }
       } else {
           // Auto-select intelligence docs
-          if (label.includes('confirmation') && checkedCS01 < 2) {
-              isChecked = true;
-              checkedCS01++;
+          if (label.includes('confirmation')) {
+              if (checkedCS01 < 2) {
+                  isChecked = true;
+                  checkedCS01++;
+              }
           } else if (label.includes('incorporation') && checkedInc < 1) {
               isChecked = true;
               checkedInc++;
-          } else if ((label.includes('share') || label.includes('capital')) && checkedShares < 2) {
+          } else if (label.includes('share') || label.includes('capital') || label.includes('officer')) {
+              // Select ALL share allotments and officer changes
               isChecked = true;
-              checkedShares++;
           }
       }
 
@@ -1659,6 +1662,8 @@ async function searchCompaniesHouse() {
     } else {
         showStatus('Corporate Intelligence fetched from Companies House ✓');
     }
+    
+    validateRequiredFields();
 
   } catch (err) {
     showStatus('Lookup failed: ' + err.message);
