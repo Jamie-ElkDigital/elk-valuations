@@ -34,7 +34,7 @@ $user_id = $_SESSION['user_id'];
 
 define('GCP_PROJECT_ID',    'gta-valuations');
 define('GCP_LOCATION',      'europe-west2');
-define('GEMINI_MODEL',      'gemini-1.5-pro-002'); 
+define('GEMINI_MODEL',      'gemini-3.1-pro-preview'); 
 
 // Set this to true to switch from local prompts to ELK Internal API
 define('USE_EXTERNAL_LOGIC', false);
