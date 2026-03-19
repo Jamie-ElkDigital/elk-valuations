@@ -266,6 +266,18 @@ if ($curl_err || $http_code !== 200) {
 }
 
 $data = json_decode($response, true);
+if (!$data || !isset($data['candidates'])) {
+    $error_detail = [
+        'error' => 'Malformed Vertex AI Response',
+        'raw_response' => $response,
+        'json_error' => json_last_error_msg()
+    ];
+    error_log("VERTEX MALFORMED DATA: " . json_encode($error_detail));
+    http_response_code(200);
+    echo json_encode(['error' => 'Vertex AI returned malformed data', 'debug' => $error_detail]);
+    exit;
+}
+
 $text = $data['candidates'][0]['content']['parts'][0]['text'] ?? '';
 $finishReason = $data['candidates'][0]['finishReason'] ?? 'UNKNOWN';
 
