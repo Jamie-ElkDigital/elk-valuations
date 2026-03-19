@@ -39,7 +39,7 @@ steps:
       - '--allow-unauthenticated'
       - '--session-affinity'
       - '--vpc-connector'
-      - 'gta-valuations-vpc-connector'
+      - 'elk-vpc'
       - '--memory'
       - '4Gi'
       - '--cpu'
