@@ -105,10 +105,14 @@ try {
                 ];
 
                 if ($category === 'accounts') {
+                    // Skip micro-entity accounts entirely to reduce payload and noise
+                    if (stripos($desc, 'micro-entity') !== false) {
+                        continue;
+                    }
+
                     // Friendly labels for UI
                     $label = 'Accounts';
-                    if (stripos($desc, 'micro-entity') !== false) $label = 'Micro-Entity Accounts';
-                    elseif (stripos($desc, 'total exemption') !== false) $label = 'Total Exemption Accounts';
+                    if (stripos($desc, 'total exemption') !== false) $label = 'Total Exemption Accounts';
                     elseif (stripos($desc, 'group') !== false) $label = 'Group Accounts';
                     elseif (stripos($desc, 'full') !== false) $label = 'Full Accounts';
                     elseif (stripos($desc, 'filleted') !== false) $label = 'Filleted Accounts';
