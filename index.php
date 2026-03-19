@@ -1713,8 +1713,8 @@ async function importCHAccounts() {
       },
       body: JSON.stringify({ 
         action: 'extract_from_urls',
-        files: fileData,
-        context: window.CH_INTEL ? { profile: window.CH_INTEL.profile, pscs: window.CH_INTEL.pscs } : null
+        ch_urls: fileData,
+        context: window.CH_INTEL ? { profile: window.CH_INTEL.profile } : null
       })
     });
 
