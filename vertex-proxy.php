@@ -9,6 +9,7 @@ ini_set('memory_limit', '1024M');
 set_time_limit(300);
 
 session_start();
+header("X-Vertex-Proxy: Active"); // Diagnostic Header
 require_once 'db.php';
 require_once 'proprietary-logic.php'; // Local fallback (to be replaced by ELK API call)
 
