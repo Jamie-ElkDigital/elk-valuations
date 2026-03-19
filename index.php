@@ -1595,11 +1595,23 @@ async function searchCompaniesHouse() {
         }
     });
     
+    let checkedAccounts = 0;
+    let checkedCS01 = 0;
+
     result.accounts.forEach(acc => {
       const item = document.createElement('div');
       item.className = 'ch-acc-item';
       
       const isPartial = acc.type.toLowerCase().includes('filleted') || acc.type.toLowerCase().includes('micro');
+      
+      let isChecked = false;
+      if (acc.is_account && checkedAccounts < 3) {
+          isChecked = true;
+          checkedAccounts++;
+      } else if (acc.category === 'confirmation-statement' && checkedCS01 < 1) {
+          isChecked = true;
+          checkedCS01++;
+      }
 
       item.innerHTML = `
         <div class="ch-acc-info">
@@ -1609,7 +1621,7 @@ async function searchCompaniesHouse() {
           </div>
           <div class="ch-acc-type">${acc.type.toUpperCase()}</div>
         </div>
-        <input type="checkbox" class="ch-acc-checkbox" value="${acc.pdf_url}" checked>
+        <input type="checkbox" class="ch-acc-checkbox" value="${acc.pdf_url}" ${isChecked ? 'checked' : ''}>
       `;
       container.appendChild(item);
     });
