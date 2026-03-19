@@ -33,8 +33,8 @@ $firm_id = $_SESSION['firm_id'];
 $user_id = $_SESSION['user_id'];
 
 define('GCP_PROJECT_ID',    'gta-valuations');
-define('GCP_LOCATION',      'europe-west2');
-define('GEMINI_MODEL',      'gemini-1.5-pro'); 
+define('GCP_LOCATION',      'us-central1'); // Use us-central1 for global model availability
+define('GEMINI_MODEL',      'gemini-3.1-pro-preview'); 
 
 // Set this to true to switch from local prompts to ELK Internal API
 define('USE_EXTERNAL_LOGIC', false);
@@ -196,6 +196,7 @@ $endpoint = $is_stream ? 'streamGenerateContent?alt=sse' : 'generateContent';
 // Use the user-preferred latest model for everything
 $current_model = GEMINI_MODEL;
 
+// Construct the URL using the global endpoint for preview models
 $vertex_url = sprintf(
     'https://%s-aiplatform.googleapis.com/v1/projects/%s/locations/%s/publishers/google/models/%s:%s',
     GCP_LOCATION, GCP_PROJECT_ID, GCP_LOCATION, $current_model, $endpoint
