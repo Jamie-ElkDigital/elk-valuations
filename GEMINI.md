@@ -18,3 +18,8 @@
 - **Live Environment:** Development happens directly against the live environment/database. Be incredibly careful with `DELETE` or `DROP` statements.
 - **Doc Updates:** If significant architectural changes occur, manually update `PROJECT_STATUS.md` and `SYSTEM_ARCHITECTURE.md`, but *do not* `git push` those specific markdown files unless explicitly asked.
 - **Deployment:** Committing and pushing to `main` triggers a ~2 minute Cloud Build deployment to Cloud Run.
+
+## Communication & Execution Rules
+- **Pre-Flight Checks:** Always explain the exact plan, files to be modified, and intended outcome *before* writing code or running complex terminal commands. 
+- **No Silent Rabbit Holes:** Do not disappear into deep debugging loops (e.g. attempting local installations or running experimental scripts) without explicit user consent.
+- **Stop and Ask:** If a process fails or becomes complex, immediately stop, report the error, explain the options, and wait for a directive.
