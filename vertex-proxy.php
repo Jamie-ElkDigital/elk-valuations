@@ -191,14 +191,16 @@ try {
 $is_stream = ($action === 'narrative');
 $endpoint = $is_stream ? 'streamGenerateContent?alt=sse' : 'generateContent';
 
-// 1.5 Flash is now used for BOTH extraction and narrative to ensure maximum speed.
-// Using specific stable version for Vertex AI reliability.
-$current_model = 'gemini-1.5-flash-002';
+// Use the user-preferred latest model for everything
+$current_model = 'gemini-3.1-pro-preview';
 
 $vertex_url = sprintf(
     'https://%s-aiplatform.googleapis.com/v1/projects/%s/locations/%s/publishers/google/models/%s:%s',
     GCP_LOCATION, GCP_PROJECT_ID, GCP_LOCATION, $current_model, $endpoint
 );
+
+// Debug: Log the URL to GCP Logs to diagnose 404s
+error_log("Calling Vertex AI: " . $vertex_url);
 
 // Get the payload (Now hydrated by the Logic Vault)
 $payload = get_proprietary_payload($action, $input);
