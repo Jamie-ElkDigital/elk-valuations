@@ -32,7 +32,7 @@ $user_id = $_SESSION['user_id'];
 
 define('GCP_PROJECT_ID',    'gta-valuations');
 define('GCP_LOCATION',      'europe-west2');
-define('GEMINI_MODEL',      'gemini-3.1-pro-preview'); 
+define('GEMINI_MODEL',      'gemini-1.5-pro'); 
 
 // Set this to true to switch from local prompts to ELK Internal API
 define('USE_EXTERNAL_LOGIC', false);
@@ -192,7 +192,7 @@ $is_stream = ($action === 'narrative');
 $endpoint = $is_stream ? 'streamGenerateContent?alt=sse' : 'generateContent';
 
 // Use the user-preferred latest model for everything
-$current_model = 'gemini-3.1-pro-preview';
+$current_model = GEMINI_MODEL;
 
 $vertex_url = sprintf(
     'https://%s-aiplatform.googleapis.com/v1/projects/%s/locations/%s/publishers/google/models/%s:%s',
