@@ -282,10 +282,15 @@ $text = $data['candidates'][0]['content']['parts'][0]['text'] ?? '';
 $finishReason = $data['candidates'][0]['finishReason'] ?? 'UNKNOWN';
 
 // Log Usage Metadata
-$usage = $data['usageMetadata'] ?? [];
-$promptTokens = (int)($usage['promptTokenCount'] ?? 0);
-$compTokens   = (int)($usage['candidatesTokenCount'] ?? 0);
-$totalTokens  = (int)($usage['totalTokenCount'] ?? 0);
+$promptTokens = 0;
+$compTokens = 0;
+$totalTokens = 0;
+if (isset($data) && is_array($data) && isset($data['usageMetadata'])) {
+    $usage = $data['usageMetadata'];
+    $promptTokens = (int)($usage['promptTokenCount'] ?? 0);
+    $compTokens   = (int)($usage['candidatesTokenCount'] ?? 0);
+    $totalTokens  = (int)($usage['totalTokenCount'] ?? 0);
+}
 
 // Extract client name for logging if available
 $clientName = null;
