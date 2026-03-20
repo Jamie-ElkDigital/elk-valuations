@@ -35,8 +35,6 @@ class ElkLogicVault {
             'year': 2025, 'turnover': 120000, 'cos': 60000, 'admin': 35000, 'other': 0, 'depreciation': 45000,
             'netAssets': 150000, 'cash': 20000, 'debtors': 15000, 'loans': 10000,
             'companyName': '...', 'companyNumber': '...', 'yearEnd': '30 April', 'employees': 8, 'sector': '...',
-            'description': 'A high-level 4-sentence executive summary of the company\'s business model, market position, and operational history since inception.',
-            'performanceCommentary': 'A 3-paragraph professional financial analysis. Paragraph 1: Revenue & Gross Margin trends. Paragraph 2: Operational efficiency and EBITDA performance. Paragraph 3: Balance sheet strength and liquidity.',
             'yearsTrading': 10,
             'directors': ['Name 1', 'Name 2'], 
             'shareholders': [

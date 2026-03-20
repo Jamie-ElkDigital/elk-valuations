@@ -147,6 +147,17 @@ if (isset($_GET['edit'])) {
 
   <main class="main">
 
+    <!-- Persistent Validation Banner -->
+    <div id="validationBanner" class="validation-banner">
+      <div class="validation-title">
+        <span>⚠️</span> 
+        <span>Incomplete Valuation Data</span>
+      </div>
+      <div id="validationList" class="validation-list">
+        <!-- Items populated via JS -->
+      </div>
+    </div>
+
     <!-- PAGE 1: Business Details -->
     <div class="page active" id="page0">
       <div class="page-header">
@@ -286,7 +297,10 @@ if (isset($_GET['edit'])) {
           <input type="text" id="reportDate" placeholder="e.g. March 2025">
         </div>
         <div class="form-group full">
-          <label>Business Description (optional)</label>
+          <label style="display:flex; justify-content:space-between; align-items:center;">
+            Business Description (optional)
+            <button id="aiDescBtn" class="btn btn-outline" style="font-size:10px; padding:2px 8px; color:var(--brand-accent-light);" onclick="generateNarrative('businessDesc')">✦ Auto-Generate</button>
+          </label>
           <textarea id="businessDesc" placeholder="Brief description of the business — what it does, its market position, key clients or contracts…"></textarea>
         </div>
       </div>
@@ -1668,6 +1682,41 @@ async function importCHAccounts() {
   }
 }
 
+function validateRequiredFields() {
+  const fields = [
+    { id: 'companyName', label: 'Company Name' },
+    { id: 'companyNumber', label: 'Company Number' },
+    { id: 'sector', label: 'Sector' },
+    { id: 'yearEnd', label: 'Year End' },
+    { id: 'f_turn3', label: 'Turnover (Year 3)' },
+    { id: 'b_netassets', label: 'Net Assets' },
+    { id: 'b_cash', label: 'Cash at Bank' }
+  ];
+
+  const missing = [];
+  fields.forEach(f => {
+    const el = document.getElementById(f.id);
+    const val = el ? (el.value || '').toString().trim() : '';
+    // Check if value is empty or exactly "£0" / "0" for financial fields
+    const isFinancial = ['f_turn3', 'b_netassets', 'b_cash'].includes(f.id);
+    const isEmpty = val === '' || (isFinancial && (val === '0' || val === '£0'));
+    
+    if (isEmpty) {
+      missing.push(f.label);
+    }
+  });
+
+  const banner = document.getElementById('validationBanner');
+  const list = document.getElementById('validationList');
+
+  if (missing.length > 0) {
+    list.innerHTML = missing.map(m => `<div class="validation-item">${m}</div>`).join('');
+    banner.classList.add('show');
+  } else {
+    banner.classList.remove('show');
+  }
+}
+
 function init() {
   if (window.EDIT_DATA) {
     const d = window.EDIT_DATA;
@@ -1747,6 +1796,15 @@ function init() {
 
   initFormatting();
   applyFormatting();
+  
+  // Attach validation listeners
+  const watchFields = ['companyName', 'companyNumber', 'sector', 'yearEnd', 'f_turn3', 'b_netassets', 'b_cash'];
+  watchFields.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', validateRequiredFields);
+  });
+  
+  validateRequiredFields();
 }
 init();
 </script>

@@ -1,6 +1,13 @@
 # ELK Valuations Platform - Project Status
 *Proprietary Platform by ELK Digital Limited*
 
+## 🚨 CRITICAL SYSTEM BASELINE: COMMIT f1b19e1 🚨
+**The core data extraction pipeline (Companies House → Vertex AI Proxy → Gemini 3.1 Pro Preview) was completely stabilized and verified as 100% working on Commit `f1b19e1`.** 
+
+Future AI Agents MUST NOT alter `ch-proxy.php`, `vertex-proxy.php`, or the core extraction logic within `proprietary-logic.php` or `index.php` without explicit, overriding directives from the lead developer. Any attempts to "optimize" or "enhance" the document payload or model parameters have historically resulted in fatal AI hallucination (e.g., omitting minority shareholders) or 500 server crashes. 
+
+**If extraction fails, DO NOT change the pipeline; investigate the specific company data first.**
+
 ## 🚀 Current Status (Phase 6 In Progress - Enterprise Readiness)
 The application has successfully transitioned to secure UUID-based URLs, features a new Relational Dashboard with nested report history, and includes advanced UX features for generating high-fidelity snapshots.
 
