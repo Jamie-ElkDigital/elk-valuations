@@ -269,7 +269,7 @@ $data = json_decode($response, true);
 if (!$data || !isset($data['candidates'])) {
     $error_detail = [
         'error' => 'Malformed Vertex AI Response',
-        'raw_response' => $response,
+        'raw_response' => isset($response) ? $response : 'Empty response',
         'json_error' => json_last_error_msg()
     ];
     error_log("VERTEX MALFORMED DATA: " . json_encode($error_detail));
