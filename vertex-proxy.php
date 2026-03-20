@@ -305,7 +305,7 @@ try {
 }
 if ($action === 'extract' || $action === 'extract_from_urls' || $action === 'hybrid_extract') {
     $clean_text = trim($text);
-    if (preg_match('/^```(?:json)?\s*([\s\S]*?)\s*```$/', $clean_text, $matches)) { $clean_text = $matches[1]; }
+    if (preg_match('/```(?:json)?\s*([\s\S]*?)\s*```/', $clean_text, $matches)) { $clean_text = $matches[1]; }
     $json = json_decode($clean_text, true);
     if (!$json && preg_match('/\{[\s\S]*\}/', $clean_text, $matches)) { $json = json_decode($matches[0], true); }
 
