@@ -45,6 +45,12 @@ if (isset($_GET['edit'])) {
 <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css?v=3.2.1">
 <style>
+.validation-banner { display: none; background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; border-radius: 8px; padding: 16px; margin-bottom: 24px; animation: slideDown 0.4s ease; }
+.validation-banner.show { display: block; }
+.validation-title { display: flex; align-items: center; gap: 8px; font-weight: 600; color: #ef4444; margin-bottom: 8px; font-size: 14px; }
+.validation-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.validation-item { background: rgba(239, 68, 68, 0.15); color: #ef4444; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+
 .intel-panel { display: none; margin-top: 24px; padding: 24px; background: var(--brand-surface-light); border: 1px solid var(--brand-accent-border); border-radius: 8px; animation: slideDown 0.4s ease; }
 .intel-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; margin-bottom: 24px; }
 .intel-stat { padding: 16px; background: var(--brand-surface-mid); border-radius: 6px; border: 1px solid var(--border-subtle); }
