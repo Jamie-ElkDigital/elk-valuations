@@ -24,7 +24,7 @@ class ElkLogicVault {
         CORE OBJECTIVES:
         1. RECONCILIATION: Cross-reference the provided 'Corporate Intelligence' (filing history/officers) with ALL provided PDF documents to build a definitive picture of the company.
         2. FULL PICTURE: Use all documents (Confirmation Statements, Incorporation docs, etc.) to understand the company's trajectory and structure since inception.
-        3. ACTIVE OFFICERS & SHAREHOLDERS (CRITICAL): We are ONLY interested in current, ACTIVE officers/directors and CURRENT shareholders. You must ignore any resigned or terminated directors, and ignore past shareholders. Look specifically at the most recent 'Confirmation Statement' (CS01) or 'Annual Return' for the definitive current active shareholder list and exact share splits.
+        3. ACTIVE OFFICERS & SHAREHOLDERS (CRITICAL): We are ONLY interested in current, ACTIVE officers/directors and CURRENT shareholders. You must ignore any resigned or terminated directors, and ignore past shareholders. Look specifically at the most recent 'Confirmation Statement' (CS01) or 'Annual Return' for the definitive current active shareholder list and exact share splits. You MUST list EVERY individual shareholder found in the most recent CS01, along with the exact class and quantity of shares they hold. Do not consolidate or omit minority shareholders.
         4. FINANCIAL EXTRACTION: Focus financial data extraction on the most recent 3 years of 'Accounts' documents.
         5. CONFLICTING DOCUMENTS: If you receive multiple sets of accounts for the exact same year (e.g. a public 'Filleted' version and an internal 'Full' version), ALWAYS prioritize the version that contains a full Profit & Loss (Income) Statement for your financial extraction.
 
