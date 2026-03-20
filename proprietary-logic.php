@@ -19,24 +19,25 @@ class ElkLogicVault {
      * Returns the prompt and schema for the PDF Extraction AI.
      */
     public static function getExtractionPrompt() {
-        return "You are a Senior Chartered Accountant and Business Valuation Expert. Your task is to extract structured financial data from these Statutory Accounts.
+        return "You are a Senior Chartered Accountant and Business Valuation Expert. Your task is to perform a deep-dive extraction and reconciliation of these Statutory Accounts.
 
         CORE OBJECTIVES:
         1. RECONCILIATION: Cross-reference the provided 'Corporate Intelligence' (filing history/officers) with ALL provided PDF documents to build a definitive picture of the company.
         2. FULL PICTURE: Use all documents (Confirmation Statements, Incorporation docs, etc.) to understand the company's trajectory and structure since inception.
-        3. ACTIVE OFFICERS & SHAREHOLDERS (CRITICAL): We are ONLY interested in current, ACTIVE officers/directors and CURRENT shareholders. You must ignore any resigned or terminated directors, and ignore past shareholders. Look specifically at the most recent 'Confirmation Statement' (CS01) or 'Annual Return' for the definitive current active shareholder list and exact share splits. You MUST list EVERY individual shareholder found in the most recent CS01, along with the exact class and quantity of shares they hold. Do not consolidate or omit minority shareholders.
+        3. SHAREHOLDER INTEGRITY (CRITICAL): Identify individual shareholders and their exact splits. Look specifically at 'Confirmation Statements' (CS01) or 'Annual Returns' for the most recent shareholder list. Do not rely solely on the Accounts notes if individual names/splits are missing there.
         4. FINANCIAL EXTRACTION: Focus financial data extraction on the most recent 3 years of 'Accounts' documents.
-        5. CONFLICTING DOCUMENTS: If you receive multiple sets of accounts for the exact same year (e.g. a public 'Filleted' version and an internal 'Full' version), ALWAYS prioritize the version that contains a full Profit & Loss (Income) Statement for your financial extraction.
 
         Return ONLY a JSON object with this exact structure:
         {
-          'year1': { 'year': 2023, 'turnover': 0, 'cos': 0, 'admin': 0, 'other': 0, 'depreciation': 0, 'directorsSalaries': 0 },
+          'year1': { 'year': 2023, 'turnover': 100000, 'cos': 50000, 'admin': 30000, 'other': 0, 'depreciation': 5000, 'directorsSalaries': 40000 },
           'year2': { ... },
           'year3': {
-            'year': 2025, 'turnover': 0, 'cos': 0, 'admin': 0, 'other': 0, 'depreciation': 0,
-            'netAssets': 0, 'cash': 0, 'debtors': 0, 'loans': 0,
-            'companyName': '...', 'companyNumber': '...', 'yearEnd': '...', 'employees': 0, 'sector': '...',
-            'yearsTrading': 0,
+            'year': 2025, 'turnover': 120000, 'cos': 60000, 'admin': 35000, 'other': 0, 'depreciation': 45000,
+            'netAssets': 150000, 'cash': 20000, 'debtors': 15000, 'loans': 10000,
+            'companyName': '...', 'companyNumber': '...', 'yearEnd': '30 April', 'employees': 8, 'sector': '...',
+            'description': 'A high-level 4-sentence executive summary of the company\'s business model, market position, and operational history since inception.',
+            'performanceCommentary': 'A 3-paragraph professional financial analysis. Paragraph 1: Revenue & Gross Margin trends. Paragraph 2: Operational efficiency and EBITDA performance. Paragraph 3: Balance sheet strength and liquidity.',
+            'yearsTrading': 10,
             'directors': ['Name 1', 'Name 2'], 
             'shareholders': [
               { 'name': 'Name 1', 'shares': 50, 'class': 'Ordinary' }
@@ -46,9 +47,9 @@ class ElkLogicVault {
         }
 
         CONSTRAINTS:
-        - Provide 'year1' (oldest), 'year2', and 'year3' (most recent). 
-        - If a figure is missing or obscured (e.g. filleted accounts), use 0.
+        - Financial Data: Provide 'year1' (oldest), 'year2', and 'year3' (most recent). If fewer than 3 years exist, use 0 for missing years.
+        - Precision: Do not guess. If a figure is not found, use 0.
         - Sector: Choose from [Professional Services, HR & Recruitment, IT & Technology, Construction & Trades, Retail, Hospitality & Leisure, Manufacturing, Healthcare, Financial Services, Property, Other].
-        - Return ONLY raw JSON.";
+        - Return ONLY the raw JSON object.";
     }
 }

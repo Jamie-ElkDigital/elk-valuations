@@ -1691,16 +1691,14 @@ async function importCHAccounts() {
   statusText.textContent = 'Connecting to Companies House Vault...';
 
   try {
-  const fileData = [];
-  for (const cb of checkboxes) {
-    const pdfUrl = cb.value;
-    fileData.push({ url: pdfUrl });
-  }
+    const fileData = [];
+    for (const cb of checkboxes) {
+      const pdfUrl = cb.value;
+      fileData.push({ url: pdfUrl });
+    }
 
-  // Intelligence docs are now managed entirely by UI checkboxes, so we no longer
-  // silently append them here. This prevents double-fetching PDFs.
-
-  // Progress Simulation    setTimeout(() => { if(progressFill.style.width !== '100%') { progressFill.style.width = '20%'; statusText.textContent = 'Scanning available documents...'; } }, 1500);
+    // Progress Simulation
+    setTimeout(() => { if(progressFill.style.width !== '100%') { progressFill.style.width = '20%'; statusText.textContent = 'Scanning available documents...'; } }, 1500);
     setTimeout(() => { if(progressFill.style.width !== '100%') { progressFill.style.width = '40%'; statusText.textContent = 'Fetching PDF documents...'; } }, 3500);
     setTimeout(() => { if(progressFill.style.width !== '100%') { progressFill.style.width = '60%'; statusText.textContent = 'Analyzing accounts...'; } }, 8000);
     setTimeout(() => { if(progressFill.style.width !== '100%') { progressFill.style.width = '80%'; statusText.textContent = 'Extracting line items, please do not navigate away...'; } }, 16000);
@@ -1714,7 +1712,7 @@ async function importCHAccounts() {
       body: JSON.stringify({ 
         action: 'extract_from_urls',
         ch_urls: fileData,
-        context: window.CH_INTEL ? { profile: window.CH_INTEL.profile } : null
+        context: window.CH_INTEL ? { profile: window.CH_INTEL.profile, pscs: window.CH_INTEL.pscs } : null
       })
     });
 
