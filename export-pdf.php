@@ -14,6 +14,7 @@ require_once 'theme-engine.php';
 
 // Bucket Configuration (GCP)
 define('GCS_BUCKET_NAME', 'gta-valuations-reports');
+define('REPORTS_DIR', getenv('REPORTS_DIR') ?: dirname(__DIR__) . '/reports'); // outside the web root
 
 $uuid = $_GET['uuid'] ?? null;
 if (!$uuid) {
@@ -78,6 +79,7 @@ function fmtShort($n) {
  * Get OAuth2 Token from Metadata Server
  */
 function get_gcs_token(): string {
+    if (!getenv('K_SERVICE')) return ''; // not on Cloud Run: use the local reports/ store
     $ch = curl_init('http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token');
     curl_setopt_array($ch, [
         CURLOPT_RETURNTRANSFER => true,
@@ -98,11 +100,11 @@ function upload_to_gcs($local_path, $gcs_name) {
     $token = get_gcs_token();
     if (!$token) {
         // Fallback for local testing
-        $local_dir = __DIR__ . '/reports/' . dirname($gcs_name);
+        $local_dir = REPORTS_DIR . '/' . dirname($gcs_name);
         if (!is_dir($local_dir)) {
             mkdir($local_dir, 0777, true);
         }
-        return copy($local_path, __DIR__ . '/reports/' . $gcs_name);
+        return copy($local_path, REPORTS_DIR . '/' . $gcs_name);
     }
 
     $url = "https://storage.googleapis.com/upload/storage/v1/b/" . GCS_BUCKET_NAME . "/o?uploadType=media&name=" . urlencode($gcs_name);
@@ -131,7 +133,7 @@ function download_from_gcs($gcs_name) {
     $token = get_gcs_token();
     if (!$token) {
         // Fallback for local testing
-        $local_file = __DIR__ . '/reports/' . $gcs_name;
+        $local_file = REPORTS_DIR . '/' . $gcs_name;
         if (file_exists($local_file)) {
             return file_get_contents($local_file);
         }

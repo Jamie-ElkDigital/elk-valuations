@@ -1,7 +1,7 @@
 <?php
 /**
  * ELK Valuations - Database Connection
- * Connects to Google Cloud SQL via Private IP
+ * Credentials from the environment (php-fpm pool env[] on the ELK box)
  */
 
 class DB {
@@ -9,10 +9,13 @@ class DB {
     private $pdo;
 
     private function __construct() {
-        $host = getenv('DB_HOST') ?: '10.141.0.3'; // Your Cloud SQL Private IP
-        $db   = getenv('DB_NAME') ?: 'valuations_platform';
-        $user = getenv('DB_USER') ?: 'elk_admin';
-        $pass = getenv('DB_PASS') ?: 'ELK_Admin_Password_2026!'; // Default provided for legacy support, recommend setting DB_PASS env var
+        $host = getenv('DB_HOST') ?: '127.0.0.1';
+        $db   = getenv('DB_NAME') ?: 'valuations';
+        $user = getenv('DB_USER') ?: '';
+        $pass = getenv('DB_PASS') ?: '';
+        if ($user === '' || $pass === '') {
+            throw new \RuntimeException('DB_USER / DB_PASS not set in the environment');
+        }
         $charset = 'utf8mb4';
 
         $dsn = "mysql:host=$host;dbname=$db;charset=$charset";

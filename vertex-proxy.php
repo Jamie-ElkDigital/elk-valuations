@@ -27,35 +27,14 @@ if (!$csrf_token || $csrf_token !== $_SESSION['csrf_token']) {
 $firm_id = $_SESSION['firm_id'];
 $user_id = $_SESSION['user_id'];
 
-define('GCP_PROJECT_ID',    'gta-valuations');
-define('GCP_LOCATION',      'europe-west2');
-define('GEMINI_MODEL',      'gemini-3.1-pro-preview'); 
+// LLM endpoint + key come from .env (php-fpm pool env[]). Gemini API shape; Vertex-compatible payloads.
+define('LLM_API_BASE', rtrim(getenv('LLM_API_BASE') ?: 'https://generativelanguage.googleapis.com/v1beta', '/'));
+define('LLM_API_KEY',  getenv('LLM_API_KEY') ?: '');
+define('GEMINI_MODEL', getenv('LLM_MODEL') ?: 'gemini-2.5-flash');
 
 // Set this to true to switch from local prompts to ELK Internal API
 define('USE_EXTERNAL_LOGIC', false);
 define('ELK_LOGIC_API_URL',  'https://api.elkdigital.co.uk/v1/valuation-logic');
-
-/**
- * Get a fresh access token using the Service Account (Application Default Credentials)
- */
-function get_access_token(): string {
-    $ch = curl_init('http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token');
-    curl_setopt_array($ch, [
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_HTTPHEADER     => ['Metadata-Flavor: Google'],
-    ]);
-    
-    $response = curl_exec($ch);
-    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
-
-    if ($http_code !== 200) {
-        throw new RuntimeException('Metadata server token fetch failed. Ensure this is running on Google Cloud.');
-    }
-
-    $data = json_decode($response, true);
-    return $data['access_token'] ?? '';
-}
 
 /**
  * Hydrates the request with proprietary ELK Digital prompts.
@@ -149,19 +128,14 @@ function get_proprietary_payload($action, $input) {
 $input = json_decode(file_get_contents('php://input'), true);
 $action = $input['action'] ?? 'narrative';
 
-try {
-    $access_token = get_access_token();
-} catch (RuntimeException $e) {
-    http_response_code(500); echo json_encode(['error' => 'Auth failed: ' . $e->getMessage()]); exit;
+if (LLM_API_KEY === '') {
+    http_response_code(500); echo json_encode(['error' => 'LLM_API_KEY not set']); exit;
 }
 
 $is_stream = ($action === 'narrative');
 $endpoint = $is_stream ? 'streamGenerateContent?alt=sse' : 'generateContent';
 
-$vertex_url = sprintf(
-    'https://aiplatform.googleapis.com/v1/projects/%s/locations/%s/publishers/google/models/%s:%s',
-    GCP_PROJECT_ID, GCP_LOCATION, GEMINI_MODEL, $endpoint
-);
+$vertex_url = sprintf('%s/models/%s:%s', LLM_API_BASE, GEMINI_MODEL, $endpoint);
 
 // Get the payload (Now hydrated by the Logic Vault)
 $payload = get_proprietary_payload($action, $input);
@@ -175,7 +149,7 @@ if ($is_stream) {
     curl_setopt_array($ch, [
         CURLOPT_POST           => true,
         CURLOPT_POSTFIELDS     => json_encode($payload),
-        CURLOPT_HTTPHEADER     => ['Authorization: Bearer ' . $access_token, 'Content-Type: application/json'],
+        CURLOPT_HTTPHEADER     => ['x-goog-api-key: ' . LLM_API_KEY, 'Content-Type: application/json'],
         CURLOPT_TIMEOUT        => 120,
         CURLOPT_WRITEFUNCTION  => function($curl, $data) {
             echo $data;
@@ -195,7 +169,7 @@ curl_setopt_array($ch, [
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_POST           => true,
     CURLOPT_POSTFIELDS     => json_encode($payload),
-    CURLOPT_HTTPHEADER     => ['Authorization: Bearer ' . $access_token, 'Content-Type: application/json'],
+    CURLOPT_HTTPHEADER     => ['x-goog-api-key: ' . LLM_API_KEY, 'Content-Type: application/json'],
     CURLOPT_TIMEOUT        => 120,
 ]);
 $response  = curl_exec($ch);
