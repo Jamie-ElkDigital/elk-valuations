@@ -703,7 +703,7 @@ if (isset($_GET['edit'])) {
       <textarea class="narrative-box" id="r_narrative" placeholder="Click 'Draft Professional Commentary' to auto-generate a summary, or type your own…" style="min-height:140px;"></textarea>
 
       <div class="report-disclaimer" style="background: var(--bg-dim); border: 1px solid var(--border-subtle); color: var(--text-faint);">
-        <strong>Important:</strong> This valuation report has been prepared for the purpose stated above and should not be relied upon for any other purpose. The valuation is based on information provided by the directors and has not been independently verified. This report constitutes an opinion, not a guarantee of the price achievable on any open market transaction. GTA Accounting accepts no liability to any third party in connection with this report.
+        <strong>Important:</strong> This valuation report has been prepared for the purpose stated above and should not be relied upon for any other purpose. The valuation is based on information provided by the directors and has not been independently verified. This report constitutes an opinion, not a guarantee of the price achievable on any open market transaction. <?php echo htmlspecialchars($_SESSION['firm_name'] ?? 'The firm'); ?> accepts no liability to any third party in connection with this report.
       </div>
 
       <div class="btn-row">
