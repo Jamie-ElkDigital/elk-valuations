@@ -16,8 +16,7 @@ if (!isset($_SESSION['authenticated']) || !$_SESSION['authenticated']) {
 }
 
 // CSRF Verification
-$headers = getallheaders();
-$csrf_token = $headers['X-CSRF-Token'] ?? $headers['x-csrf-token'] ?? '';
+$csrf_token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? ''; // php-fpm normalises the header to X-Csrf-Token, so getallheaders() lookups by exact case missed it (24 Sep 2026)
 if (!$csrf_token || $csrf_token !== $_SESSION['csrf_token']) {
     http_response_code(403);
     echo json_encode(['error' => 'CSRF validation failed.']);
