@@ -309,8 +309,8 @@ $tempPdf  = tempnam(sys_get_temp_dir(), 'pdf_out_') . '.pdf';
 file_put_contents($tempHtml, $html);
 
 // Pipe HTML into node script
-$nodePath = exec('which node') ?: 'node';
-$cmd = "$nodePath generate-pdf.js " . escapeshellarg($tempPdf);
+$nodePath = getenv('NODE_BIN') ?: '/usr/bin/node';
+$cmd = escapeshellarg($nodePath) . ' ' . escapeshellarg(__DIR__ . '/generate-pdf.js') . ' ' . escapeshellarg($tempPdf);
 
 $descriptorspec = [
    0 => ["pipe", "r"], // stdin
