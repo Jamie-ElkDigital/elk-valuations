@@ -113,7 +113,7 @@ function get_proprietary_payload($action, $input) {
 
         return [
             'contents' => [['role' => 'user', 'parts' => $parts]],
-            'generationConfig' => ['temperature' => 0.1, 'maxOutputTokens' => 8192]
+            'generationConfig' => ['temperature' => 0.1, 'maxOutputTokens' => 8192, 'responseMimeType' => 'application/json']
         ];
     } else {
         return [
@@ -163,24 +163,33 @@ if ($is_stream) {
     exit;
 }
 
-$ch = curl_init($vertex_url);
-curl_setopt_array($ch, [
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_POST           => true,
-    CURLOPT_POSTFIELDS     => json_encode($payload),
-    CURLOPT_HTTPHEADER     => ['x-goog-api-key: ' . LLM_API_KEY, 'Content-Type: application/json'],
-    CURLOPT_TIMEOUT        => 120,
-]);
-$response  = curl_exec($ch);
-$http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-$curl_err  = curl_error($ch);
-curl_close($ch);
+// Gemini returns transient 503 "high demand" / 429 often enough that one attempt fails a real run
+// (seen 24 Sep 2026: first call 503, identical retry 200). Retry with backoff before giving up.
+$body = json_encode($payload);
+foreach ([0, 2, 5, 10] as $attempt => $delay) {
+    if ($delay) sleep($delay);
+    $ch = curl_init($vertex_url);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST           => true,
+        CURLOPT_POSTFIELDS     => $body,
+        CURLOPT_HTTPHEADER     => ['x-goog-api-key: ' . LLM_API_KEY, 'Content-Type: application/json'],
+        CURLOPT_TIMEOUT        => 120,
+    ]);
+    $response  = curl_exec($ch);
+    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $curl_err  = curl_error($ch);
+    curl_close($ch);
+    if (!$curl_err && !in_array($http_code, [429, 503], true)) break;
+    error_log("LLM attempt " . ($attempt + 1) . " failed: HTTP $http_code $curl_err");
+}
 
 if ($curl_err) { http_response_code(500); echo json_encode(['error' => 'cURL error: ' . $curl_err]); exit; }
 if ($http_code !== 200) { http_response_code($http_code); echo json_encode(['error' => 'Vertex AI error', 'detail' => $response]); exit; }
 
 $data = json_decode($response, true);
-$text = $data['candidates'][0]['content']['parts'][0]['text'] ?? '';
+// Gemini 3.x splits long answers across several parts; parts[0] alone truncated the JSON (24 Sep 2026).
+$text = implode('', array_map(fn($p) => $p['text'] ?? '', $data['candidates'][0]['content']['parts'] ?? []));
 $finishReason = $data['candidates'][0]['finishReason'] ?? 'UNKNOWN';
 
 // Log Usage Metadata
@@ -205,7 +214,7 @@ try {
 } catch (Exception $e) {
     error_log("Usage logging failed: " . $e->getMessage());
 }
-if ($action === 'extract' || $action === 'extract_from_urls') {
+if ($action === 'extract' || $action === 'extract_from_urls' || $action === 'hybrid_extract') { // hybrid was missing, so PDF uploads returned raw text as 'narrative' and the UI said no data (24 Sep 2026)
     $clean_text = trim($text);
     if (preg_match('/^```(?:json)?\s*([\s\S]*?)\s*```$/', $clean_text, $matches)) { $clean_text = $matches[1]; }
     $json = json_decode($clean_text, true);

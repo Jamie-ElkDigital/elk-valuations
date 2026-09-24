@@ -1573,6 +1573,11 @@ async function searchCompaniesHouse() {
     // We only care about "Accounts" for the gap detection, not Confirmation Statements etc.
     const accountFilings = result.accounts.filter(acc => acc.is_account);
     let partialGapsInRecent = 0;
+    // Pre-tick only what extraction needs: last 3 accounts + latest confirmation statement (shareholders).
+    // Everything ticked sent 37 PDFs to the model and timed out (James, 25 Mar 2026; fixed 24 Sep 2026).
+    const latestCS = result.accounts.find(acc => acc.category === 'confirmation-statement');
+    const preTick = new Set(accountFilings.slice(0, 3).map(a => a.pdf_url));
+    if (latestCS) preTick.add(latestCS.pdf_url);
     
     // Check the most recent 3 account filings for gaps
     accountFilings.slice(0, 3).forEach(acc => {
@@ -1595,7 +1600,7 @@ async function searchCompaniesHouse() {
           </div>
           <div class="ch-acc-type">${acc.type.toUpperCase()}</div>
         </div>
-        <input type="checkbox" class="ch-acc-checkbox" value="${acc.pdf_url}" checked>
+        <input type="checkbox" class="ch-acc-checkbox" value="${acc.pdf_url}" ${preTick.has(acc.pdf_url) ? 'checked' : ''}>
       `;
       container.appendChild(item);
     });
