@@ -88,21 +88,25 @@ try {
         $version_id = $input['version_id'] ?? '';
         if (!$version_id) throw new Exception("Version ID required");
 
-        // 1. Verify ownership via a join
+        // 1. Verify ownership via a join (and fetch the stored path so the PDF goes with the row; Codex finding 24 Sep 2026)
         $stmt = $pdo->prepare("
-            SELECT vv.id 
+            SELECT vv.gcs_path
             FROM valuation_versions vv
             JOIN valuations v ON vv.valuation_id = v.id
             WHERE vv.id = ? AND v.firm_id = ?
         ");
         $stmt->execute([$version_id, $firm_id]);
-        if (!$stmt->fetchColumn()) {
+        $gcs_path = $stmt->fetchColumn();
+        if ($gcs_path === false) {
              throw new Exception("Version not found or access denied.");
         }
 
-        // 2. Delete version record
+        // 2. Delete version record and its file
         $stmt = $pdo->prepare("DELETE FROM valuation_versions WHERE id = ?");
         $stmt->execute([$version_id]);
+        $reportsDir = getenv('REPORTS_DIR') ?: dirname(__DIR__) . '/reports';
+        $file = $reportsDir . '/' . $gcs_path;
+        if ($gcs_path && strpos(realpath(dirname($file)) ?: '', realpath($reportsDir)) === 0 && is_file($file)) unlink($file);
 
         echo json_encode(['success' => true]);
     } else {
