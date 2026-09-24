@@ -82,10 +82,7 @@ function get_proprietary_payload($action, $input) {
                         $pdfData = curl_exec($ch);
                         curl_close($ch);
                         if ($pdfData) $parts[] = ['inlineData' => ['mimeType' => 'application/pdf', 'data' => base64_encode($pdfData)]];
-                    } elseif (file_exists($url)) {
-                        $pdfData = file_get_contents($url);
-                        if ($pdfData) $parts[] = ['inlineData' => ['mimeType' => 'application/pdf', 'data' => base64_encode($pdfData)]];
-                    }
+                    } // local paths are never accepted: the browser could name any readable server file (removed 24 Sep 2026)
                 }
             }
         }
@@ -119,7 +116,7 @@ function get_proprietary_payload($action, $input) {
         return [
             'contents' => [['role' => 'user', 'parts' => [['text' => trim($input['prompt'])]]]],
             'generationConfig' => ['temperature' => 0.4, 'maxOutputTokens' => 8192, 'topP' => 0.8],
-            'systemInstruction' => ['parts' => [['text' => ElkLogicVault::getNarrativeSystemInstruction()]]]
+            'systemInstruction' => ['parts' => [['text' => ElkLogicVault::getNarrativeSystemInstruction($_SESSION['firm_name'] ?? 'the firm')]]]
         ];
     }
 }
