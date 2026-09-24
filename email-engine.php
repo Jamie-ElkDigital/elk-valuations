@@ -10,7 +10,7 @@ function sendMfaEmail($to, $code) {
     $smtp_port = 465;
     $smtp_user = 'emailapikey';
     $smtp_pass = getenv('SMTP_PASS') ?: ($_ENV['SMTP_PASS'] ?? ($_SERVER['SMTP_PASS'] ?? '')); 
-    $from_email = 'noreply@elkdigital.co.uk';
+    $from_email = 'valuations@elkdigital.co.uk';
     
     if (!$smtp_pass) {
         error_log("ZeptoMail MFA Error: SMTP_PASS not set.");
