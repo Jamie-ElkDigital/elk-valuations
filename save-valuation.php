@@ -77,7 +77,7 @@ try {
         'years_trad' => (int)($input['yearsTrading'] ?? 0),
         'emp'        => (int)($input['employees'] ?? 0),
         'purpose'    => $input['purpose'] ?? '',
-        'rep_date'   => $input['reportDate'] ?? '',
+        'rep_date'   => ($t = strtotime($input['reportDate'] ?? '')) ? date('Y-m-d', $t) : null, // column is DATE; UI sends free text like "September 2026" (24 Sep 2026)
         'bus_desc'   => $input['businessDesc'] ?? '',
         'fin_json'   => json_encode($input['financials'] ?? []),
         'adj_json'   => json_encode($input['adjustments'] ?? []),
