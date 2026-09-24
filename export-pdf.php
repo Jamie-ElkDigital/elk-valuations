@@ -61,6 +61,10 @@ try {
 $primary_color = $firm['primary_color'] ?? '#c5a059';
 $secondary_color = $firm['secondary_color'] ?? '#050505';
 $logo_url = $firm['logo_url'] ?? '';
+// Headless Chrome renders the HTML from a temp file, so a relative logo path breaks; make it absolute (24 Sep 2026)
+if ($logo_url && !preg_match('#^(https?:|data:)#i', $logo_url)) {
+    $logo_url = 'https://' . $_SERVER['HTTP_HOST'] . '/' . ltrim($logo_url, '/');
+}
 
 // Helper Functions
 function fmt($n) {
