@@ -1467,7 +1467,7 @@ async function generateNarrative(targetId = 'r_narrative') {
   const valHigh = (wAvg * multHigh) - netDebt - deduction;
   const margin = turn3 ? ((getPreAdjEbitda(3) / turn3) * 100).toFixed(1) : 'unknown';
 
-  const prompt = `Write a comprehensive professional business valuation commentary for ${company}. Sector: ${sector}. Purpose: ${purpose}. Financials: EBITDA ${fmt(e1)} (Y1), ${fmt(e2)} (Y2), ${fmt(e3)} (Y3). Weighted Avg: ${fmt(wAvg)}. Net Debt: ${fmt(netDebt)}. Valuation Range: ${fmtShort(valLow)} to ${fmtShort(valHigh)}. Deduction: ${fmt(deduction)} (${deductDesc}). Write 4-5 flowing paragraphs.`;
+  const prompt = `Write a comprehensive professional business valuation commentary for ${company}. Sector: ${sector}. Purpose: ${purpose}. Financials: EBITDA ${fmt(e1)} (Y1), ${fmt(e2)} (Y2), ${fmt(e3)} (Y3). Weighted Avg: ${fmt(wAvg)}. Multiples applied: ${multLow}x to ${multHigh}x. ${netDebt < 0 ? 'Net cash of ' + fmt(-netDebt) : 'Net debt of ' + fmt(netDebt)} and deductions of ${fmt(deduction)}${deductDesc ? ' (' + deductDesc + ')' : ''} have ALREADY been applied. FINAL equity valuation range: ${fmtShort(valLow)} to ${fmtShort(valHigh)} (mid ${fmtShort(valMid)}). Quote this range exactly as written and do not derive any other figure. Write 4-5 flowing paragraphs.`;
 
   btn.disabled = true;
   const originalHtml = btn.innerHTML;
