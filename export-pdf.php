@@ -16,6 +16,12 @@ require_once 'theme-engine.php';
 define('GCS_BUCKET_NAME', 'gta-valuations-reports');
 define('REPORTS_DIR', getenv('REPORTS_DIR') ?: dirname(__DIR__) . '/reports'); // outside the web root
 
+// Security: a login is required (the PDF renderer works from a temp file, it never fetches this URL),
+// and the user must belong to the same firm. Was open to anyone holding a uuid (24 Sep 2026).
+if (empty($_SESSION['authenticated'])) {
+    http_response_code(401);
+    die("Unauthorised. Please log in.");
+}
 $uuid = $_GET['uuid'] ?? null;
 if (!$uuid) {
     die("Missing Valuation UUID.");
@@ -32,11 +38,8 @@ if (!$v) {
     die("Valuation not found or access denied.");
 }
 
-// Security: If a session exists, ensure the user belongs to the same firm
-if (isset($_SESSION['authenticated']) && $_SESSION['authenticated']) {
-    if ($_SESSION['firm_id'] != $v['firm_id'] && $_SESSION['firm_slug'] !== 'elk') {
-        die("Unauthorised Access. Firm isolation violation.");
-    }
+if ($_SESSION['firm_id'] != $v['firm_id'] && ($_SESSION['firm_slug'] ?? '') !== 'elk') {
+    die("Unauthorised Access. Firm isolation violation.");
 }
 
 $firm_id = $v['firm_id'];

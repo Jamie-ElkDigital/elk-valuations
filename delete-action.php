@@ -58,6 +58,14 @@ try {
 
         if (count($val_ids) > 0) {
             $placeholders = implode(',', array_fill(0, count($val_ids), '?'));
+            // Collect uuids first so the stored PDFs can be removed with the rows (were orphaned, 24 Sep 2026)
+            $stmt = $pdo->prepare("SELECT uuid FROM valuations WHERE id IN ($placeholders)");
+            $stmt->execute($val_ids);
+            $reportsDir = getenv('REPORTS_DIR') ?: dirname(__DIR__) . '/reports';
+            foreach ($stmt->fetchAll(PDO::FETCH_COLUMN) as $u) {
+                $dir = $reportsDir . '/reports/' . (int)$firm_id . '/' . basename($u);
+                if (is_dir($dir)) { foreach (glob("$dir/*") as $f) unlink($f); rmdir($dir); }
+            }
             
             // 3. Delete related versions (PDF records)
             $stmt = $pdo->prepare("DELETE FROM valuation_versions WHERE valuation_id IN ($placeholders)");
