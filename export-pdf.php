@@ -10,6 +10,7 @@ set_time_limit(120);
 
 session_start();
 require_once 'db.php';
+require_once 'calc.php';
 require_once 'theme-engine.php';
 
 // Bucket Configuration (GCP)
@@ -52,6 +53,8 @@ try {
     $shareholders = json_decode($v['shareholders_json'], true);
     $methodology = json_decode($v['methodology_json'], true);
     $multiples = $methodology['multiples'] ?? [];
+    $calc = elk_calc($financials ?: [], $adjustments ?: [], $methodology ?: []); // one calculator (25 Sep 2026)
+    $leaver = trim($methodology['leaver'] ?? '');
 
     // Fetch Firm Branding
     $stmt = $pdo->prepare("SELECT * FROM firms WHERE id = ?");
@@ -228,29 +231,31 @@ ob_start();
             <div class="valuation-range" style="display: flex; justify-content: space-around; align-items: flex-end; gap: 20px; text-align: center;">
                 <div class="val-point">
                     <div class="label" style="font-size: 10px; text-transform: uppercase; color: var(--text-faint);">Conservative</div>
-                    <div class="amount" style="font-family: 'DM Mono', monospace; font-size: 32px; color: var(--text-main);"><?php 
-                        $wAvg = (float)$v['valuation_mid'] / (float)$multiples['mid'];
-                        echo fmtShort($wAvg * (float)$multiples['low']); 
-                    ?></div>
-                    <div class="sublabel" style="font-size: 11px; color: var(--text-muted);"><?php echo $multiples['low']; ?>× EBITDA</div>
+                    <div class="amount" style="font-family: 'DM Mono', monospace; font-size: 32px; color: var(--text-main);"><?php echo fmtShort($calc['valLow']); ?></div>
+                    <div class="sublabel" style="font-size: 11px; color: var(--text-muted);"><?php echo $calc['multLow']; ?>&times; EBITDA</div>
                 </div>
                 <div class="val-point mid">
                     <div class="label" style="font-size: 10px; text-transform: uppercase; color: var(--text-faint);">Mid-point Equity Value</div>
-                    <div class="amount" style="font-family: 'DM Mono', monospace; font-size: 48px; color: var(--brand-accent-light);"><?php echo fmtShort($v['valuation_mid']); ?></div>
-                    <div class="sublabel" style="font-size: 11px; color: var(--text-muted);"><?php echo $multiples['mid']; ?>× EBITDA (Adjusted)</div>
+                    <div class="amount" style="font-family: 'DM Mono', monospace; font-size: 48px; color: var(--brand-accent-light);"><?php echo fmtShort($calc['valMid']); ?></div>
+                    <div class="sublabel" style="font-size: 11px; color: var(--text-muted);"><?php echo $calc['multMid']; ?>&times; EBITDA (Adjusted)</div>
                 </div>
                 <div class="val-point">
                     <div class="label" style="font-size: 10px; text-transform: uppercase; color: var(--text-faint);">Optimistic</div>
-                    <div class="amount" style="font-family: 'DM Mono', monospace; font-size: 32px; color: var(--text-main);"><?php echo fmtShort($wAvg * (float)$multiples['high']); ?></div>
-                    <div class="sublabel" style="font-size: 11px; color: var(--text-muted);"><?php echo $multiples['high']; ?>× EBITDA</div>
+                    <div class="amount" style="font-family: 'DM Mono', monospace; font-size: 32px; color: var(--text-main);"><?php echo fmtShort($calc['valHigh']); ?></div>
+                    <div class="sublabel" style="font-size: 11px; color: var(--text-muted);"><?php echo $calc['multHigh']; ?>&times; EBITDA</div>
                 </div>
             </div>
+        <div class="basis-row" style="display:flex; gap:24px; justify-content:center; margin-top:18px; font-size:13px; color:var(--text-muted);">
+          <span>EBITDA multiple basis: <strong style="color:var(--text-main)"><?php echo fmt($calc['valMid']); ?></strong><?php if ($calc['method'] === 'ebitda'): ?> <span class="badge-sel" style="color:var(--brand-accent-light); font-size:10px; text-transform:uppercase; margin-left:6px;">Selected</span><?php endif; ?></span>
+          <span>Net assets basis: <strong style="color:var(--text-main)"><?php echo fmt($calc['netAssets']); ?></strong><?php if ($calc['method'] === 'netassets'): ?> <span class="badge-sel" style="color:var(--brand-accent-light); font-size:10px; text-transform:uppercase; margin-left:6px;">Selected</span><?php endif; ?></span>
+        </div>
+        <?php if ($leaver): ?><div class="leaver-row" style="text-align:center; margin-top:10px; font-size:13px; color:var(--text-muted);">Leaving shareholder: <strong style="color:var(--text-main)"><?php echo htmlspecialchars($leaver); ?></strong></div><?php endif; ?>
         </div>
 
         <div class="results-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 40px;">
             <div class="result-card" style="background: var(--brand-surface-mid); padding: 20px; border-radius: 4px; border: 1px solid var(--border-subtle);">
                 <div class="card-label" style="font-size: 10px; text-transform: uppercase; color: var(--text-faint);">Weighted Average EBITDA</div>
-                <div class="card-value" style="font-size: 24px; color: var(--brand-accent-light); font-family: 'DM Mono', monospace;"><?php echo fmt($wAvg); ?></div>
+                <div class="card-value" style="font-size: 24px; color: var(--brand-accent-light); font-family: 'DM Mono', monospace;"><?php echo fmt($calc['wAvg']); ?></div>
             </div>
             <div class="result-card" style="background: var(--brand-surface-mid); padding: 20px; border-radius: 4px; border: 1px solid var(--border-subtle);">
                 <div class="card-label" style="font-size: 10px; text-transform: uppercase; color: var(--text-faint);">Most Recent Turnover</div>
@@ -264,6 +269,33 @@ ob_start();
                 <div class="card-label" style="font-size: 10px; text-transform: uppercase; color: var(--text-faint);">Cash at Bank</div>
                 <div class="card-value" style="font-size: 24px; color: var(--brand-accent-light); font-family: 'DM Mono', monospace;"><?php echo fmt($financials['balanceSheet']['cash'] ?? 0); ?></div>
             </div>
+        </div>
+
+
+        <div class="section-title">EBITDA Breakdown by Year</div>
+        <div class="ebitda-breakdown">
+          <?php $pct = fn($m) => $m === null ? '&mdash;' : number_format($m * 100, 1) . '%';
+          foreach (['Year 1 (oldest)', 'Year 2', 'Year 3 (most recent)'] as $i => $lbl): ?>
+          <div class="breakdown-row">
+            <span class="year"><?php echo $lbl; ?></span>
+            <span class="ebitda-val"><?php echo fmt($calc['ebitda'][$i]); ?></span>
+            <span class="weight">&times;<?php echo $calc['weighting'][$i]; ?> &middot; margin <?php echo $pct($calc['margin'][$i]); ?></span>
+            <span class="weighted"><?php echo fmt($calc['ebitda'][$i] * $calc['weighting'][$i]); ?></span>
+          </div>
+          <?php endforeach; ?>
+          <div class="breakdown-row" style="padding-top:12px; border-top:1px solid var(--border-subtle);">
+            <span style="font-weight:600; color:var(--text-main)">Weighted Average EBITDA</span>
+            <span></span>
+            <span class="weight">avg margin <?php echo $pct($calc['avgMargin']); ?></span>
+            <span class="weighted" style="font-size:15px; color:var(--brand-accent-light);"><?php echo fmt($calc['wAvgRaw']); ?></span>
+          </div>
+          <?php if ($calc['leakage'] || $calc['netDebt'] || $calc['deduction']): ?>
+          <div class="breakdown-row" style="font-size:12px; color:var(--text-muted);">
+            <span>Less key person leakage <?php echo fmt($calc['leakage']); ?>; net debt <?php echo fmt($calc['netDebt']); ?>; deductions <?php echo fmt($calc['deduction']); ?></span>
+            <span></span><span></span>
+            <span class="weighted"><?php echo fmt($calc['wAvg']); ?></span>
+          </div>
+          <?php endif; ?>
         </div>
 
         <div class="section-title">Professional Commentary</div>
@@ -280,7 +312,7 @@ ob_start();
                     <th style="padding: 12px;">Shareholder</th>
                     <th style="padding: 12px;">Class</th>
                     <th style="padding: 12px;">Shares</th>
-                    <th style="padding: 12px;">Estimated Value (Mid)</th>
+                    <th style="padding: 12px;">Estimated Value (<?php echo $calc['method'] === 'netassets' ? 'Net assets' : 'Mid'; ?>)</th>
                 </tr>
             </thead>
             <tbody>
@@ -288,7 +320,7 @@ ob_start();
                 $totalShares = 0;
                 foreach($shareholders as $sh) $totalShares += (int)$sh['shares'];
                 foreach ($shareholders as $sh): 
-                    $shareVal = $totalShares > 0 ? ((int)$sh['shares'] / $totalShares) * (float)$v['valuation_mid'] : 0;
+                    $shareVal = $totalShares > 0 ? ((int)$sh['shares'] / $totalShares) * $calc['basisValue'] : 0;
                 ?>
                     <tr style="border-bottom: 1px solid var(--border-subtle); font-size: 14px; color: var(--text-main);">
                         <td style="padding: 12px;"><?php echo htmlspecialchars($sh['name']); ?></td>

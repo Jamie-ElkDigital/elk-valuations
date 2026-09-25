@@ -60,11 +60,17 @@ try {
     }
 
     // Methodology JSON
+    // Everything calc.php needs must be here: view-valuation.php and export-pdf.php recompute from it (25 Sep 2026)
     $meth_json = json_encode([
         'weighting' => $input['weighting'] ?? [],
         'multiples' => $input['multiples'] ?? [],
         'deduction' => $input['deduction'] ?? 0,
-        'deductionDesc' => $input['deductionDesc'] ?? ''
+        'deductionDesc' => $input['deductionDesc'] ?? '',
+        'kpRevenue' => $input['kpRevenue'] ?? 0,
+        'kpLeakage' => $input['kpLeakage'] ?? 0,
+        'useNetDebt' => !empty($input['useNetDebt']),
+        'leaver' => $input['leaver'] ?? '',
+        'method' => ($input['method'] ?? 'ebitda') === 'netassets' ? 'netassets' : 'ebitda'
     ]);
 
     $data = [

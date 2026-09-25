@@ -244,6 +244,27 @@ if (isset($_GET['edit'])) {
       <!-- ROW 3+: General Business Details -->
       <div class="form-grid">
         <div class="form-group">
+          <label>Purpose of Valuation</label>
+          <select id="purpose" onchange="onPurposeChange()">
+            <option>Company buyback</option>
+            <option>Share sale / exit</option>
+            <option>Shareholder buyout</option>
+            <option>Succession planning</option>
+            <option>Keyman insurance</option>
+            <option>Shareholder protection</option>
+            <option>HMRC / tax planning</option>
+            <option>Management buyout (MBO)</option>
+            <option>Investment / funding</option>
+            <option>Divorce / legal dispute</option>
+            <option>General advisory</option>
+          </select>
+        </div>
+        <div class="form-group" id="leaverWrap" style="display:none">
+          <label>Who is leaving?</label>
+          <select id="leaver" onfocus="fillLeaverOptions()" onchange="onLeaverChange()"></select>
+          <input type="text" id="leaverOther" placeholder="Name of the leaving shareholder" style="display:none; margin-top:6px;" oninput="onLeaverChange()">
+        </div>
+        <div class="form-group">
           <label>Company Name</label>
           <input type="text" id="companyName" placeholder="e.g. Acme Trading Limited" oninput="updateHeader()">
         </div>
@@ -282,21 +303,6 @@ if (isset($_GET['edit'])) {
         <div class="form-group">
           <label>Number of Employees</label>
           <input type="number" id="employees" placeholder="8" min="1">
-        </div>
-        <div class="form-group">
-          <label>Purpose of Valuation</label>
-          <select id="purpose">
-            <option>Share sale / exit</option>
-            <option>Shareholder buyout</option>
-            <option>Succession planning</option>
-            <option>Keyman insurance</option>
-            <option>Shareholder protection</option>
-            <option>HMRC / tax planning</option>
-            <option>Management buyout (MBO)</option>
-            <option>Investment / funding</option>
-            <option>Divorce / legal dispute</option>
-            <option>General advisory</option>
-          </select>
         </div>
         <div class="form-group">
           <label>Report Date</label>
@@ -630,6 +636,11 @@ if (isset($_GET['edit'])) {
             <div class="sublabel" id="r_high_mult">—</div>
           </div>
         </div>
+        <div class="basis-row" style="display:flex; gap:24px; justify-content:center; margin-top:18px; font-size:13px; color:var(--text-muted);">
+          <label style="cursor:pointer"><input type="radio" name="method" value="ebitda" checked onchange="calcResults()"> EBITDA multiple basis: <strong style="color:var(--text-main)" id="r_basis_ebitda">—</strong></label>
+          <label style="cursor:pointer"><input type="radio" name="method" value="netassets" onchange="calcResults()"> Net assets basis: <strong style="color:var(--text-main)" id="r_basis_na">—</strong></label>
+        </div>
+        <div id="r_leaver" style="text-align:center; margin-top:10px; font-size:13px; color:var(--text-muted); display:none;"></div>
       </div>
 
       <div class="results-grid">
@@ -678,7 +689,7 @@ if (isset($_GET['edit'])) {
         <div class="breakdown-row" style="padding-top:12px; border-top:1px solid var(--border-subtle);">
           <span style="font-weight:600; color:var(--text-main)">Weighted Average EBITDA</span>
           <span></span>
-          <span></span>
+          <span class="weight" id="r_avg_margin"></span>
           <span class="weighted" style="font-size:15px; color:var(--brand-accent-light);" id="r_wAvg">—</span>
         </div>
       </div>
@@ -690,7 +701,7 @@ if (isset($_GET['edit'])) {
             <th>Shareholder</th>
             <th>Class</th>
             <th>Shares</th>
-            <th>Value (mid)</th>
+            <th id="r_shareValHead">Value (mid)</th>
           </tr>
         </thead>
         <tbody id="r_shareBody"></tbody>
@@ -844,6 +855,7 @@ function populateExtractedData(data) {
   }
   const years = ['year1', 'year2', 'year3'];
   const latest = data.year3 || data.year2 || data.year1;
+  window.EXTRACTED_DIRECTORS = (latest && Array.isArray(latest.directors)) ? latest.directors.filter(Boolean) : [];
   // Reconcile against the printed subtotals: a run once moved £43,732 between cost of sales and admin (25 Sep 2026)
   const recon = years.map((k, i) => { const d = data[k]; if (!d || !d.grossProfit) return null;
     const gpOk = Math.abs((d.turnover - d.cos) - d.grossProfit) <= 2;
@@ -951,6 +963,53 @@ function populateExtractedData(data) {
   }
 
   calcFinancials();
+}
+
+
+// ---- Company buyback: leaver picker and its pre-labelled adjustment rows (James 25 Sep 2026) ----
+const LEAVER_ROWS = [
+  ['Leaver salary', 'Typed from payroll', true],
+  ['Leaver employer NI', 'Typed from payroll', true],
+  ['Leaver employer pension', 'Typed from payroll', true],
+  ['Replacement cost (enter as negative)', '', false],
+  ['Future commitment (enter as negative)', '', false]
+];
+function onPurposeChange() {
+  const p = document.getElementById('purpose').value;
+  const show = p === 'Company buyback' || p === 'Shareholder buyout';
+  document.getElementById('leaverWrap').style.display = show ? '' : 'none';
+  if (show) fillLeaverOptions();
+}
+function fillLeaverOptions() {
+  const sel = document.getElementById('leaver');
+  const current = sel.value;
+  const names = [...(window.EXTRACTED_DIRECTORS || [])];
+  document.querySelectorAll('#shareholderRows .shareholder-row').forEach(row => {
+    const n = row.querySelector('input')?.value.trim();
+    if (n && !names.includes(n)) names.push(n);
+  });
+  sel.innerHTML = '<option value="">Select…</option>' + names.map(n => `<option></option>`).join('') + '<option value="Other">Other…</option>';
+  Array.from(sel.options).slice(1, -1).forEach((o, i) => { o.textContent = names[i]; o.value = names[i]; }); // textContent, not HTML: names come from the model
+  if (current && (names.includes(current) || current === 'Other')) sel.value = current;
+}
+function getLeaver() {
+  const sel = document.getElementById('leaver');
+  if (!sel || document.getElementById('leaverWrap').style.display === 'none') return '';
+  return sel.value === 'Other' ? document.getElementById('leaverOther').value.trim() : sel.value;
+}
+function onLeaverChange() {
+  const sel = document.getElementById('leaver');
+  document.getElementById('leaverOther').style.display = sel.value === 'Other' ? '' : 'none';
+  const name = getLeaver();
+  if (!name) return;
+  const rows = Array.from(document.querySelectorAll('#adjRows .adj-row'));
+  LEAVER_ROWS.forEach(([prefix, note, named]) => {
+    const label = named ? `${prefix}: ${name}` : prefix;
+    const existing = rows.find(r => r.querySelector('input').value.split(':')[0].trim() === prefix);
+    if (existing) existing.querySelector('input').value = label; // rename in place, keep the typed figures
+    else addAdjRow(label, '', '', '', note);
+  });
+  calcAdjustments();
 }
 
 function goTo(idx) {
@@ -1245,9 +1304,24 @@ function calcResults() {
   document.getElementById('r_ebitda_y1').textContent = fmt(e1);
   document.getElementById('r_ebitda_y2').textContent = fmt(e2);
   document.getElementById('r_ebitda_y3').textContent = fmt(e3);
-  document.getElementById('r_w1').textContent = `×${w1}`;
-  document.getElementById('r_w2').textContent = `×${w2}`;
-  document.getElementById('r_w3').textContent = `×${w3}`;
+  const pct = m => m === null ? '—' : (m * 100).toFixed(1) + '%';
+  const marginOf = y => { const t = getNum(`f_turn${y}`); return t > 0 ? getAdjEbitda(y) / t : null; };
+  document.getElementById('r_w1').textContent = `×${w1} · margin ${pct(marginOf(1))}`;
+  document.getElementById('r_w2').textContent = `×${w2} · margin ${pct(marginOf(2))}`;
+  document.getElementById('r_w3').textContent = `×${w3} · margin ${pct(marginOf(3))}`;
+  const avgTurn = (getNum('f_turn1') + getNum('f_turn2') + getNum('f_turn3')) / 3;
+  document.getElementById('r_avg_margin').textContent = `avg margin ${pct(avgTurn > 0 ? ((e1 + e2 + e3) / 3) / avgTurn : null)}`;
+  // Valuation basis (goal 5): valuation_mid always stays the EBITDA mid; the radio only picks what the share table divides
+  const method = document.querySelector('input[name="method"]:checked')?.value || 'ebitda';
+  const netAssets = getNum('b_netassets');
+  document.getElementById('r_basis_ebitda').textContent = fmt(valMid);
+  document.getElementById('r_basis_na').textContent = fmt(netAssets);
+  const basisValue = method === 'netassets' ? netAssets : valMid;
+  document.getElementById('r_shareValHead').textContent = method === 'netassets' ? 'Value (net assets)' : 'Value (mid)';
+  const leaverName = getLeaver();
+  const lv = document.getElementById('r_leaver');
+  lv.style.display = leaverName ? '' : 'none';
+  lv.textContent = leaverName ? `Leaving shareholder: ${leaverName}` : '';
   document.getElementById('r_wv1').textContent = fmt(e1 * w1);
   document.getElementById('r_wv2').textContent = fmt(e2 * w2);
   document.getElementById('r_wv3').textContent = fmt(e3 * w3);
@@ -1255,7 +1329,7 @@ function calcResults() {
 
   const totalShares = Array.from(document.querySelectorAll('#shareholderRows .shareholder-row'))
     .reduce((t, row) => t + (parseInt(row.querySelectorAll('input')[1]?.value) || 0), 0);
-  const pricePerShare = totalShares > 0 ? valMid / totalShares : 0;
+  const pricePerShare = totalShares > 0 ? basisValue / totalShares : 0;
 
   const tbody = document.getElementById('r_shareBody');
   tbody.innerHTML = '';
@@ -1367,9 +1441,12 @@ async function saveValuation() {
     kpLeakage: getNum('kpLeakage'),
     deduction: getNum('deduction'),
     deductionDesc: document.getElementById('deductionDesc').value,
+    useNetDebt: document.getElementById('useNetDebt').checked,
+    leaver: getLeaver(),
+    method: document.querySelector('input[name="method"]:checked')?.value || 'ebitda',
     accountantNotes: document.getElementById('accountantNotes').value,
     aiNarrative: document.getElementById('r_narrative').value,
-    valuationMid: parseFloat(document.getElementById('r_mid').textContent.replace(/[£,mk]/g, '')) * (document.getElementById('r_mid').textContent.includes('m') ? 1000000 : (document.getElementById('r_mid').textContent.includes('k') ? 1000 : 1))
+    valuationMid: (calcResults(), window.RESULTS.valMid) // exact figure; parsing the rounded "£329k" text was the view/PDF drift (25 Sep 2026)
   };
 
   btn.disabled = true;
@@ -1789,6 +1866,16 @@ function init() {
 
     document.getElementById('deduction').value = meth.deduction || 0;
     document.getElementById('deductionDesc').value = meth.deductionDesc || '';
+    document.getElementById('useNetDebt').checked = !!meth.useNetDebt;
+    const methodRadio = document.querySelector(`input[name="method"][value="${meth.method === 'netassets' ? 'netassets' : 'ebitda'}"]`);
+    if (methodRadio) methodRadio.checked = true;
+    onPurposeChange();
+    if (meth.leaver) {
+      const sel = document.getElementById('leaver');
+      fillLeaverOptions();
+      if (Array.from(sel.options).some(o => o.value === meth.leaver)) sel.value = meth.leaver;
+      else { sel.value = 'Other'; document.getElementById('leaverOther').value = meth.leaver; document.getElementById('leaverOther').style.display = ''; }
+    }
     document.getElementById('accountantNotes').value = d.accountant_notes || '';
     document.getElementById('r_narrative').value = d.ai_narrative || '';
     updateHeader();

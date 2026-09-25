@@ -128,6 +128,24 @@ if (LLM_API_KEY === '') {
     http_response_code(500); echo json_encode(['error' => 'LLM_API_KEY not set']); exit;
 }
 
+// Usage row for every model call, streamed or not (streamed narratives were never logged before 25 Sep 2026)
+function log_usage(string $action, array $usage, ?string $clientName): void {
+    global $firm_id, $user_id;
+    if (!$usage) return; // no usageMetadata = the call failed; do not write a zero-token row
+    try {
+        $stmt = DB::getInstance()->prepare("INSERT INTO usage_log (firm_id, user_id, client_name, action, prompt_tokens, completion_tokens, total_tokens) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$firm_id, $user_id, $clientName, $action, (int)($usage['promptTokenCount'] ?? 0), (int)($usage['candidatesTokenCount'] ?? 0), (int)($usage['totalTokenCount'] ?? 0)]);
+    } catch (Exception $e) {
+        error_log("Usage logging failed: " . $e->getMessage());
+    }
+}
+$clientName = null;
+if (!empty($input['context']['name'])) {
+    $clientName = $input['context']['name'];
+} elseif (!empty($input['prompt']) && preg_match('/valuation commentary for (.*?)\./', $input['prompt'], $m)) {
+    $clientName = $m[1];
+}
+
 $is_stream = ($action === 'narrative');
 $endpoint = $is_stream ? 'streamGenerateContent?alt=sse' : 'generateContent';
 
@@ -147,16 +165,27 @@ if ($is_stream) {
         CURLOPT_POSTFIELDS     => json_encode($payload),
         CURLOPT_HTTPHEADER     => ['x-goog-api-key: ' . LLM_API_KEY, 'Content-Type: application/json'],
         CURLOPT_TIMEOUT        => 120,
-        CURLOPT_WRITEFUNCTION  => function($curl, $data) {
+        CURLOPT_WRITEFUNCTION  => function($curl, $data) use (&$sse) {
+            $sse .= $data;
             echo $data;
             ob_flush();
             flush();
             return strlen($data);
         }
     ]);
+    $sse = '';
     curl_exec($ch);
     $curl_err = curl_error($ch);
     curl_close($ch);
+    // usageMetadata rides on the last SSE chunk; scan every data: line and keep the last one that carries it
+    $usage = [];
+    if (preg_match_all('/^data: (.*)$/m', $sse, $mm)) {
+        foreach ($mm[1] as $line) {
+            $j = json_decode(trim($line), true);
+            if (!empty($j['usageMetadata'])) $usage = $j['usageMetadata'];
+        }
+    }
+    log_usage($action, $usage, $clientName);
     exit;
 }
 
@@ -189,28 +218,7 @@ $data = json_decode($response, true);
 $text = implode('', array_map(fn($p) => $p['text'] ?? '', $data['candidates'][0]['content']['parts'] ?? []));
 $finishReason = $data['candidates'][0]['finishReason'] ?? 'UNKNOWN';
 
-// Log Usage Metadata
-$usage = $data['usageMetadata'] ?? [];
-$promptTokens = (int)($usage['promptTokenCount'] ?? 0);
-$compTokens   = (int)($usage['candidatesTokenCount'] ?? 0);
-$totalTokens  = (int)($usage['totalTokenCount'] ?? 0);
-
-// Extract client name for logging if available
-$clientName = null;
-if (!empty($input['context']['name'])) {
-    $clientName = $input['context']['name'];
-} elseif (!empty($input['prompt']) && preg_match('/valuation commentary for (.*?)\./', $input['prompt'], $m)) {
-    $clientName = $m[1];
-}
-
-try {
-    $pdo = DB::getInstance();
-    $stmt = $pdo->prepare("INSERT INTO usage_log (firm_id, user_id, client_name, action, prompt_tokens, completion_tokens, total_tokens)
-                           VALUES (?, ?, ?, ?, ?, ?, ?)");
-    $stmt->execute([$firm_id, $user_id, $clientName, $action, $promptTokens, $compTokens, $totalTokens]);
-} catch (Exception $e) {
-    error_log("Usage logging failed: " . $e->getMessage());
-}
+log_usage($action, $data['usageMetadata'] ?? [], $clientName);
 if ($action === 'extract' || $action === 'extract_from_urls' || $action === 'hybrid_extract') { // hybrid was missing, so PDF uploads returned raw text as 'narrative' and the UI said no data (24 Sep 2026)
     $clean_text = trim($text);
     if (preg_match('/^```(?:json)?\s*([\s\S]*?)\s*```$/', $clean_text, $matches)) { $clean_text = $matches[1]; }
