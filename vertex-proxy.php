@@ -115,7 +115,7 @@ function get_proprietary_payload($action, $input) {
     } else {
         return [
             'contents' => [['role' => 'user', 'parts' => [['text' => trim($input['prompt'])]]]],
-            'generationConfig' => ['temperature' => 0.4, 'maxOutputTokens' => 8192, 'topP' => 0.8],
+            'generationConfig' => ['temperature' => 0.2, 'maxOutputTokens' => 8192, 'topP' => 0.8], // 0.4 drifted into invented figures (25 Sep 2026)
             'systemInstruction' => ['parts' => [['text' => ElkLogicVault::getNarrativeSystemInstruction($_SESSION['firm_name'] ?? 'the firm')]]]
         ];
     }
