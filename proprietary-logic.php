@@ -33,7 +33,7 @@ class ElkLogicVault {
           'year1': { 'year': 2023, 'turnover': 100000, 'cos': 50000, 'admin': 30000, 'other': 0, 'depreciation': 5000, 'directorsSalaries': 40000 },
           'year2': { ... },
           'year3': {
-            'year': 2025, 'turnover': 120000, 'cos': 60000, 'admin': 35000, 'other': 0, 'depreciation': 45000,
+            'year': 2025, 'turnover': 120000, 'cos': 60000, 'admin': 35000, 'other': 0, 'depreciation': 45000, 'directorsSalaries': 42000,
             'netAssets': 150000, 'cash': 20000, 'debtors': 15000, 'loans': 10000,
             'companyName': '...', 'companyNumber': '...', 'yearEnd': '30 April', 'employees': 8, 'sector': '...',
             'yearsTrading': 10,
@@ -48,6 +48,7 @@ class ElkLogicVault {
         CONSTRAINTS:
         - Financial Data: Provide 'year1' (oldest), 'year2', and 'year3' (most recent). If fewer than 3 years exist, use 0 for missing years.
         - Precision: Do not guess. If a figure is not found, use 0.
+        - directorsSalaries (directors' remuneration from the accounts notes) is required for EVERY year, including year3.
         - Sector: Choose from [Professional Services, HR & Recruitment, IT & Technology, Construction & Trades, Retail, Hospitality & Leisure, Manufacturing, Healthcare, Financial Services, Property, Other].
         - Return ONLY the raw JSON object.";
     }
