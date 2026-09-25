@@ -844,6 +844,13 @@ function populateExtractedData(data) {
   }
   const years = ['year1', 'year2', 'year3'];
   const latest = data.year3 || data.year2 || data.year1;
+  // Reconcile against the printed subtotals: a run once moved £43,732 between cost of sales and admin (25 Sep 2026)
+  const recon = years.map((k, i) => { const d = data[k]; if (!d || !d.grossProfit) return null;
+    const gpOk = Math.abs((d.turnover - d.cos) - d.grossProfit) <= 2;
+    const opOk = !d.operatingProfit || Math.abs((d.grossProfit - d.admin + (d.other || 0)) - d.operatingProfit) <= 2;
+    return (gpOk && opOk) ? null : `Year ${i + 1}: extracted lines do not add up to the printed ${gpOk ? 'operating' : 'gross'} profit`; }).filter(Boolean);
+  window.EXTRACT_RECON = recon;
+  if (recon.length) setTimeout(() => showStatus('⚠️ Check the figures. ' + recon.join('; ')), 1500);
   
   if (latest) {
     if (latest.companyName) {
