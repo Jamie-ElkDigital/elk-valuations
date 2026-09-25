@@ -69,7 +69,7 @@ function get_proprietary_payload($action, $input) {
                 } elseif (isset($file['url'])) {
                     // Came from extract_from_urls (local path fallback)
                     $url = $file['url'];
-                    if (strpos($url, 'http') === 0) {
+                    if (preg_match('#^https://document-api\.(companieshouse\.gov\.uk|company-information\.service\.gov\.uk)/#', $url)) { // CH document hosts only: the CH key rides on this request (Codex SSRF finding, 25 Sep 2026)
                         $ch = curl_init($url);
                         curl_setopt_array($ch, [
                             CURLOPT_RETURNTRANSFER => true,
@@ -91,7 +91,7 @@ function get_proprietary_payload($action, $input) {
         if (!empty($input['ch_urls'])) {
             foreach ($input['ch_urls'] as $file) {
                 $url = $file['url'];
-                if (strpos($url, 'http') === 0) {
+                if (preg_match('#^https://document-api\.(companieshouse\.gov\.uk|company-information\.service\.gov\.uk)/#', $url)) { // CH document hosts only: the CH key rides on this request (Codex SSRF finding, 25 Sep 2026)
                     $ch = curl_init($url);
                     curl_setopt_array($ch, [
                         CURLOPT_RETURNTRANSFER => true,

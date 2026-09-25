@@ -1212,6 +1212,7 @@ function calcResults() {
   const valLow = (adjWAvg * multLow) - netDebt - deduction;
   const valMid = (adjWAvg * multMid) - netDebt - deduction;
   const valHigh = (adjWAvg * multHigh) - netDebt - deduction;
+  window.RESULTS = { wAvg: adjWAvg, netDebt, deduction, multLow, multMid, multHigh, valLow, valMid, valHigh }; // single source of truth for the narrative (25 Sep 2026)
 
   document.getElementById('r_company').textContent = document.getElementById('companyName')?.value || '—';
   document.getElementById('r_purpose').textContent = document.getElementById('purpose')?.value || '—';
@@ -1451,20 +1452,10 @@ async function generateNarrative(targetId = 'r_narrative') {
   const years = document.getElementById('yearsTrading')?.value || 'unknown';
   const desc = document.getElementById('businessDesc')?.value || '';
   const e1 = getAdjEbitda(1), e2 = getAdjEbitda(2), e3 = getAdjEbitda(3);
-  const [w1,w2,w3] = weighting;
-  const wAvg = (e1*w1 + e2*w2 + e3*w3) / (w1+w2+w3);
+  calcResults(); // the results page is the only calculator; the narrative used to redo the sums differently (25 Sep 2026)
+  const { wAvg, netDebt, deduction, multLow, multMid, multHigh, valLow, valMid, valHigh } = window.RESULTS;
   const turn3 = getNum('f_turn3');
-  const multLow = getNum('multLow') || 2.5;
-  const multMid = getNum('multMid') || 3.5;
-  const multHigh = getNum('multHigh') || 5;
-  const cash = getNum('b_cash');
-  const loans = getNum('b_loans');
-  const netDebt = loans - cash;
-  const deduction = getNum('deduction');
   const deductDesc = document.getElementById('deductionDesc')?.value || '';
-  const valLow = (wAvg * multLow) - netDebt - deduction;
-  const valMid = (wAvg * multMid) - netDebt - deduction;
-  const valHigh = (wAvg * multHigh) - netDebt - deduction;
   const margin = turn3 ? ((getPreAdjEbitda(3) / turn3) * 100).toFixed(1) : 'unknown';
 
   const prompt = `Write a comprehensive professional business valuation commentary for ${company}. Sector: ${sector}. Purpose: ${purpose}. Financials: EBITDA ${fmt(e1)} (Y1), ${fmt(e2)} (Y2), ${fmt(e3)} (Y3). Weighted Avg: ${fmt(wAvg)}. Multiples applied: ${multLow}x to ${multHigh}x. ${netDebt < 0 ? 'Net cash of ' + fmt(-netDebt) : 'Net debt of ' + fmt(netDebt)} and deductions of ${fmt(deduction)}${deductDesc ? ' (' + deductDesc + ')' : ''} have ALREADY been applied. FINAL equity valuation range: ${fmtShort(valLow)} to ${fmtShort(valHigh)} (mid ${fmtShort(valMid)}). The ONLY monetary figures you may write are: ${[fmt(e1), fmt(e2), fmt(e3), fmt(wAvg), fmt(Math.abs(netDebt)), fmt(deduction), fmtShort(valLow), fmtShort(valMid), fmtShort(valHigh)].join('; ')}. Any other pound amount is forbidden. Write 4-5 flowing paragraphs.`;
