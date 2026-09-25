@@ -110,12 +110,12 @@ function get_proprietary_payload($action, $input) {
 
         return [
             'contents' => [['role' => 'user', 'parts' => $parts]],
-            'generationConfig' => ['temperature' => 0.1, 'maxOutputTokens' => 8192, 'responseMimeType' => 'application/json']
+            'generationConfig' => ['temperature' => 0.1, 'maxOutputTokens' => 65536, 'responseMimeType' => 'application/json', 'thinkingConfig' => ['thinkingLevel' => 'low']] // Gemini 3 counts thinking against maxOutputTokens: 8192 truncated the JSON mid-object (MAX_TOKENS after ~7.8k thought tokens, 25 Sep 2026)
         ];
     } else {
         return [
             'contents' => [['role' => 'user', 'parts' => [['text' => trim($input['prompt'])]]]],
-            'generationConfig' => ['temperature' => 0.2, 'maxOutputTokens' => 8192, 'topP' => 0.8], // 0.4 drifted into invented figures (25 Sep 2026)
+            'generationConfig' => ['temperature' => 0.2, 'maxOutputTokens' => 65536, 'topP' => 0.8, 'thinkingConfig' => ['thinkingLevel' => 'low']],
             'systemInstruction' => ['parts' => [['text' => ElkLogicVault::getNarrativeSystemInstruction($_SESSION['firm_name'] ?? 'the firm')]]]
         ];
     }
